@@ -23,6 +23,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Configure Git identity
+        run: |
+          git config --local user.email "imdineshsandaru@gmail.com"
+          git config --local user.name "Dinesh Sandaruwan"
+
       - name: Build project
         run: npm run build
 
