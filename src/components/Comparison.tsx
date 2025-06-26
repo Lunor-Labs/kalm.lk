@@ -55,7 +55,7 @@ const Comparison: React.FC = () => {
             <div className="flex flex-col items-center">
               <div className="w-10 h-10 sm:w-14 sm:h-14 bg-primary-500 rounded-xl flex items-center justify-center mb-2">
                 <img
-                  src="/logo icon (1).jpg"
+                  src="/kalm.lk/logo icon (1).jpg"
                   alt="Kalm"
                   className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg"
                 />

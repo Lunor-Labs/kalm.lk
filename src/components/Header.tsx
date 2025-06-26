@@ -34,7 +34,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
           {/* Logo */}
           <div className="flex items-center space-x-3">
             <img 
-              src="/logo icon (1).jpg" 
+              src="/kalm.lk/logo icon (1).jpg" 
               alt="Kalm Logo" 
               className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg"
             />
