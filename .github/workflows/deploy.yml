@@ -1,0 +1,38 @@
+name: Release Pipeline
+
+on:
+  push:
+    branches:
+      - dev
+      - uat
+      - prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy to GitHub Pages (dev only)
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          npm run deploy
+
+      - name: Deploy to Vercel (uat/prod)
+        if: github.ref == 'refs/heads/uat' || github.ref == 'refs/heads/prod'
+        run: |
+          npm install -g vercel
+          vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --confirm --scope your-vercel-org --env ENV=uat
