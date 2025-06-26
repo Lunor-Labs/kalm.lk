@@ -87,7 +87,7 @@ const Services: React.FC = () => {
                   {service.description}
                 </p>
                 <button className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200 flex items-center space-x-2 group">
-                  <span>Learn More</span>
+                  <span>Get Started</span>
                   <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
