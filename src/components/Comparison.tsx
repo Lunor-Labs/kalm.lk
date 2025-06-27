@@ -36,37 +36,37 @@ const Comparison: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 sm:py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <section className="py-12 lg:py-16 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-neutral-800 mb-4">
+          <h2 className="text-2xl lg:text-3xl font-bold text-neutral-800 mb-4">
             Kalm.lk vs Traditional Therapy
           </h2>
-          <p className="text-base sm:text-lg text-neutral-600 max-w-2xl mx-auto">
+          <p className="text-base lg:text-lg text-neutral-600 max-w-2xl mx-auto">
             See how our platform offers advantages over traditional in-person therapy.
           </p>
         </div>
 
-        {/* Table-like structure even on mobile */}
-        <div className="bg-cream-50 rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm overflow-hidden">
-          <div className="grid grid-cols-3 text-center items-center mb-6 gap-2 sm:gap-4 text-xs sm:text-base">
+        {/* Table-like structure */}
+        <div className="bg-cream-50 rounded-3xl p-6 md:p-8 shadow-sm overflow-hidden">
+          <div className="grid grid-cols-3 text-center items-center mb-6 gap-4">
             <div></div>
             <div className="flex flex-col items-center">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-primary-500 rounded-xl flex items-center justify-center mb-2">
+              <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center mb-2">
                 <img
-                  src="/kalm.lk/logo icon (1).jpg"
+                  src="/logo icon (1).jpg"
                   alt="Kalm"
-                  className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg"
+                  className="w-6 h-6 rounded-lg"
                 />
               </div>
-              <h3 className="font-bold text-primary-500">Kalm.lk</h3>
+              <h3 className="font-bold text-primary-500 text-sm">Kalm.lk</h3>
             </div>
             <div className="flex flex-col items-center">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-neutral-200 rounded-xl flex items-center justify-center mb-2">
-                <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-neutral-600" />
+              <div className="w-12 h-12 bg-neutral-200 rounded-xl flex items-center justify-center mb-2">
+                <MapPin className="w-6 h-6 text-neutral-600" />
               </div>
-              <h3 className="font-bold text-neutral-600">Traditional</h3>
+              <h3 className="font-bold text-neutral-600 text-sm">Traditional</h3>
             </div>
           </div>
 
@@ -77,35 +77,28 @@ const Comparison: React.FC = () => {
               return (
                 <div
                   key={index}
-                  className="grid grid-cols-3 items-center text-center gap-2 sm:gap-4 py-4 border-t first:border-t-0 text-xs sm:text-base"
+                  className="grid grid-cols-3 items-center gap-4 py-3 border-t first:border-t-0"
                 >
                   {/* Feature */}
-                  <div className="flex items-center justify-center sm:justify-start space-x-1 sm:space-x-2">
-                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary-500" />
-                    <span className="font-medium text-neutral-800">{item.feature}</span>
+                  <div className="flex items-center space-x-2">
+                    <Icon className="w-4 h-4 text-primary-500" />
+                    <span className="font-medium text-neutral-800 text-sm">{item.feature}</span>
                   </div>
 
                   {/* Kalm */}
-                  <div className="flex items-center justify-center space-x-1 sm:space-x-2">
-                    <Check className="w-4 h-4 sm:w-5 sm:h-5 text-accent-green" />
-                    <span className="text-neutral-700">{item.kalm}</span>
+                  <div className="flex items-center justify-center space-x-2">
+                    <Check className="w-4 h-4 text-accent-green flex-shrink-0" />
+                    <span className="text-neutral-700 text-sm text-center">{item.kalm}</span>
                   </div>
 
                   {/* Traditional */}
-                  <div className="flex items-center justify-center space-x-1 sm:space-x-2">
-                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-accent-orange" />
-                    <span className="text-neutral-700">{item.traditional}</span>
+                  <div className="flex items-center justify-center space-x-2">
+                    <X className="w-4 h-4 text-accent-orange flex-shrink-0" />
+                    <span className="text-neutral-700 text-sm text-center">{item.traditional}</span>
                   </div>
                 </div>
               );
             })}
-          </div>
-
-          {/* CTA */}
-          <div className="mt-10 text-center">
-            <button className="bg-primary-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full hover:bg-primary-600 transition-all duration-300 font-semibold text-sm sm:text-lg shadow-md hover:shadow-lg hover:scale-105">
-              Experience the Difference
-            </button>
           </div>
         </div>
       </div>
