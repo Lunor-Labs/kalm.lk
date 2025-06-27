@@ -32,18 +32,18 @@ const FAQ: React.FC = () => {
   ];
 
   return (
-    <section id="faq" className="py-20 lg:py-32 bg-cream-50">
+    <section id="faq" className="py-12 lg:py-16 bg-cream-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold text-neutral-800 mb-6">
+        <div className="text-center mb-12">
+          <h2 className="text-2xl lg:text-3xl font-bold text-neutral-800 mb-4">
             Frequently Asked Questions
           </h2>
-          <p className="text-lg lg:text-xl text-neutral-600 leading-relaxed">
+          <p className="text-base lg:text-lg text-neutral-600 leading-relaxed">
             Get answers to common questions about our platform and services.
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {faqs.map((faq, index) => (
             <div
               key={index}
@@ -51,23 +51,23 @@ const FAQ: React.FC = () => {
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-cream-50 rounded-2xl transition-colors duration-200"
+                className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-cream-50 rounded-2xl transition-colors duration-200"
               >
-                <h3 className="text-lg font-semibold text-neutral-800 pr-4">
+                <h3 className="text-base font-semibold text-neutral-800 pr-4">
                   {faq.question}
                 </h3>
                 <div className="flex-shrink-0">
                   {openIndex === index ? (
-                    <Minus className="w-5 h-5 text-primary-500" />
+                    <Minus className="w-4 h-4 text-primary-500" />
                   ) : (
-                    <Plus className="w-5 h-5 text-neutral-400" />
+                    <Plus className="w-4 h-4 text-neutral-400" />
                   )}
                 </div>
               </button>
               
               {openIndex === index && (
-                <div className="px-8 pb-6">
-                  <p className="text-neutral-600 leading-relaxed">
+                <div className="px-6 pb-4 bg-neutral-50 rounded-b-2xl">
+                  <p className="text-neutral-600 leading-relaxed text-sm">
                     {faq.answer}
                   </p>
                 </div>
@@ -76,11 +76,11 @@ const FAQ: React.FC = () => {
           ))}
         </div>
 
-        <div className="text-center mt-12">
-          <p className="text-neutral-600 mb-4">
+        <div className="text-center mt-8">
+          <p className="text-neutral-600 mb-3 text-sm">
             Still have questions?
           </p>
-          <button className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200">
+          <button className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200 text-sm">
             Contact our support team
           </button>
         </div>
