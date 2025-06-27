@@ -51,7 +51,7 @@ const FAQ: React.FC = () => {
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-cream-50 rounded-2xl transition-colors duration-200"
+                className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-neutral-200 rounded-2xl transition-colors duration-200"
               >
                 <h3 className="text-base font-semibold text-neutral-800 pr-4">
                   {faq.question}
