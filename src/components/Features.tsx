@@ -42,30 +42,30 @@ const Features: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 lg:py-32 bg-cream-50">
+    <section className="py-12 lg:py-16 bg-cream-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold text-neutral-800 mb-6">
+        <div className="text-center mb-12">
+          <h2 className="text-2xl lg:text-3xl font-bold text-neutral-800 mb-4">
             Why Choose Kalm?
           </h2>
-          <p className="text-lg lg:text-xl text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base lg:text-lg text-neutral-600 max-w-3xl mx-auto leading-relaxed">
             We've built a platform that puts your comfort, privacy, and convenience first.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+              className="group bg-white p-6 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
             >
-              <div className={`w-16 h-16 ${feature.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                <feature.icon className="w-8 h-8" />
+              <div className={`w-12 h-12 ${feature.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                <feature.icon className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-semibold text-neutral-800 mb-4">
+              <h3 className="text-lg font-semibold text-neutral-800 mb-3">
                 {feature.title}
               </h3>
-              <p className="text-neutral-600 leading-relaxed">
+              <p className="text-neutral-600 leading-relaxed text-sm">
                 {feature.description}
               </p>
             </div>
