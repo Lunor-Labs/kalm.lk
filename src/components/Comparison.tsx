@@ -8,30 +8,40 @@ const Comparison: React.FC = () => {
       kalm: '24/7 online access',
       traditional: 'Limited office hours',
       kalmIcon: Clock,
+      kalmPositive: true,
+      traditionalPositive: false,
     },
     {
       feature: 'Location',
       kalm: 'Anywhere with internet',
       traditional: 'Must travel to office',
       kalmIcon: MapPin,
+      kalmPositive: true,
+      traditionalPositive: false,
     },
     {
       feature: 'Privacy',
       kalm: 'Complete anonymity',
       traditional: 'Public waiting rooms',
       kalmIcon: Shield,
+      kalmPositive: true,
+      traditionalPositive: false,
     },
     {
       feature: 'Cost',
       kalm: 'Affordable pricing',
       traditional: 'Higher consultation fees',
       kalmIcon: CreditCard,
+      kalmPositive: true,
+      traditionalPositive: false,
     },
     {
       feature: 'Therapist Choice',
       kalm: 'Wide selection available',
       traditional: 'Limited local options',
       kalmIcon: Check,
+      kalmPositive: true,
+      traditionalPositive: false,
     },
   ];
 
@@ -50,12 +60,13 @@ const Comparison: React.FC = () => {
 
         {/* Table-like structure */}
         <div className="bg-cream-50 rounded-3xl p-6 md:p-8 shadow-sm overflow-hidden">
+          {/* Column Headers */}
           <div className="grid grid-cols-3 text-center items-center mb-6 gap-4">
             <div></div>
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center mb-2">
                 <img
-                  src="/logo icon (1).jpg"
+                  src="/kalm.lk/logo icon (1).jpg"
                   alt="Kalm"
                   className="w-6 h-6 rounded-lg"
                 />
@@ -70,7 +81,7 @@ const Comparison: React.FC = () => {
             </div>
           </div>
 
-          {/* Comparisons */}
+          {/* Rows */}
           <div className="space-y-4">
             {comparisons.map((item, index) => {
               const Icon = item.kalmIcon;
@@ -86,15 +97,23 @@ const Comparison: React.FC = () => {
                   </div>
 
                   {/* Kalm */}
-                  <div className="flex items-center justify-center space-x-2">
-                    <Check className="w-4 h-4 text-accent-green flex-shrink-0" />
-                    <span className="text-neutral-700 text-sm text-center">{item.kalm}</span>
+                  <div className="flex items-center justify-center text-center flex-col gap-1">
+                    {item.kalmPositive ? (
+                      <Check className="w-4 h-4 text-accent-green" />
+                    ) : (
+                      <X className="w-4 h-4 text-accent-orange" />
+                    )}
+                    <span className="text-neutral-700 text-sm">{item.kalm}</span>
                   </div>
 
                   {/* Traditional */}
-                  <div className="flex items-center justify-center space-x-2">
-                    <X className="w-4 h-4 text-accent-orange flex-shrink-0" />
-                    <span className="text-neutral-700 text-sm text-center">{item.traditional}</span>
+                  <div className="flex items-center justify-center text-center flex-col gap-1">
+                    {item.traditionalPositive ? (
+                      <Check className="w-4 h-4 text-accent-green" />
+                    ) : (
+                      <X className="w-4 h-4 text-accent-orange" />
+                    )}
+                    <span className="text-neutral-700 text-sm">{item.traditional}</span>
                   </div>
                 </div>
               );
