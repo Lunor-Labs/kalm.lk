@@ -42,13 +42,13 @@ const Features: React.FC = () => {
   ];
 
   return (
-    <section className="py-12 lg:py-16 bg-cream-200">
+    <section className="py-12 lg:py-16 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-2xl lg:text-3xl font-bold text-neutral-800 mb-4">
+          <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4">
             Why Choose Kalm?
           </h2>
-          <p className="text-base lg:text-lg text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base lg:text-lg text-white max-w-3xl mx-auto leading-relaxed">
             We've built a platform that puts your comfort, privacy, and convenience first.
           </p>
         </div>
