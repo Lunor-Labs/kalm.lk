@@ -1,50 +1,55 @@
-import React from 'react';
-import { Users, User, Heart, Rainbow } from 'lucide-react';
+import React from "react";
+import { Users, User, Heart, Rainbow } from "lucide-react";
 
 const Services: React.FC = () => {
   const services = [
     {
       icon: Users,
-      title: 'TEENS',
-      subtitle: '(13-17)',
-      description: 'Specialized support for teenagers navigating adolescence, school stress, and identity.',
-      color: 'from-primary-500 to-primary-600'
+      title: "TEENS",
+      subtitle: "(13-17)",
+      description:
+        "Specialized support for teenagers navigating adolescence, school stress, and identity.",
+      color: "from-primary-500 to-primary-600",
     },
     {
       icon: User,
-      title: 'INDIVIDUALS',
-      subtitle: '(18+)',
-      description: 'Personal therapy for adults dealing with anxiety, depression, and life challenges.',
-      color: 'from-accent-green to-primary-500'
+      title: "INDIVIDUALS",
+      subtitle: "(18+)",
+      description:
+        "Personal therapy for adults dealing with anxiety, depression, and life challenges.",
+      color: "from-accent-green to-primary-500",
     },
     {
       icon: Heart,
-      title: 'FAMILY & COUPLES',
-      subtitle: '(FOR US)',
-      description: 'Relationship counseling and family therapy to strengthen bonds and communication.',
-      color: 'from-accent-pink to-accent-orange'
+      title: "FAMILY & COUPLES",
+      subtitle: "(FOR US)",
+      description:
+        "Relationship counseling and family therapy to strengthen bonds and communication.",
+      color: "from-accent-pink to-accent-orange",
     },
     {
       icon: Rainbow,
-      title: 'LGBTQIA+',
-      subtitle: '',
-      description: 'Affirming and inclusive therapy for LGBTQIA+ individuals and couples.',
-      color: 'from-accent-yellow to-accent-orange'
-    }
+      title: "LGBTQIA+",
+      subtitle: "",
+      description:
+        "Affirming and inclusive therapy for LGBTQIA+ individuals and couples.",
+      color: "from-accent-yellow to-accent-orange",
+    },
   ];
 
   return (
     <section id="services" className="py-8 lg:py-12 bg-neutral-900 relative">
       {/* Grain texture overlay */}
       <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2247%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-8">
           <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4">
             Key Services
           </h2>
           <p className="text-base lg:text-lg text-neutral-300 max-w-3xl mx-auto leading-relaxed">
-            We provide specialized support for a wide range of mental health concerns.
+            We provide specialized support for a wide range of mental health
+            concerns.
           </p>
         </div>
 
@@ -52,33 +57,50 @@ const Services: React.FC = () => {
           {services.map((service, index) => (
             <div
               key={index}
-              className="group relative bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-neutral-800"
+              className="group relative bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-neutral-800 flex flex-col"
             >
               <div className="relative h-32 overflow-hidden">
-                <div className={`absolute inset-0 bg-gradient-to-t ${service.color} opacity-90`}></div>
+                <div
+                  className={`absolute inset-0 bg-gradient-to-t ${service.color} opacity-90`}
+                ></div>
                 <div className="absolute top-4 left-4">
                   <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
                     <service.icon className="w-5 h-5 text-white" />
                   </div>
                 </div>
               </div>
-              
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-1">
-                  {service.title}
-                </h3>
-                {service.subtitle && (
-                  <p className="text-sm text-primary-500 font-medium mb-3">
-                    {service.subtitle}
+
+              {/* FLEX container for content and button spacing */}
+              <div className="p-6 flex flex-col justify-between flex-1">
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-1">
+                    {service.title}
+                  </h3>
+                  {service.subtitle && (
+                    <p className="text-sm text-primary-500 font-medium mb-3">
+                      {service.subtitle}
+                    </p>
+                  )}
+                  <p className="text-neutral-300 leading-relaxed text-sm mb-4">
+                    {service.description}
                   </p>
-                )}
-                <p className="text-neutral-300 leading-relaxed text-sm mb-4">
-                  {service.description}
-                </p>
-                <button className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200 flex items-center space-x-2 group text-sm">
+                </div>
+
+                {/* Button always at the bottom */}
+                <button className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200 flex items-center space-x-2 group text-sm mt-auto">
                   <span>Get Started</span>
-                  <svg className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg
+                    className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </button>
               </div>
