@@ -1,127 +1,158 @@
 import React from 'react';
-import { Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { Instagram, Mail, Phone, MapPin, Facebook, Youtube } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-neutral-800 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Brand */}
+    <footer className="bg-black text-white relative">
+      {/* Grain texture overlay */}
+      <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2247%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+        <div className="grid md:grid-cols-2 lg:grid-cols-[4fr_1fr_2fr_2fr_2fr] gap-8">
+          {/* Brand - Takes more space with larger gap after */}
           <div className="lg:col-span-1">
-            <div className="flex items-center space-x-3 mb-6">
+            <div className="flex items-center space-x-2 mb-4">
               <img 
-                src="/kalm.lk/logo icon (1).jpg" 
+                src="/kalm.lk/logo.jpg" 
                 alt="Kalm Logo" 
-                className="w-10 h-10 rounded-lg"
+                className="w-8 h-8 rounded-lg"
               />
-              <span className="text-2xl font-bold">kalm.lk</span>
+              <span className="text-xl font-bold">kalm.lk</span>
             </div>
-            <p className="text-neutral-300 leading-relaxed mb-6">
+            <p className="text-neutral-400 leading-relaxed mb-6 text-sm">
               For the thoughts you've never told anyone. Professional mental health support, 
               accessible and private.
             </p>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <a
                 href="#"
-                className="w-10 h-10 bg-neutral-700 rounded-lg flex items-center justify-center hover:bg-primary-500 transition-colors duration-200"
+                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-primary-500 transition-colors duration-200"
+                aria-label="Follow us on Instagram"
               >
-                <Instagram className="w-5 h-5" />
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a
+                href="#"
+                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200"
+                aria-label="Follow us on Facebook"
+              >
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a
+                href="#"
+                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                aria-label="Subscribe to our YouTube channel"
+              >
+                <Youtube className="w-4 h-4" />
+              </a>
+              <a
+                href="#"
+                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors duration-200"
+                aria-label="Follow us on TikTok"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                </svg>
               </a>
               <a
                 href="mailto:hello@kalm.lk"
-                className="w-10 h-10 bg-neutral-700 rounded-lg flex items-center justify-center hover:bg-primary-500 transition-colors duration-200"
+                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-primary-500 transition-colors duration-200"
+                aria-label="Email us"
               >
-                <Mail className="w-5 h-5" />
+                <Mail className="w-4 h-4" />
               </a>
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-lg font-semibold mb-6">Quick Links</h4>
-            <ul className="space-y-3">
+          {/* Spacer column for larger gap */}
+          <div className="lg:col-span-1 hidden lg:block"></div>
+
+          {/* Quick Links - Similar spacing to other sections */}
+          <div className="lg:col-span-1">
+            <h4 className="text-base font-semibold mb-4">Quick Links</h4>
+            <ul className="space-y-2">
               <li>
-                <a href="#about" className="text-neutral-300 hover:text-white transition-colors duration-200">
+                <a href="#about" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
                   About Us
                 </a>
               </li>
               <li>
-                <a href="#services" className="text-neutral-300 hover:text-white transition-colors duration-200">
+                <a href="#services" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
                   Services
                 </a>
               </li>
               <li>
-                <a href="#therapists" className="text-neutral-300 hover:text-white transition-colors duration-200">
+                <a href="#therapists" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
                   Our Therapists
                 </a>
               </li>
               <li>
-                <a href="#faq" className="text-neutral-300 hover:text-white transition-colors duration-200">
+                <a href="#faq" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
                   FAQ
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Legal */}
-          <div>
-            <h4 className="text-lg font-semibold mb-6">Legal</h4>
-            <ul className="space-y-3">
+          {/* Legal - Similar spacing to other sections */}
+          <div className="lg:col-span-1">
+            <h4 className="text-base font-semibold mb-4">Legal</h4>
+            <ul className="space-y-2">
               <li>
-                <a href="#" className="text-neutral-300 hover:text-white transition-colors duration-200">
+                <a href="#" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
                   Privacy Policy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-neutral-300 hover:text-white transition-colors duration-200">
+                <a href="#" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
                   Terms of Service
                 </a>
               </li>
               <li>
-                <a href="#" className="text-neutral-300 hover:text-white transition-colors duration-200">
+                <a href="#" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
                   Cookie Policy
                 </a>
               </li>
               <li>
-                <a href="#" className="text-neutral-300 hover:text-white transition-colors duration-200">
+                <a href="#" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
                   Disclaimer
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Contact */}
-          <div>
-            <h4 className="text-lg font-semibold mb-6">Contact</h4>
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <Mail className="w-5 h-5 text-primary-500 mt-0.5" />
+          {/* Contact - Similar spacing to other sections */}
+          <div className="lg:col-span-1">
+            <h4 className="text-base font-semibold mb-4">Contact</h4>
+            <div className="space-y-3">
+              <div className="flex items-start space-x-2">
+                <Mail className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-neutral-300">hello@kalm.lk</p>
+                  <p className="text-neutral-400 text-sm">hello@kalm.lk</p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3">
-                <Phone className="w-5 h-5 text-primary-500 mt-0.5" />
+              <div className="flex items-start space-x-2">
+                <Phone className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-neutral-300">+94 77 123 4567</p>
+                  <p className="text-neutral-400 text-sm">+94 77 123 4567</p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-primary-500 mt-0.5" />
+              <div className="flex items-start space-x-2">
+                <MapPin className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-neutral-300">Colombo, Sri Lanka</p>
+                  <p className="text-neutral-400 text-sm">Colombo, Sri Lanka</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-neutral-700 mt-12 pt-8">
+        <div className="border-t border-neutral-800 mt-8 pt-6">
           <div className="flex flex-col md:flex-row items-center justify-between">
-            <p className="text-neutral-400 text-sm">
+            <p className="text-neutral-500 text-xs">
               © 2024 Kalm.lk. All rights reserved.
             </p>
-            <p className="text-neutral-400 text-sm mt-4 md:mt-0">
+            <p className="text-neutral-500 text-xs mt-2 md:mt-0">
               Made with ❤️ for mental wellness in Sri Lanka
             </p>
           </div>
