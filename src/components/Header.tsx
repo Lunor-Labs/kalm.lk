@@ -64,11 +64,14 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden lg:flex items-center space-x-4 flex-shrink-0 w-64 justify-end">
-            <button className={`flex items-center space-x-2 hover:text-primary-600 transition-colors duration-200 font-medium text-sm px-4 py-2 rounded-lg ${
-              isScrolled 
-                ? 'text-primary-500 hover:bg-primary-50/10' 
-                : 'text-white hover:bg-white/10'
-            }`}>
+            <button
+              className={`flex items-center space-x-2 hover:text-primary-600 transition-colors duration-200 font-medium text-sm px-4 py-2 rounded-lg ${
+                isScrolled 
+                  ? 'text-primary-500 hover:bg-primary-50/10' 
+                  : 'text-white hover:bg-white/10'
+              }`}
+              style={{ whiteSpace: 'nowrap' }}
+            >
               <Phone className="w-4 h-4" />
               <span>Call Us</span>
             </button>
