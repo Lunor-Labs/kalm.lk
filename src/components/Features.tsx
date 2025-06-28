@@ -42,7 +42,7 @@ const Features: React.FC = () => {
   ];
 
   return (
-    <section className="py-12 lg:py-16 bg-cream-50">
+    <section className="py-12 lg:py-16 bg-cream-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-2xl lg:text-3xl font-bold text-neutral-800 mb-4">
