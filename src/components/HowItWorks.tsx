@@ -37,7 +37,7 @@ const HowItWorks: React.FC = () => {
 
   return (
     <section id="how-it-works" className="py-8 lg:py-12 bg-cream-50 relative">
-       <div className="absolute inset-0 bg-black/10 pointer-events-none z-0"></div>
+      <div className="absolute inset-0 bg-black/10 pointer-events-none z-0"></div>
       {/* Subtle grain texture overlay for cream background */}
       <div className="absolute inset-0 opacity-5 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23000000%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2247%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
       
@@ -54,12 +54,7 @@ const HowItWorks: React.FC = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-8">
           {steps.map((step, index) => (
             <div key={index} className="relative text-center group">
-              {/* Connection Line */}
-              {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-10 left-full w-full h-0.5 bg-neutral-200 transform translate-x-4 -translate-y-1/2 z-0">
-                  <div className="absolute inset-0 bg-gradient-to-r from-neutral-200 to-primary-500/30"></div>
-                </div>
-              )}
+              {/* Removed all connection lines by deleting this block */}
               
               <div className="relative z-10">
                 <div className={`w-20 h-20 ${step.color} rounded-3xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-lg`}>
