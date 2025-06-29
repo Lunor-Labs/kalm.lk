@@ -55,16 +55,19 @@ const HowItWorks: React.FC = () => {
           {steps.map((step, index) => (
             <div key={index} className="relative text-center group">
               <div className="relative z-10">
-                <div className={`w-20 h-20 ${step.color} rounded-3xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-lg`}>
-                  <step.icon className="w-8 h-8 text-white" />
-                </div>
-                
-                <div className="absolute top-[-1.7rem] left-1/2 -translate-x-1/2 sm:-top-1 sm:right-[-0.25rem] sm:left-auto sm:translate-x-0 w-6 h-6 bg-cream-50 border-2 border-neutral-200 rounded-full flex items-center justify-center text-xs font-bold text-neutral-800 shadow-md">
+                {/* Mobile: Number on top with gap, Desktop: Number in bottom-right corner */}
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 lg:-top-1 lg:-right-1 lg:translate-x-0 lg:left-auto w-6 h-6 bg-cream-50 border-2 border-neutral-200 rounded-full flex items-center justify-center text-xs font-bold text-neutral-800 shadow-md">
                   {index + 1}
                 </div>
+        
+                {/* Added mt-6 on mobile and lg:mt-0 to remove it on desktop */}
+                <div className={`w-20 h-20 ${step.color} rounded-3xl flex items-center justify-center mx-auto mb-4 mt-6 lg:mt-0 group-hover:scale-110 transition-all duration-300 shadow-lg`}>
+                  <step.icon className="w-8 h-8 text-white" />
+                </div>
               </div>
-
-              <h3 className="text-lg font-semibold text-neutral-800 mb-3">
+        
+              {/* Mobile: Add top margin to create space between number and title, Desktop: Keep original spacing */}
+              <h3 className="text-lg font-semibold text-neutral-800 mb-4 mt-8 lg:mt-0">
                 {step.title}
               </h3>
               <p className="text-neutral-600 leading-relaxed text-sm">
