@@ -2,7 +2,7 @@ import React from 'react';
 import { User, UserCheck, Shield, Check, X } from 'lucide-react';
 
 interface HeroProps {
-  onOpenAuth: (mode: 'login' | 'signup') => void;
+  onOpenAuth: (mode: 'login' | 'signup' | 'anonymous') => void;
 }
 
 const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
@@ -95,14 +95,14 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
                   </button>
                 </div>
 
-                {/* Guest Account */}
+                {/* Anonymous Account */}
                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-200">
                   <div className="flex items-center space-x-3 mb-4">
                     <div className="w-10 h-10 bg-accent-green/20 rounded-xl flex items-center justify-center">
                       <UserCheck className="w-5 h-5 text-accent-green" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white">Guest Account</h3>
+                      <h3 className="font-semibold text-white">Anonymous Account</h3>
                       <p className="text-white/70 text-sm">Privacy-first</p>
                     </div>
                   </div>
@@ -121,7 +121,7 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
                   </div>
                   
                   <button
-                    onClick={() => onOpenAuth('signup')}
+                    onClick={() => onOpenAuth('anonymous')}
                     className="w-full bg-accent-green hover:bg-accent-green/90 text-white py-2.5 rounded-xl font-medium text-sm transition-colors duration-200"
                   >
                     Join Anonymously
@@ -133,7 +133,7 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
               <div className="flex items-center justify-center space-x-2 text-center">
                 <Shield className="w-4 h-4 text-primary-500 flex-shrink-0" />
                 <p className="text-white/70 text-xs">
-                  You can upgrade from guest to regular account anytime
+                  You can upgrade from anonymous to regular account anytime
                 </p>
               </div>
             </div>
@@ -151,28 +151,25 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
             </div>
           </div>
 
-          {/* Video Section - Now on the right */}
+          {/* Video Section - Fixed zoom issue by removing hover scale effects */}
           <div className="relative animate-fade-in order-2 lg:order-2">
-            <div className="relative z-10 rounded-3xl shadow-2xl overflow-hidden border-2 border-white/20">
+            <div className="relative z-10 rounded-2xl shadow-2xl overflow-hidden border border-white/30">
               <video
                 autoPlay
                 muted
                 loop
                 playsInline
-                className="w-full h-72 lg:h-96 object-cover"
+                className="w-full h-64 lg:h-80 object-cover"
               >
                 <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
                 {/* Fallback image if video doesn't load */}
                 <img
                   src="https://images.pexels.com/photos/7176319/pexels-photo-7176319.jpeg?auto=compress&cs=tinysrgb&w=800"
                   alt="Mental wellness consultation"
-                  className="w-full h-72 lg:h-96 object-cover"
+                  className="w-full h-64 lg:h-80 object-cover"
                 />
               </video>
             </div>
-            
-            {/* Background Decoration */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-accent-green/20 rounded-3xl transform rotate-3 -z-10"></div>
           </div>
         </div>
       </div>
