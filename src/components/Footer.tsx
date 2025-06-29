@@ -150,10 +150,13 @@ const Footer: React.FC = () => {
         <div className="border-t border-neutral-800 mt-8 pt-6">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <p className="text-neutral-500 text-xs">
-              © 2024 Kalm.lk. All rights reserved.
+              © 2024 Kalm.lk. All rights reserved. 
             </p>
             <p className="text-neutral-500 text-xs mt-2 md:mt-0">
               Made with ❤️ for mental wellness in Sri Lanka
+            </p>
+            <p className="text-neutral-500 text-xs mt-2 md:mt-0">
+    Developed by <a href="https://www.lunorlabs.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-700">Lunor Labs</a>
             </p>
           </div>
         </div>
