@@ -12,15 +12,32 @@ import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import WhatsAppFloat from './components/WhatsAppFloat';
 import AuthModal from './components/AuthModal';
+import TherapistListing from './components/TherapistListing';
 
 function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = React.useState(false);
-  const [authMode, setAuthMode] = React.useState<'login' | 'signup'>('login');
+  const [authMode, setAuthMode] = React.useState<'login' | 'signup' | 'anonymous'>('login');
+  const [currentView, setCurrentView] = React.useState<'home' | 'therapists'>('home');
+  const [serviceFilter, setServiceFilter] = React.useState<string | undefined>(undefined);
 
-  const openAuthModal = (mode: 'login' | 'signup') => {
+  const openAuthModal = (mode: 'login' | 'signup' | 'anonymous') => {
     setAuthMode(mode);
     setIsAuthModalOpen(true);
   };
+
+  const openTherapistListing = (serviceCategory?: string) => {
+    setServiceFilter(serviceCategory);
+    setCurrentView('therapists');
+  };
+
+  const backToHome = () => {
+    setCurrentView('home');
+    setServiceFilter(undefined);
+  };
+
+  if (currentView === 'therapists') {
+    return <TherapistListing onBack={backToHome} initialFilter={serviceFilter} />;
+  }
 
   return (
     <div className="min-h-screen bg-cream-50">
@@ -29,9 +46,9 @@ function App() {
       <About />
       <Features />
       <HowItWorks />
-      <Services />
+      <Services onViewAllTherapists={openTherapistListing} />
       <Comparison />
-      <Therapists />
+      <Therapists onViewAllTherapists={openTherapistListing} />
       <Testimonials />
       <FAQ />
       <Footer />
