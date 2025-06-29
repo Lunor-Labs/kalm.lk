@@ -58,81 +58,82 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
 
               {/* Account Type Comparison - Compact Version */}
               <div className="mb-8">
-                <h2 className="text-xl font-semibold text-white mb-6 text-center lg:text-left">
+                <h2 className="text-xl font-semibold text-white mb-6 text-center">
                   Choose How You Want to Join
                 </h2>
                 
                 <div className="grid md:grid-cols-2 gap-4 mb-6">
                   {/* Regular Account */}
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-200">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-10 h-10 bg-primary-500/20 rounded-xl flex items-center justify-center">
-                        <User className="w-5 h-5 text-primary-500" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-white">Regular Account</h3>
-                        <p className="text-white/70 text-sm">Full features</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2 mb-4">
-                      {comparisonFeatures.slice(0, 2).map((item, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          {item.regular.hasFeature ? (
-                            <Check className="w-3 h-3 text-accent-green flex-shrink-0" />
-                          ) : (
-                            <X className="w-3 h-3 text-neutral-400 flex-shrink-0" />
-                          )}
-                          <span className="text-white/80 text-xs">{item.regular.text}</span>
+                      {/* Regular Account */}
+                      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-200">
+                        <div className="flex flex-col items-center text-center md:flex-row md:items-start md:text-left space-x-0 md:space-x-3 mb-4">
+                          <div className="w-10 h-10 bg-primary-500/20 rounded-xl flex items-center justify-center mb-2 md:mb-0">
+                            <User className="w-5 h-5 text-primary-500" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-white">Regular Account</h3>
+                            <p className="text-white/70 text-sm">Full features</p>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                    
-                    <button
-                      onClick={() => onOpenAuth('signup')}
-                      className="w-full bg-primary-500 hover:bg-primary-600 text-white py-2.5 rounded-xl font-medium text-sm transition-colors duration-200"
-                    >
-                      Sign Up
-                    </button>
-                  </div>
+                        
+                        <div className="space-y-2 mb-4">
+                          {comparisonFeatures.slice(0, 2).map((item, index) => (
+                            <div key={index} className="flex items-center justify-center md:justify-start space-x-2">
+                              {item.regular.hasFeature ? (
+                                <Check className="w-3 h-3 text-accent-green flex-shrink-0" />
+                              ) : (
+                                <X className="w-3 h-3 text-neutral-400 flex-shrink-0" />
+                              )}
+                              <span className="text-white/80 text-xs text-center md:text-left">{item.regular.text}</span>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <button
+                          onClick={() => onOpenAuth('signup')}
+                          className="w-full bg-primary-500 hover:bg-primary-600 text-white py-2.5 rounded-xl font-medium text-sm transition-colors duration-200"
+                        >
+                          Sign Up
+                        </button>
+                      </div>
 
-                  {/* Anonymous Account */}
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-200">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-10 h-10 bg-accent-green/20 rounded-xl flex items-center justify-center">
-                        <UserCheck className="w-5 h-5 text-accent-green" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-white">Anonymous Account</h3>
-                        <p className="text-white/70 text-sm">Privacy-first</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2 mb-4">
-                      {comparisonFeatures.slice(0, 2).map((item, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          {item.guest.hasFeature ? (
-                            <Check className="w-3 h-3 text-accent-green flex-shrink-0" />
-                          ) : (
-                            <X className="w-3 h-3 text-neutral-400 flex-shrink-0" />
-                          )}
-                          <span className="text-white/80 text-xs">{item.guest.text}</span>
+                      {/* Anonymous Account */}
+                      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-200">
+                        <div className="flex flex-col items-center text-center md:flex-row md:items-start md:text-left space-x-0 md:space-x-3 mb-4">
+                          <div className="w-10 h-10 bg-accent-green/20 rounded-xl flex items-center justify-center mb-2 md:mb-0">
+                            <UserCheck className="w-5 h-5 text-accent-green" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-white">Anonymous Account</h3>
+                            <p className="text-white/70 text-sm">Privacy-first</p>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                    
-                    <button
-                      onClick={() => onOpenAuth('anonymous')}
-                      className="w-full bg-accent-green hover:bg-accent-green/90 text-white py-2.5 rounded-xl font-medium text-sm transition-colors duration-200"
-                    >
-                      Join Anonymously
-                    </button>
-                  </div>
+                        
+                        <div className="space-y-2 mb-4">
+                          {comparisonFeatures.slice(0, 2).map((item, index) => (
+                            <div key={index} className="flex items-center justify-center md:justify-start space-x-2">
+                              {item.guest.hasFeature ? (
+                                <Check className="w-3 h-3 text-accent-green flex-shrink-0" />
+                              ) : (
+                                <X className="w-3 h-3 text-neutral-400 flex-shrink-0" />
+                              )}
+                              <span className="text-white/80 text-xs text-center md:text-left">{item.guest.text}</span>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <button
+                          onClick={() => onOpenAuth('anonymous')}
+                          className="w-full bg-accent-green hover:bg-accent-green/90 text-white py-2.5 rounded-xl font-medium text-sm transition-colors duration-200"
+                        >
+                          Join Anonymously
+                        </button>
+                      </div>
                 </div>
 
                 {/* Privacy Note */}
-                <div className="flex items-center justify-center space-x-2 text-center">
-                  <Shield className="w-4 h-4 text-primary-500 flex-shrink-0" />
+                <div className="flex flex-col items-center text-center md:flex-row md:justify-center space-x-0 md:space-x-2">
+                  <Shield className="w-4 h-4 text-primary-500 flex-shrink-0 mb-1 md:mb-0" />
                   <p className="text-white/70 text-xs">
                     You can upgrade from anonymous to regular account anytime
                   </p>
@@ -140,12 +141,12 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
               </div>
 
               {/* Stats - Now only 2 stats, arranged nicely */}
-              <div className="grid grid-cols-2 gap-8 pt-6 border-t border-white/20 max-w-md mx-auto lg:mx-0">
-                <div className="text-center lg:text-left">
+              <div className="grid grid-cols-2 gap-8 pt-6 border-t border-white/20 max-w-md mx-auto">
+                <div className="text-center">
                   <div className="text-2xl lg:text-3xl font-bold text-primary-500 mb-2">500+</div>
                   <div className="text-sm text-white/80">Happy Clients</div>
                 </div>
-                <div className="text-center lg:text-left">
+                <div className="text-center">
                   <div className="text-2xl lg:text-3xl font-bold text-primary-500 mb-2">50+</div>
                   <div className="text-sm text-white/80">Licensed Therapists</div>
                 </div>
