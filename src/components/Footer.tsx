@@ -25,28 +25,28 @@ const Footer: React.FC = () => {
             </p>
             <div className="flex items-center space-x-3">
               <a
-                href="#"
+                href="https://www.instagram.com/kalm_lk?igsh=dHJ1YWExNDg1Mmpz"
                 className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-primary-500 transition-colors duration-200"
                 aria-label="Follow us on Instagram"
               >
                 <Instagram className="w-4 h-4" />
               </a>
               <a
-                href="#"
+                href="https://www.facebook.com/share/1UrHxB76WN/?mibextid=wwXIfr"
                 className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200"
                 aria-label="Follow us on Facebook"
               >
                 <Facebook className="w-4 h-4" />
               </a>
               <a
-                href="#"
+                href="https://youtube.com/@kalm_lkpodcast?si=QvVJa8eYRfSqNr2h"
                 className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
                 aria-label="Subscribe to our YouTube channel"
               >
                 <Youtube className="w-4 h-4" />
               </a>
               <a
-                href="#"
+                href="https://vt.tiktok.com/ZSkySoCwe/"
                 className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors duration-200"
                 aria-label="Follow us on TikTok"
               >
@@ -134,7 +134,7 @@ const Footer: React.FC = () => {
               <div className="flex items-start space-x-2">
                 <Phone className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-neutral-400 text-sm">+94 77 123 4567</p>
+                  <p className="text-neutral-400 text-sm">+94 (76) 633 0360</p>
                 </div>
               </div>
               <div className="flex items-start space-x-2">

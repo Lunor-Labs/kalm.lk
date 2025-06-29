@@ -25,8 +25,8 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
     { label: 'FAQ', href: '#faq' },
   ];
 
-  const phoneNumber = '+94 7 345 567';
-  const phoneNumberForCall = '+94734556789'; // Without spaces for tel: link
+  const phoneNumber = '+94 (76) 633 0360';
+  const phoneNumberForCall = '+94766330360'; // Without spaces for tel: link
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
