@@ -1,10 +1,34 @@
 import React from 'react';
+import { User, UserCheck, Shield, Check, X } from 'lucide-react';
 
 interface HeroProps {
   onOpenAuth: (mode: 'login' | 'signup') => void;
 }
 
 const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
+  const comparisonFeatures = [
+    {
+      feature: 'Setup',
+      regular: { text: 'Email & secure account', hasFeature: true },
+      guest: { text: 'No personal info needed', hasFeature: true }
+    },
+    {
+      feature: 'Chat History',
+      regular: { text: 'Saved & accessible', hasFeature: true },
+      guest: { text: 'Session-based only', hasFeature: false }
+    },
+    {
+      feature: 'Reminders',
+      regular: { text: 'Email updates & alerts', hasFeature: true },
+      guest: { text: 'No follow-ups', hasFeature: false }
+    },
+    {
+      feature: 'Privacy',
+      regular: { text: 'Private & secure', hasFeature: true },
+      guest: { text: 'Fully anonymous', hasFeature: true }
+    }
+  ];
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-neutral-900">
       {/* Grain texture overlay */}
@@ -31,39 +55,118 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
               Your mental wellness journey starts here.
             </p>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-6 border-t border-white/20">
+            {/* Account Type Comparison - Compact Version */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-white mb-6 text-center lg:text-left">
+                Choose How You Want to Join
+              </h2>
+              
+              <div className="grid md:grid-cols-2 gap-4 mb-6">
+                {/* Regular Account */}
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-200">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-primary-500/20 rounded-xl flex items-center justify-center">
+                      <User className="w-5 h-5 text-primary-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">Regular Account</h3>
+                      <p className="text-white/70 text-sm">Full features</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 mb-4">
+                    {comparisonFeatures.slice(0, 2).map((item, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        {item.regular.hasFeature ? (
+                          <Check className="w-3 h-3 text-accent-green flex-shrink-0" />
+                        ) : (
+                          <X className="w-3 h-3 text-neutral-400 flex-shrink-0" />
+                        )}
+                        <span className="text-white/80 text-xs">{item.regular.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <button
+                    onClick={() => onOpenAuth('signup')}
+                    className="w-full bg-primary-500 hover:bg-primary-600 text-white py-2.5 rounded-xl font-medium text-sm transition-colors duration-200"
+                  >
+                    Sign Up
+                  </button>
+                </div>
+
+                {/* Guest Account */}
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 hover:bg-white/15 transition-all duration-200">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-accent-green/20 rounded-xl flex items-center justify-center">
+                      <UserCheck className="w-5 h-5 text-accent-green" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">Guest Account</h3>
+                      <p className="text-white/70 text-sm">Privacy-first</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 mb-4">
+                    {comparisonFeatures.slice(0, 2).map((item, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        {item.guest.hasFeature ? (
+                          <Check className="w-3 h-3 text-accent-green flex-shrink-0" />
+                        ) : (
+                          <X className="w-3 h-3 text-neutral-400 flex-shrink-0" />
+                        )}
+                        <span className="text-white/80 text-xs">{item.guest.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <button
+                    onClick={() => onOpenAuth('signup')}
+                    className="w-full bg-accent-green hover:bg-accent-green/90 text-white py-2.5 rounded-xl font-medium text-sm transition-colors duration-200"
+                  >
+                    Join Anonymously
+                  </button>
+                </div>
+              </div>
+
+              {/* Privacy Note */}
+              <div className="flex items-center justify-center space-x-2 text-center">
+                <Shield className="w-4 h-4 text-primary-500 flex-shrink-0" />
+                <p className="text-white/70 text-xs">
+                  You can upgrade from guest to regular account anytime
+                </p>
+              </div>
+            </div>
+
+            {/* Stats - Now only 2 stats, arranged nicely */}
+            <div className="grid grid-cols-2 gap-8 pt-6 border-t border-white/20 max-w-md mx-auto lg:mx-0">
               <div className="text-center lg:text-left">
-                <div className="text-xl lg:text-2xl font-bold text-primary-500 mb-1">500+</div>
-                <div className="text-xs text-white/80">Happy Clients</div>
+                <div className="text-2xl lg:text-3xl font-bold text-primary-500 mb-2">500+</div>
+                <div className="text-sm text-white/80">Happy Clients</div>
               </div>
               <div className="text-center lg:text-left">
-                <div className="text-xl lg:text-2xl font-bold text-primary-500 mb-1">50+</div>
-                <div className="text-xs text-white/80">Licensed Therapists</div>
-              </div>
-              <div className="text-center lg:text-left">
-                <div className="text-xl lg:text-2xl font-bold text-primary-500 mb-1">24/7</div>
-                <div className="text-xs text-white/80">Support Available</div>
+                <div className="text-2xl lg:text-3xl font-bold text-primary-500 mb-2">50+</div>
+                <div className="text-sm text-white/80">Licensed Therapists</div>
               </div>
             </div>
           </div>
 
           {/* Video Section - Now on the right */}
           <div className="relative animate-fade-in order-2 lg:order-2">
-            <div className="relative z-10 bg-white/10 backdrop-blur-sm rounded-3xl shadow-2xl p-6 lg:p-8 overflow-hidden">
+            <div className="relative z-10 rounded-3xl shadow-2xl overflow-hidden border-2 border-white/20">
               <video
                 autoPlay
                 muted
                 loop
                 playsInline
-                className="w-full h-64 lg:h-80 object-cover rounded-2xl"
+                className="w-full h-72 lg:h-96 object-cover"
               >
                 <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
                 {/* Fallback image if video doesn't load */}
                 <img
                   src="https://images.pexels.com/photos/7176319/pexels-photo-7176319.jpeg?auto=compress&cs=tinysrgb&w=800"
                   alt="Mental wellness consultation"
-                  className="w-full h-64 lg:h-80 object-cover rounded-2xl"
+                  className="w-full h-72 lg:h-96 object-cover"
                 />
               </video>
             </div>

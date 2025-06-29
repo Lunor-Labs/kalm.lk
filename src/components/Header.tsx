@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 lg:h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-2 flex-shrink-0 w-40">
+          <div className="flex items-center space-x-2 flex-shrink-0">
             <img 
               src="/kalm.lk/logo.jpg" 
               alt="Kalm Logo" 
@@ -45,7 +45,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             </span>
           </div>
 
-          {/* Desktop Navigation - Centered to align with section titles */}
+          {/* Desktop Navigation - Centered */}
           <nav className="hidden lg:flex items-center justify-center flex-1">
             <div className="flex items-center space-x-10">
               {navItems.map((item) => (
@@ -63,31 +63,24 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
           </nav>
 
           {/* Desktop Auth Buttons */}
-          <div className="hidden lg:flex items-center space-x-4 flex-shrink-0 w-64 justify-end">
-            <button
-              className={`flex items-center space-x-2 hover:text-primary-600 transition-colors duration-200 font-medium text-sm px-4 py-2 rounded-lg ${
-                isScrolled 
-                  ? 'text-primary-500 hover:bg-primary-50/10' 
-                  : 'text-white hover:bg-white/10'
-              }`}
-              style={{ whiteSpace: 'nowrap' }}
-            >
+          <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
+            <button className={`flex items-center space-x-2 hover:text-primary-600 transition-colors duration-200 font-medium text-sm px-4 py-2 rounded-lg ${
+              isScrolled 
+                ? 'text-primary-500 hover:bg-primary-50/10' 
+                : 'text-white hover:bg-white/10'
+            }`}>
               <Phone className="w-4 h-4" />
               <span>Call Us</span>
             </button>
             <button
               onClick={() => onOpenAuth('login')}
-              className={`hover:text-primary-500 transition-colors duration-200 font-medium text-sm px-4 py-2 rounded-lg ${
-                isScrolled ? 'text-neutral-300 hover:bg-neutral-800/50' : 'text-white/90 hover:text-white hover:bg-white/10'
+              className={`transition-colors duration-200 font-medium text-sm px-5 py-2.5 rounded-full ${
+                isScrolled 
+                  ? 'bg-primary-500 text-white hover:bg-primary-600' 
+                  : 'bg-primary-500 text-white hover:bg-primary-600'
               }`}
             >
               Login
-            </button>
-            <button
-              onClick={() => onOpenAuth('signup')}
-              className="bg-primary-500 text-white px-5 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm shadow-md hover:shadow-lg whitespace-nowrap"
-            >
-              Get Started
             </button>
           </div>
 
@@ -128,18 +121,9 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                     onOpenAuth('login');
                     setIsMenuOpen(false);
                   }}
-                  className="block w-full text-left text-neutral-300 hover:text-primary-500 transition-colors duration-200 font-medium py-2 text-sm"
-                >
-                  Login
-                </button>
-                <button
-                  onClick={() => {
-                    onOpenAuth('signup');
-                    setIsMenuOpen(false);
-                  }}
                   className="block w-full bg-primary-500 text-white px-4 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-center text-sm"
                 >
-                  Get Started
+                  Login
                 </button>
               </div>
             </div>
