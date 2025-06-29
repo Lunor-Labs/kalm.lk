@@ -83,9 +83,14 @@ const FAQ: React.FC = () => {
           <p className="text-neutral-400 mb-3 text-sm">
             Still have questions?
           </p>
-          <button className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200 text-sm">
-            Contact our support team
-          </button>
+          <a
+              href="https://wa.me/+94766330360?text=Hi%20Kalm%20Support%2C%20I%20have%20a%20question%20regarding%20your%20services."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200 text-sm"
+            >
+              Contact our support team
+          </a>
         </div>
       </div>
     </section>
