@@ -62,7 +62,8 @@ const Services: React.FC = () => {
               key={index}
               className="group relative bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-neutral-800 flex flex-col"
             >
-              <div className="relative h-32 overflow-hidden">
+              {/* Increased image height from h-32 to h-48 (75% of card) */}
+              <div className="relative h-48 overflow-hidden">
                 <img
                   src={service.image}
                   alt={service.imageAlt}
@@ -73,8 +74,8 @@ const Services: React.FC = () => {
                 ></div>
               </div>
 
-              {/* FLEX container for content and button spacing */}
-              <div className="p-6 flex flex-col justify-between flex-1">
+              {/* Reduced text area padding from p-6 to p-4 (25% of card) */}
+              <div className="p-4 flex flex-col justify-between flex-1">
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-1">
                     {service.title}
