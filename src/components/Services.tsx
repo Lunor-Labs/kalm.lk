@@ -1,10 +1,10 @@
 import React from "react";
-import { Users, User, Heart, Rainbow } from "lucide-react";
 
 const Services: React.FC = () => {
   const services = [
     {
-      icon: Users,
+      image: "https://images.pexels.com/photos/3184430/pexels-photo-3184430.jpeg?auto=compress&cs=tinysrgb&w=800",
+      imageAlt: "Teenager in a thoughtful pose",
       title: "TEENS",
       subtitle: "(13-17)",
       description:
@@ -12,7 +12,8 @@ const Services: React.FC = () => {
       color: "from-primary-500 to-primary-600",
     },
     {
-      icon: User,
+      image: "https://images.pexels.com/photos/3756947/pexels-photo-3756947.jpeg?auto=compress&cs=tinysrgb&w=800",
+      imageAlt: "Adult in a calm, reflective setting",
       title: "INDIVIDUALS",
       subtitle: "(18+)",
       description:
@@ -20,7 +21,8 @@ const Services: React.FC = () => {
       color: "from-accent-green to-primary-500",
     },
     {
-      icon: Heart,
+      image: "https://images.pexels.com/photos/3184183/pexels-photo-3184183.jpeg?auto=compress&cs=tinysrgb&w=800",
+      imageAlt: "Family or couple sharing a warm moment",
       title: "FAMILY & COUPLES",
       subtitle: "(FOR US)",
       description:
@@ -28,7 +30,8 @@ const Services: React.FC = () => {
       color: "from-accent-pink to-accent-orange",
     },
     {
-      icon: Rainbow,
+      image: "https://images.pexels.com/photos/698532/pexels-photo-698532.jpeg?auto=compress&cs=tinysrgb&w=800",
+      imageAlt: "Inclusive scene with rainbow elements",
       title: "LGBTQIA+",
       subtitle: "",
       description:
@@ -60,14 +63,14 @@ const Services: React.FC = () => {
               className="group relative bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-neutral-800 flex flex-col"
             >
               <div className="relative h-32 overflow-hidden">
+                <img
+                  src={service.image}
+                  alt={service.imageAlt}
+                  className="w-full h-full object-cover"
+                />
                 <div
-                  className={`absolute inset-0 bg-gradient-to-t ${service.color} opacity-90`}
+                  className={`absolute inset-0 bg-gradient-to-t ${service.color} opacity-50`}
                 ></div>
-                <div className="absolute top-4 left-4">
-                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                    <service.icon className="w-5 h-5 text-white" />
-                  </div>
-                </div>
               </div>
 
               {/* FLEX container for content and button spacing */}
