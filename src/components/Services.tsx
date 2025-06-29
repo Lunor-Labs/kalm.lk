@@ -3,7 +3,7 @@ import React from "react";
 const Services: React.FC = () => {
   const services = [
     {
-      image: "https://images.pexels.com/photos/3184430/pexels-photo-3184430.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "/kalm.lk/Teen.jpg?auto=compress&cs=tinysrgb&w=800",
       imageAlt: "Teenager in a thoughtful pose",
       title: "TEENS",
       subtitle: "(13-17)",
@@ -12,7 +12,7 @@ const Services: React.FC = () => {
       color: "from-primary-500 to-primary-600",
     },
     {
-      image: "https://images.pexels.com/photos/3756947/pexels-photo-3756947.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "/kalm.lk/Individual.jpg?auto=compress&cs=tinysrgb&w=800",
       imageAlt: "Adult in a calm, reflective setting",
       title: "INDIVIDUALS",
       subtitle: "(18+)",
@@ -21,7 +21,7 @@ const Services: React.FC = () => {
       color: "from-accent-green to-primary-500",
     },
     {
-      image: "https://images.pexels.com/photos/3184183/pexels-photo-3184183.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "/kalm.lk/Family.jpg?auto=compress&cs=tinysrgb&w=800",
       imageAlt: "Family or couple sharing a warm moment",
       title: "FAMILY & COUPLES",
       subtitle: "(FOR US)",
@@ -30,7 +30,7 @@ const Services: React.FC = () => {
       color: "from-accent-pink to-accent-orange",
     },
     {
-      image: "https://images.pexels.com/photos/698532/pexels-photo-698532.jpeg?auto=compress&cs=tinysrgb&w=800",
+      image: "/kalm.lk/LGBTQ.jpg?auto=compress&cs=tinysrgb&w=800",
       imageAlt: "Inclusive scene with rainbow elements",
       title: "LGBTQIA+",
       subtitle: "",
