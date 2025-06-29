@@ -15,23 +15,111 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     username: '',
     phone: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    agreeTerms: false,
+  });
+  const [errors, setErrors] = useState({
+    email: '',
+    username: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    agreeTerms: '',
   });
 
   if (!isOpen) return null;
 
+  const validateForm = () => {
+    const newErrors = {
+      email: '',
+      username: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      agreeTerms: '',
+    };
+    let isValid = true;
+
+    if (mode === 'signup') {
+      if (!formData.email) {
+        newErrors.email = 'Email is required';
+        isValid = false;
+      } else if (!formData.email.includes('@')) {
+        newErrors.email = "Email must include an '@' symbol";
+        isValid = false;
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = 'Please enter a valid email';
+        isValid = false;
+      }
+      if (!formData.phone) {
+        newErrors.phone = 'Phone number is required';
+        isValid = false;
+      } else if (!/^\+?\d{10,15}$/.test(formData.phone)) {
+        newErrors.phone = 'Phone number must contain only digits (10-15) and an optional +';
+        isValid = false;
+      }
+    } else if (mode === 'login') {
+      if (!formData.email) {
+        newErrors.email = 'Email or username is required';
+        isValid = false;
+      } else if (formData.email.includes('@') && !/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = "Email must include a valid '@' symbol";
+        isValid = false;
+      }
+    } else if (mode === 'anonymous') {
+      if (!formData.username) {
+        newErrors.username = 'Username is required';
+        isValid = false;
+      }
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+      isValid = false;
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+      isValid = false;
+    }
+
+    if ((mode === 'signup' || mode === 'anonymous') && formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+      isValid = false;
+    }
+
+    if ((mode === 'signup' || mode === 'anonymous') && !formData.agreeTerms) {
+      newErrors.agreeTerms = 'You must agree to the Terms of Service';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', { ...formData, mode });
-    onClose();
+    if (validateForm()) {
+      console.log('Form submitted:', { ...formData, mode });
+      onClose();
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    let newValue = value;
+
+    // Restrict phone input to digits and optional + in signup mode
+    if (name === 'phone' && mode === 'signup') {
+      newValue = value.replace(/[^+\d]/g, ''); // Allow only digits and +
+      if (newValue.startsWith('+') && value.length > 1) {
+        newValue = '+' + newValue.slice(1).replace(/\+/g, ''); // Allow only one + at start
+      }
+    }
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? checked : newValue,
     });
+    setErrors({ ...errors, [name]: '' }); // Clear error on input change
   };
 
   const resetForm = () => {
@@ -40,7 +128,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       username: '',
       phone: '',
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      agreeTerms: false,
+    });
+    setErrors({
+      email: '',
+      username: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      agreeTerms: '',
     });
   };
 
@@ -116,7 +213,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6" noValidate>
           {/* Email field for regular signup */}
           {mode === 'signup' && (
             <>
@@ -124,36 +221,42 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Email Address
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                <div className="relative flex items-center">
+                  <Mail className="absolute left-3 w-5 h-5 text-neutral-400 z-10" />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                    className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:border-neutral-400 transition-all duration-200"
                     placeholder="Enter your email"
-                    required
+                    aria-describedby="email-error"
                   />
                 </div>
+                {errors.email && (
+                  <p id="email-error" className="text-red-500 text-xs mt-1">{errors.email}</p>
+                )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Phone Number
                 </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                <div className="relative flex items-center">
+                  <Phone className="absolute left-3 w-5 h-5 text-neutral-400 z-10" />
                   <input
                     type="tel"
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                    className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:border-neutral-400 transition-all duration-200"
                     placeholder="Enter your phone number"
-                    required
+                    aria-describedby="phone-error"
                   />
                 </div>
+                {errors.phone && (
+                  <p id="phone-error" className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                )}
               </div>
             </>
           )}
@@ -164,18 +267,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
               <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Username
               </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+              <div className="relative flex items-center">
+                <User className="absolute left-3 w-5 h-5 text-neutral-400 z-10" />
                 <input
                   type="text"
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:border-neutral-400 transition-all duration-200"
                   placeholder="Choose a unique username"
-                  required
+                  aria-describedby="username-error"
                 />
               </div>
+              {errors.username && (
+                <p id="username-error" className="text-red-500 text-xs mt-1">{errors.username}</p>
+              )}
               <p className="text-xs text-neutral-500 mt-1">
                 This will be your unique identifier. Choose something memorable!
               </p>
@@ -188,18 +294,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
               <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Email or Username
               </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+              <div className="relative flex items-center">
+                <User className="absolute left-3 w-5 h-5 text-neutral-400 z-10" />
                 <input
                   type="text"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:border-neutral-400 transition-all duration-200"
                   placeholder="Enter your email or username"
-                  required
+                  aria-describedby="email-error"
                 />
               </div>
+              {errors.email && (
+                <p id="email-error" className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
               <p className="text-xs text-neutral-500 mt-1">
                 Use your email for regular accounts or username for anonymous accounts
               </p>
@@ -210,16 +319,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
             <label className="block text-sm font-medium text-neutral-700 mb-2">
               Password
             </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+            <div className="relative flex items-center">
+              <Lock className="absolute left-3 w-5 h-5 text-neutral-400 z-10" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-12 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                className="w-full pl-10 pr-12 py-3 border border-cream-200 rounded-2xl focus:border-neutral-400 transition-all duration-200"
                 placeholder="Enter your password"
-                required
+                aria-describedby="password-error"
               />
               <button
                 type="button"
@@ -229,6 +338,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+            {errors.password && (
+              <p id="password-error" className="text-red-500 text-xs mt-1">{errors.password}</p>
+            )}
             {mode === 'anonymous' && (
               <p className="text-xs text-amber-600 mt-1 flex items-start space-x-1">
                 <span>⚠️</span>
@@ -242,25 +354,34 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
               <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Confirm Password
               </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+              <div className="relative flex items-center">
+                <Lock className="absolute left-3 w-5 h-5 text-neutral-400 z-10" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:border-neutral-400 transition-all duration-200"
                   placeholder="Confirm your password"
-                  required
+                  aria-describedby="confirmPassword-error"
                 />
               </div>
+              {errors.confirmPassword && (
+                <p id="confirmPassword-error" className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+              )}
             </div>
           )}
 
           {mode === 'login' && (
             <div className="flex items-center justify-between">
               <label className="flex items-center">
-                <input type="checkbox" className="rounded border-cream-200 text-primary-500 focus:ring-primary-500" />
+                <input
+                  type="checkbox"
+                  name="rememberMe"
+                  checked={formData.agreeTerms}
+                  onChange={handleInputChange}
+                  className="rounded border-cream-200 text-primary-500 focus:ring-0 focus:border-neutral-400"
+                />
                 <span className="ml-2 text-sm text-neutral-600">Remember me</span>
               </label>
               <button type="button" className="text-sm text-primary-500 hover:text-primary-600">
@@ -269,34 +390,26 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
             </div>
           )}
 
-          {mode === 'signup' && (
-            <div className="flex items-start space-x-3">
-              <input 
-                type="checkbox" 
-                className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
-                required 
-              />
-              <p className="text-sm text-neutral-600">
-                I agree to the{' '}
-                <a href="#" className="text-primary-500 hover:text-primary-600">Terms of Service</a>
-                {' '}and{' '}
-                <a href="#" className="text-primary-500 hover:text-primary-600">Privacy Policy</a>
-              </p>
-            </div>
-          )}
-
-          {mode === 'anonymous' && (
-            <div className="flex items-start space-x-3">
-              <input 
-                type="checkbox" 
-                className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
-                required 
-              />
-              <p className="text-sm text-neutral-600">
-                I agree to the{' '}
-                <a href="#" className="text-primary-500 hover:text-primary-600">Terms of Service</a>
-                {' '}and understand that anonymous accounts have limited recovery options
-              </p>
+          {(mode === 'signup' || mode === 'anonymous') && (
+            <div>
+              <label className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  name="agreeTerms"
+                  checked={formData.agreeTerms}
+                  onChange={handleInputChange}
+                  className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-0 focus:border-neutral-400"
+                />
+                <p className="text-sm text-neutral-600">
+                  I agree to the{' '}
+                  <a href="#" className="text-primary-500 hover:text-primary-600">Terms of Service</a>
+                  {mode === 'anonymous' ? ' and understand that anonymous accounts have limited recovery options' : ' and '}
+                  <a href="#" className="text-primary-500 hover:text-primary-600">Privacy Policy</a>
+                </p>
+              </label>
+              {errors.agreeTerms && (
+                <p id="agreeTerms-error" className="text-red-500 text-xs mt-1">{errors.agreeTerms}</p>
+              )}
             </div>
           )}
 
