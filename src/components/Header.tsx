@@ -25,6 +25,9 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
     { label: 'FAQ', href: '#faq' },
   ];
 
+  const phoneNumber = '+94 7 345 567';
+  const phoneNumberForCall = '+94734556789'; // Without spaces for tel: link
+
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled ? 'bg-neutral-900/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
@@ -34,7 +37,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
           {/* Logo */}
           <div className="flex items-center space-x-2 flex-shrink-0">
             <img 
-              src="/kalm.lk/logo.jpg" 
+              src="/logo icon (1).jpg" 
               alt="Kalm Logo" 
               className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg"
             />
@@ -64,14 +67,15 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
-            <button className={`flex items-center space-x-2 hover:text-primary-600 transition-colors duration-200 font-medium text-sm px-4 py-2 rounded-lg ${
+            {/* Desktop - Show phone number */}
+            <div className={`flex items-center space-x-2 font-medium text-sm px-4 py-2 rounded-lg ${
               isScrolled 
-                ? 'text-primary-500 hover:bg-primary-50/10' 
-                : 'text-white hover:bg-white/10'
+                ? 'text-primary-500' 
+                : 'text-white'
             }`}>
               <Phone className="w-4 h-4" />
-              <span>Call Us</span>
-            </button>
+              <span>{phoneNumber}</span>
+            </div>
             <button
               onClick={() => onOpenAuth('login')}
               className={`transition-colors duration-200 font-medium text-sm px-5 py-2.5 rounded-full ${
@@ -112,10 +116,14 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                 </a>
               ))}
               <div className="pt-3 border-t border-neutral-700 space-y-2">
-                <button className="flex items-center space-x-2 w-full text-left text-primary-500 hover:text-primary-600 transition-colors duration-200 font-medium py-2 text-sm">
+                {/* Mobile - Clickable call button */}
+                <a
+                  href={`tel:${phoneNumberForCall}`}
+                  className="flex items-center space-x-2 w-full text-left text-primary-500 hover:text-primary-600 transition-colors duration-200 font-medium py-2 text-sm"
+                >
                   <Phone className="w-4 h-4" />
                   <span>Call Us</span>
-                </button>
+                </a>
                 <button
                   onClick={() => {
                     onOpenAuth('login');
