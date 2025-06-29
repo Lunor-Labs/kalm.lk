@@ -101,38 +101,45 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - Centered content */}
         {isMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 bg-neutral-900/95 backdrop-blur-md shadow-xl rounded-b-2xl border-t border-neutral-700">
             <div className="px-4 py-4 space-y-3">
-              {navItems.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block text-neutral-300 hover:text-primary-500 transition-colors duration-200 font-medium py-2 text-sm"
-                >
-                  {item.label}
-                </a>
-              ))}
-              <div className="pt-3 border-t border-neutral-700 space-y-2">
+              {/* Centered navigation items */}
+              <div className="text-center space-y-3">
+                {navItems.map((item) => (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-neutral-300 hover:text-primary-500 transition-colors duration-200 font-medium py-2 text-sm"
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+              
+              {/* Centered action buttons */}
+              <div className="pt-3 border-t border-neutral-700 space-y-2 text-center">
                 {/* Mobile - Clickable call button */}
                 <a
                   href={`tel:${phoneNumberForCall}`}
-                  className="flex items-center space-x-2 w-full text-left text-primary-500 hover:text-primary-600 transition-colors duration-200 font-medium py-2 text-sm"
+                  className="inline-flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200 font-medium py-2 text-sm"
                 >
                   <Phone className="w-4 h-4" />
                   <span>Call Us</span>
                 </a>
-                <button
-                  onClick={() => {
-                    onOpenAuth('login');
-                    setIsMenuOpen(false);
-                  }}
-                  className="block w-full bg-primary-500 text-white px-4 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-center text-sm"
-                >
-                  Login
-                </button>
+                <div>
+                  <button
+                    onClick={() => {
+                      onOpenAuth('login');
+                      setIsMenuOpen(false);
+                    }}
+                    className="bg-primary-500 text-white px-6 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm"
+                  >
+                    Login
+                  </button>
+                </div>
               </div>
             </div>
           </div>

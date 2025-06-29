@@ -8,10 +8,11 @@ const Footer: React.FC = () => {
       <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2247%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+        {/* Mobile: Center everything, Desktop: Keep original layout */}
         <div className="grid md:grid-cols-2 lg:grid-cols-[4fr_1fr_2fr_2fr_2fr] gap-8">
-          {/* Brand - Takes more space with larger gap after */}
-          <div className="lg:col-span-1">
-            <div className="flex items-center space-x-2 mb-4">
+          {/* Brand - Mobile: centered, Desktop: original */}
+          <div className="lg:col-span-1 text-center md:text-left">
+            <div className="flex items-center space-x-2 mb-4 justify-center md:justify-start">
               <img 
                 src="/kalm.lk/logo.jpg" 
                 alt="Kalm Logo" 
@@ -23,16 +24,20 @@ const Footer: React.FC = () => {
               For the thoughts you've never told anyone. Professional mental health support, 
               accessible and private.
             </p>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 justify-center md:justify-start">
               <a
                 href="https://www.instagram.com/kalm_lk?igsh=dHJ1YWExNDg1Mmpz"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-primary-500 transition-colors duration-200"
                 aria-label="Follow us on Instagram"
               >
                 <Instagram className="w-4 h-4" />
               </a>
               <a
-                href="https://www.facebook.com/share/1CJyjxuVrf/?mibextid=wwXIfr"
+                href="https://www.facebook.com/share/1UrHxB76WN/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200"
                 aria-label="Follow us on Facebook"
               >
@@ -40,6 +45,8 @@ const Footer: React.FC = () => {
               </a>
               <a
                 href="https://youtube.com/@kalm_lkpodcast?si=QvVJa8eYRfSqNr2h"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
                 aria-label="Subscribe to our YouTube channel"
               >
@@ -47,6 +54,8 @@ const Footer: React.FC = () => {
               </a>
               <a
                 href="https://vt.tiktok.com/ZSkySoCwe/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors duration-200"
                 aria-label="Follow us on TikTok"
               >
@@ -64,11 +73,11 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Spacer column for larger gap */}
+          {/* Spacer column for larger gap - hidden on mobile */}
           <div className="lg:col-span-1 hidden lg:block"></div>
 
-          {/* Quick Links - Similar spacing to other sections */}
-          <div className="lg:col-span-1">
+          {/* Quick Links - Mobile: centered, Desktop: original */}
+          <div className="lg:col-span-1 text-center md:text-left">
             <h4 className="text-base font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
@@ -94,8 +103,8 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Legal - Similar spacing to other sections */}
-          <div className="lg:col-span-1">
+          {/* Legal - Mobile: centered, Desktop: original */}
+          <div className="lg:col-span-1 text-center md:text-left">
             <h4 className="text-base font-semibold mb-4">Legal</h4>
             <ul className="space-y-2">
               <li>
@@ -121,23 +130,23 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Contact - Similar spacing to other sections */}
-          <div className="lg:col-span-1">
+          {/* Contact - Mobile: centered, Desktop: original */}
+          <div className="lg:col-span-1 text-center md:text-left">
             <h4 className="text-base font-semibold mb-4">Contact</h4>
             <div className="space-y-3">
-              <div className="flex items-start space-x-2">
+              <div className="flex items-start space-x-2 justify-center md:justify-start">
                 <Mail className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-neutral-400 text-sm">hello@kalm.lk</p>
                 </div>
               </div>
-              <div className="flex items-start space-x-2">
+              <div className="flex items-start space-x-2 justify-center md:justify-start">
                 <Phone className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-neutral-400 text-sm">+94 (76) 633 0360</p>
                 </div>
               </div>
-              <div className="flex items-start space-x-2">
+              <div className="flex items-start space-x-2 justify-center md:justify-start">
                 <MapPin className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-neutral-400 text-sm">Colombo, Sri Lanka</p>
@@ -147,16 +156,17 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
+        {/* Bottom section - Mobile: centered, Desktop: original */}
         <div className="border-t border-neutral-800 mt-8 pt-6">
-          <div className="flex flex-col md:flex-row items-center justify-between">
+          <div className="flex flex-col md:flex-row items-center justify-between text-center md:text-left">
             <p className="text-neutral-500 text-xs">
-              © 2024 Kalm.lk. All rights reserved. 
+              © 2024 Kalm.lk. All rights reserved.
             </p>
             <p className="text-neutral-500 text-xs mt-2 md:mt-0">
               Made with ❤️ for mental wellness in Sri Lanka
             </p>
             <p className="text-neutral-500 text-xs mt-2 md:mt-0">
-    Developed by <a href="https://www.lunorlabs.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-700">Lunor Labs</a>
+              Developed by <a href="https://lunorlabs.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-700">Lunor Labs</a>
             </p>
           </div>
         </div>
