@@ -6,28 +6,36 @@ const FAQ: React.FC = () => {
 
   const faqs = [
     {
-      question: 'How does online therapy work?',
-      answer: 'Online therapy works through secure video calls, voice calls, or text messaging with licensed therapists. You can schedule sessions at your convenience and connect from anywhere with an internet connection. All sessions are private and confidential.'
+      question: 'What is Kalm?',
+      answer: 'Kalm is a calm, online space to speak with licensed Sri Lankan therapists in a way that feels human, more like talking to a friend than attending a formal session. It\'s professional, but personal.'
     },
     {
-      question: 'Are your therapists licensed?',
-      answer: 'Yes, all our therapists are licensed mental health professionals with verified credentials. They have completed their education, training, and certification requirements to practice therapy in Sri Lanka.'
+      question: 'How does Kalm work?',
+      answer: 'You can choose a service (like individual, couples, or family therapy), then browse verified therapists. Once you find someone who feels right, you pick a time slot based on their availability and book your session — video, audio, or text-based.'
     },
     {
-      question: 'Is my information secure and private?',
-      answer: 'Absolutely. We use end-to-end encryption for all communications and follow strict privacy protocols. Your personal information and therapy sessions are completely confidential and secure.'
+      question: 'How do I book a therapist?',
+      answer: 'Just choose the type of service you need, then explore our list of therapists — each with a photo, bio, availability, and style. Pick a time that suits you from their schedule and confirm your session. It\'s quick, clear, and designed for comfort.'
     },
     {
-      question: 'How much does it cost?',
-      answer: 'Our pricing is transparent and affordable. Individual therapy sessions start from LKR 3,500 per session. We also offer package deals and accept various local payment methods including mobile wallets.'
+      question: 'Can I talk casually, like with a friend?',
+      answer: 'Yes. Kalm is built for that. You can speak as formally or as casually as you like. Some people want structured advice. Others just want someone to talk to — like a friend who listens. Both are valid.'
     },
     {
-      question: 'Can I switch therapists if needed?',
-      answer: 'Yes, you can switch therapists at any time if you feel you need a better match. We want you to feel comfortable and supported, so finding the right therapist is important for your success.'
+      question: 'How do I pay?',
+      answer: 'You can pay securely by credit or debit card, or through bank transfer — right before your session. Payments are fully safe, simple, and confirmed instantly once booked.'
     },
     {
-      question: 'What if I need emergency support?',
-      answer: 'For mental health emergencies, please contact your local emergency services immediately. Kalm is designed for ongoing therapy support, not crisis intervention. We can provide resources for emergency support when needed.'
+      question: 'Is this only for people with "serious" issues?',
+      answer: 'No. You don\'t have to be in crisis to talk to someone. You can come just to release, vent, ask for advice, talk about work stress, family tension, or anything that\'s on your mind. If it matters to you, it matters to us.'
+    },
+    {
+      question: 'Can I stay anonymous?',
+      answer: 'Yes. You can even book a session as a guest — no need to sign up or share personal details. We also offer audio-only and chat sessions, so you never have to show your face unless you want to. Just talk in a way that feels safe and right for you.'
+    },
+    {
+      question: 'What session types do you offer?',
+      answer: 'Video, voice, or text. Some people prefer typing it all out, some want face-to-face. You decide — it\'s your space. Every session also includes an optional pre-session note, so you can share how you\'re feeling before the call.'
     }
   ];
 
@@ -50,18 +58,28 @@ const FAQ: React.FC = () => {
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="bg-black/50 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 border border-neutral-800"
+              className={`bg-black/50 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border ${
+                openIndex === index 
+                  ? 'border-cream-500' 
+                  : 'border-neutral-800'
+              }`}
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full px-5 py-3 text-left flex items-center justify-between hover:bg-neutral-800/50 rounded-2xl transition-colors duration-200"
+                className={`w-full px-5 py-3 text-left flex items-center justify-between ${
+                  openIndex === index 
+                    ? 'bg-neutral-800/50' 
+                    : 'hover:bg-neutral-800/50'
+                } rounded-2xl transition-colors duration-200`}
               >
-                <h3 className="text-sm font-semibold text-white pr-4">
+                <h3 className={`text-sm font-semibold ${
+                  openIndex === index ? 'text-white' : 'text-neutral-300'
+                } pr-4`}>
                   {faq.question}
                 </h3>
                 <div className="flex-shrink-0">
                   {openIndex === index ? (
-                    <Minus className="w-4 h-4 text-primary-500" />
+                    <Minus className="w-4 h-4 text-cream-500" />
                   ) : (
                     <Plus className="w-4 h-4 text-neutral-400" />
                   )}
@@ -69,8 +87,8 @@ const FAQ: React.FC = () => {
               </button>
               
               {openIndex === index && (
-                <div className="px-5 pb-3 bg-cream-50 rounded-b-2xl border-t border-neutral-700">
-                  <p className="text-neutral-800 leading-relaxed text-xs pt-3">
+                <div className="px-5 pb-3 bg-neutral-800 rounded-b-2xl">
+                  <p className="text-neutral-300 leading-relaxed text-sm pt-3">
                     {faq.answer}
                   </p>
                 </div>

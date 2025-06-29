@@ -54,14 +54,12 @@ const HowItWorks: React.FC = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-8">
           {steps.map((step, index) => (
             <div key={index} className="relative text-center group">
-              {/* Removed all connection lines by deleting this block */}
-              
               <div className="relative z-10">
                 <div className={`w-20 h-20 ${step.color} rounded-3xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 shadow-lg`}>
                   <step.icon className="w-8 h-8 text-white" />
                 </div>
                 
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-cream-50 border-2 border-neutral-200 rounded-full flex items-center justify-center text-xs font-bold text-neutral-800 shadow-md">
+                <div className="absolute top-[-1.7rem] left-1/2 -translate-x-1/2 sm:-top-1 sm:right-[-0.25rem] sm:left-auto sm:translate-x-0 w-6 h-6 bg-cream-50 border-2 border-neutral-200 rounded-full flex items-center justify-center text-xs font-bold text-neutral-800 shadow-md">
                   {index + 1}
                 </div>
               </div>
