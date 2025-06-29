@@ -56,7 +56,7 @@ const Therapists: React.FC = () => {
           {therapists.map((therapist, index) => (
             <div
               key={index}
-              className="group bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-neutral-800"
+              className="group bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-cream-200/100"
             >
               {/* Large Image Section */}
               <div className="relative h-48 overflow-hidden">
