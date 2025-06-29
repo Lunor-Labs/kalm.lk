@@ -32,7 +32,7 @@ const Footer: React.FC = () => {
                 <Instagram className="w-4 h-4" />
               </a>
               <a
-                href="https://www.facebook.com/share/1UrHxB76WN/?mibextid=wwXIfr"
+                href="https://www.facebook.com/share/1CJyjxuVrf/?mibextid=wwXIfr"
                 className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200"
                 aria-label="Follow us on Facebook"
               >
