@@ -393,7 +393,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
                   <div className="space-y-3 mb-6">
                     <div>
                       <p className="text-xs text-neutral-400 mb-2 font-medium">Languages:</p>
-                      <div className="flex flex-wrap gap-1 justify-center">
+                      <div className="flex flex-wrap gap-1">
                         {therapist.languages.map((lang, langIndex) => (
                           <span
                             key={langIndex}
@@ -404,7 +404,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
                         ))}
                       </div>
                     </div>
-                    <div className="text-center">
+                    <div className="text-left">
                       <p className="text-xs text-neutral-400 mb-1 font-medium">Credentials:</p>
                       <p className="text-xs text-neutral-300">{therapist.credentials}</p>
                     </div>
