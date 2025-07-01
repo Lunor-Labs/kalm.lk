@@ -23,17 +23,83 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     confirmPassword: '',
     displayName: ''
   });
-
   const [errors, setErrors] = useState({
     email: '',
     username: '',
     phone: '',
     password: '',
     confirmPassword: '',
-    agreeTerms: '',
+    displayName: ''
   });
 
   if (!isOpen) return null;
+
+  const validateForm = () => {
+    const newErrors = {
+      email: '',
+      username: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      displayName: ''
+    };
+    let isValid = true;
+
+    // Email validation
+    if (mode === 'login' || mode === 'signup') {
+      if (!formData.email) {
+        newErrors.email = 'Email is required';
+        isValid = false;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        newErrors.email = 'Invalid email format';
+        isValid = false;
+      }
+    }
+
+    // Username validation for anonymous mode
+    if (mode === 'anonymous') {
+      if (!formData.username) {
+        newErrors.username = 'Username is required';
+        isValid = false;
+      } else if (formData.username.length < 3) {
+        newErrors.username = 'Username must be at least 3 characters';
+        isValid = false;
+      }
+    }
+
+    // Display name validation for signup
+    if (mode === 'signup') {
+      if (!formData.displayName) {
+        newErrors.displayName = 'Full name is required';
+        isValid = false;
+      }
+    }
+
+    // Password validation
+    if (mode === 'login' || mode === 'signup' || mode === 'anonymous') {
+      if (!formData.password) {
+        newErrors.password = 'Password is required';
+        isValid = false;
+      } else if (formData.password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
+        isValid = false;
+      }
+    }
+
+    // Confirm password validation
+    if (mode === 'signup' || mode === 'anonymous') {
+      if (!formData.confirmPassword) {
+        newErrors.confirmPassword = 'Please confirm your password';
+        isValid = false;
+      } else if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const getRoleRedirectPath = (role: string): string => {
     switch (role) {
@@ -46,6 +112,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -57,9 +128,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
           password: formData.password
         });
       } else if (mode === 'signup') {
-        if (formData.password !== formData.confirmPassword) {
-          throw new Error('Passwords do not match');
-        }
         user = await signUp({
           email: formData.email,
           password: formData.password,
@@ -67,9 +135,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
           phone: formData.phone
         });
       } else if (mode === 'anonymous') {
-        if (formData.password !== formData.confirmPassword) {
-          throw new Error('Passwords do not match');
-        }
         user = await signUpAnonymous({
           username: formData.username,
           password: formData.password
@@ -78,9 +143,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
       if (user) {
         toast.success('Welcome to Kalm!');
-        onClose(); // Close modal first
+        onClose();
         
-        // Small delay to allow modal to close, then redirect
         setTimeout(() => {
           const redirectPath = getRoleRedirectPath(user.role);
           navigate(redirectPath, { replace: true });
@@ -98,9 +162,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     try {
       const user = await signInWithGoogle();
       toast.success('Welcome to Kalm!');
-      onClose(); // Close modal first
+      onClose();
       
-      // Small delay to allow modal to close, then redirect
       setTimeout(() => {
         const redirectPath = getRoleRedirectPath(user.role);
         navigate(redirectPath, { replace: true });
@@ -117,10 +180,23 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    setErrors({
+      ...errors,
+      [e.target.name]: ''
+    });
   };
 
   const resetForm = () => {
     setFormData({
+      email: '',
+      username: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      displayName: ''
+    });
+    setErrors({
       email: '',
       username: '',
       phone: '',
@@ -155,15 +231,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       ></div>
 
-      {/* Modal */}
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-cream-100">
           <div>
             <h2 className="text-2xl font-bold text-neutral-800">
@@ -181,7 +254,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
           </button>
         </div>
 
-        {/* Anonymous Account Privacy Notice */}
         {mode === 'anonymous' && (
           <div className="p-6 border-b border-cream-100">
             <div className="bg-accent-green/10 border border-accent-green/20 rounded-2xl p-4">
@@ -201,9 +273,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Email field for regular signup/login */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6" noValidate >
           {(mode === 'signup' || mode === 'login') && (
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
@@ -216,15 +286,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                 className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
+    errors.displayName ? 'border-red-500' : 'border-black'
+  }`}
                   placeholder="Enter your email"
-                  required
                 />
               </div>
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
             </div>
           )}
 
-          {/* Display Name for regular signup */}
           {mode === 'signup' && (
             <>
             <div>
@@ -238,8 +311,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   name="displayName"
                   value={formData.displayName}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your Name"
+                 className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
+    errors.displayName ? 'border-red-500' : 'border-black'
+  }`}
+                  placeholder="Enter your full name"
                   required
                 />
               </div>
@@ -267,7 +342,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
           </>
           )}
 
-          {/* Username field for anonymous signup */}
           {mode === 'anonymous' && (
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
@@ -280,14 +354,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                 className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
+    errors.displayName ? 'border-red-500' : 'border-black'
+  }`}
                   placeholder="Choose a unique username"
-                  required
                 />
               </div>
-              <p className="text-xs text-neutral-500 mt-1">
-                This will be your unique identifier. Choose something memorable!
-              </p>
+              {errors.username ? (
+                <p className="text-red-500 text-xs mt-1">{errors.username}</p>
+              ) : (
+                <p className="text-xs text-neutral-500 mt-1">
+                  This will be your unique identifier. Choose something memorable!
+                </p>
+              )}
             </div>
           )}
 
@@ -302,9 +381,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-12 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+              className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
+    errors.displayName ? 'border-red-500' : 'border-black'
+  }`}
                 placeholder="Enter your password"
-                required
               />
               <button
                 type="button"
@@ -314,7 +394,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            {mode === 'anonymous' && (
+            {errors.password ? (
+              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+            ) : mode === 'anonymous' && (
               <p className="text-xs text-amber-600 mt-1 flex items-start space-x-1">
                 <span>⚠️</span>
                 <span>Important: Remember your password! Anonymous accounts cannot recover forgotten passwords.</span>
@@ -334,11 +416,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
+    errors.displayName ? 'border-red-500' : 'border-black'
+  }`}
                   placeholder="Confirm your password"
-                  required
                 />
               </div>
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+              )}
             </div>
           )}
 
@@ -359,7 +445,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
               <input 
                 type="checkbox" 
                 className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
-                required 
               />
               <p className="text-sm text-neutral-600">
                 I agree to the{' '}
@@ -375,7 +460,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
               <input 
                 type="checkbox" 
                 className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
-                required 
               />
               <p className="text-sm text-neutral-600">
                 I agree to the{' '}
@@ -399,7 +483,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
              mode === 'anonymous' ? 'Create Anonymous Account' : 'Create Account'}
           </button>
 
-          {/* Google Sign In (only for login and signup) */}
           {mode !== 'anonymous' && (
             <>
               <div className="relative">
@@ -429,7 +512,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
           )}
         </form>
 
-        {/* Footer */}
         <div className="p-6 border-t border-cream-100 text-center">
           <div className="space-y-2">
             <p className="text-neutral-600">
