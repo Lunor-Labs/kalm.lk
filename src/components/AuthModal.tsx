@@ -32,15 +32,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     displayName: ''
   });
 
-  const [errors, setErrors] = useState({
-    email: '',
-    username: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-    agreeTerms: '',
-  });
-
   if (!isOpen) return null;
 
   const validateForm = () => {
@@ -295,9 +286,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                    errors.email ? 'border-red-500' : 'border-cream-200'
-                  }`}
+                 className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
+    errors.displayName ? 'border-red-500' : 'border-black'
+  }`}
                   placeholder="Enter your email"
                 />
               </div>
@@ -320,12 +311,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   name="displayName"
                   value={formData.displayName}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                    errors.displayName ? 'border-red-500' : 'border-cream-200'
-                  }`}
+                 className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
+    errors.displayName ? 'border-red-500' : 'border-black'
+  }`}
                   placeholder="Enter your full name"
-                  className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your Name"
                   required
                 />
               </div>
@@ -365,9 +354,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                    errors.username ? 'border-red-500' : 'border-cream-200'
-                  }`}
+                 className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
+    errors.displayName ? 'border-red-500' : 'border-black'
+  }`}
                   placeholder="Choose a unique username"
                 />
               </div>
@@ -392,9 +381,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`w-full pl-10 pr-12 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                  errors.password ? 'border-red-500' : 'border-cream-200'
-                }`}
+              className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
+    errors.displayName ? 'border-red-500' : 'border-black'
+  }`}
                 placeholder="Enter your password"
               />
               <button
@@ -427,9 +416,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-cream-200'
-                  }`}
+                className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
+    errors.displayName ? 'border-red-500' : 'border-black'
+  }`}
                   placeholder="Confirm your password"
                 />
               </div>
