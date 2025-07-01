@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Eye, EyeOff, Mail, Lock, User, UserCheck } from 'lucide-react';
+import { Phone, X, Eye, EyeOff, Mail, Lock, User, UserCheck } from 'lucide-react';
 import { signIn, signUp, signUpAnonymous, signInWithGoogle } from '../lib/auth';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -30,6 +30,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     password: '',
     confirmPassword: '',
     displayName: ''
+  });
+
+  const [errors, setErrors] = useState({
+    email: '',
+    username: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    agreeTerms: '',
   });
 
   if (!isOpen) return null;
@@ -299,9 +308,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
           )}
 
           {mode === 'signup' && (
+            <>
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Full Name
+                Name
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
@@ -314,12 +324,33 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                     errors.displayName ? 'border-red-500' : 'border-cream-200'
                   }`}
                   placeholder="Enter your full name"
+                  className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Enter your Name"
+                  required
                 />
               </div>
-              {errors.displayName && (
-                <p className="text-red-500 text-xs mt-1">{errors.displayName}</p>
-              )}
             </div>
+            <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Phone Number
+                </label>
+                <div className="relative flex items-center">
+                  <Phone className="absolute left-3 w-5 h-5 text-neutral-400 z-10" />
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:border-neutral-400 transition-all duration-200"
+                    placeholder="Enter your phone number"
+                    aria-describedby="phone-error"
+                  />
+                </div>
+                {errors.phone && (
+                  <p id="phone-error" className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                )}
+            </div>
+          </>
           )}
 
           {mode === 'anonymous' && (
