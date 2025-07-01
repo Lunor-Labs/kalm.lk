@@ -1,7 +1,11 @@
 import React from 'react';
 import { Award, MessageCircle, Clock } from 'lucide-react';
 
-const Therapists: React.FC = () => {
+interface TherapistsProps {
+  onViewAllTherapists: () => void;
+}
+
+const Therapists: React.FC<TherapistsProps> = ({ onViewAllTherapists }) => {
   const therapists = [
     {
       name: 'Dr. Priya Perera',
@@ -115,7 +119,9 @@ const Therapists: React.FC = () => {
         </div>
 
         <div className="text-center mt-8">
-          <button className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200 flex items-center justify-center space-x-2 mx-auto text-sm">
+          <button 
+          onClick={() => onViewAllTherapists()}
+          className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200 flex items-center justify-center space-x-2 mx-auto text-sm">
             <span>View All Therapists</span>
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

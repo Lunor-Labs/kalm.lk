@@ -1,0 +1,255 @@
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  signInAnonymously,
+  signOut as firebaseSignOut,
+  updateProfile,
+  User as FirebaseUser,
+  GoogleAuthProvider,
+  signInWithPopup
+} from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from './firebase';
+import { User, UserRole, LoginCredentials, SignupData, AnonymousSignupData } from '../types/auth';
+
+export const signIn = async (credentials: LoginCredentials): Promise<User> => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+    const firebaseUser = userCredential.user;
+    
+    // Get user role from Firestore
+    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+    
+    if (!userDoc.exists()) {
+      throw new Error('User profile not found');
+    }
+    
+    const userData = userDoc.data();
+    
+    return {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      displayName: firebaseUser.displayName,
+      role: userData.role as UserRole,
+      isAnonymous: false,
+      createdAt: userData.createdAt?.toDate() || new Date(),
+      updatedAt: userData.updatedAt?.toDate() || new Date(),
+    };
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to sign in');
+  }
+};
+
+export const signUp = async (signupData: SignupData): Promise<User> => {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, signupData.email, signupData.password);
+    const firebaseUser = userCredential.user;
+    
+    // Update display name
+    await updateProfile(firebaseUser, {
+      displayName: signupData.displayName
+    });
+    
+    // Create user document in Firestore with default client role
+    const userData = {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      displayName: signupData.displayName,
+      role: 'client' as UserRole, // Default role for all signups
+      phone: signupData.phone || null,
+      isAnonymous: false,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    
+    await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+    
+    return {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      displayName: firebaseUser.displayName,
+      role: 'client',
+      isAnonymous: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to create account');
+  }
+};
+
+export const signInWithGoogle = async (): Promise<User> => {
+  try {
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+    const firebaseUser = userCredential.user;
+    
+    // Check if user already exists
+    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+    
+    if (!userDoc.exists()) {
+      // Create new user document with default client role
+      const userData = {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName,
+        role: 'client' as UserRole,
+        isAnonymous: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      
+      await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+      
+      return {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName,
+        role: 'client',
+        isAnonymous: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    } else {
+      // Return existing user
+      const userData = userDoc.data();
+      return {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName,
+        role: userData.role as UserRole,
+        isAnonymous: false,
+        createdAt: userData.createdAt?.toDate() || new Date(),
+        updatedAt: userData.updatedAt?.toDate() || new Date(),
+      };
+    }
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to sign in with Google');
+  }
+};
+
+export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promise<User> => {
+  try {
+    const userCredential = await signInAnonymously(auth);
+    const firebaseUser = userCredential.user;
+    
+    // Create user document in Firestore for anonymous user
+    const userData = {
+      uid: firebaseUser.uid,
+      email: null,
+      displayName: anonymousData.username,
+      username: anonymousData.username,
+      role: 'client' as UserRole,
+      isAnonymous: true,
+      anonymousPassword: anonymousData.password, // Store for future login
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    
+    await setDoc(doc(db, 'users', firebaseUser.uid), userData);
+    
+    return {
+      uid: firebaseUser.uid,
+      email: null,
+      displayName: anonymousData.username,
+      role: 'client',
+      isAnonymous: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to create anonymous account');
+  }
+};
+
+export const signOut = async (): Promise<void> => {
+  try {
+    await firebaseSignOut(auth);
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to sign out');
+  }
+};
+
+export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User | null> => {
+  try {
+    if (!firebaseUser) return null;
+    
+    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+    
+    if (!userDoc.exists()) {
+      return null;
+    }
+    
+    const userData = userDoc.data();
+    
+    return {
+      uid: firebaseUser.uid,
+      email: firebaseUser.email,
+      displayName: firebaseUser.displayName || userData.displayName,
+      role: userData.role as UserRole,
+      isAnonymous: userData.isAnonymous || false,
+      createdAt: userData.createdAt?.toDate() || new Date(),
+      updatedAt: userData.updatedAt?.toDate() || new Date(),
+    };
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
+};
+
+export const updateUserProfile = async (uid: string, updates: Partial<User>): Promise<void> => {
+  try {
+    await updateDoc(doc(db, 'users', uid), {
+      ...updates,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to update profile');
+  }
+};
+
+// Admin function to update user role
+export const updateUserRole = async (uid: string, newRole: UserRole): Promise<void> => {
+  try {
+    await updateDoc(doc(db, 'users', uid), {
+      role: newRole,
+      updatedAt: serverTimestamp(),
+    });
+
+    // If promoting to therapist, create therapist profile
+    if (newRole === 'therapist') {
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // Create therapist document with placeholder values
+        const therapistData = {
+          id: uid,
+          userId: uid,
+          firstName: userData.displayName?.split(' ')[0] || 'First',
+          lastName: userData.displayName?.split(' ')[1] || 'Last',
+          email: userData.email,
+          credentials: ['Licensed Therapist'],
+          specializations: ['General Counseling'],
+          languages: ['English'],
+          services: ['Individual Therapy'],
+          isAvailable: false,
+          sessionFormats: ['video'],
+          bio: 'Professional therapist ready to help you on your wellness journey.',
+          experience: 1,
+          rating: 5.0,
+          reviewCount: 0,
+          hourlyRate: 4500,
+          profilePhoto: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
+          nextAvailableSlot: 'Please set availability',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        };
+        
+        await setDoc(doc(db, 'therapists', uid), therapistData);
+      }
+    }
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to update user role');
+  }
+};

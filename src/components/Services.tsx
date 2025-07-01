@@ -1,6 +1,10 @@
 import React from "react";
 
-const Services: React.FC = () => {
+interface ServicesProps {
+  onViewAllTherapists: (serviceCategory?: string) => void;
+}
+
+const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
   const services = [
     {
       image: "/kalm.lk/Teen.jpg?auto=compress&cs=tinysrgb&w=800",
@@ -10,6 +14,7 @@ const Services: React.FC = () => {
       description:
         "Specialized support for teenagers navigating adolescence, school stress, and identity.",
       color: "from-primary-500 to-primary-600",
+      category: "TEENS"
     },
     {
       image: "/kalm.lk/Individual.jpg?auto=compress&cs=tinysrgb&w=800",
@@ -19,6 +24,7 @@ const Services: React.FC = () => {
       description:
         "Personal therapy for adults dealing with anxiety, depression, and life challenges.",
       color: "from-accent-green to-primary-500",
+      category: "INDIVIDUALS"
     },
     {
       image: "/kalm.lk/Family.jpg?auto=compress&cs=tinysrgb&w=800",
@@ -28,6 +34,7 @@ const Services: React.FC = () => {
       description:
         "Relationship counseling and family therapy to strengthen bonds and communication.",
       color: "from-accent-pink to-accent-orange",
+      category: "FAMILY & COUPLES"
     },
     {
       image: "/kalm.lk/LGBTQ.jpg?auto=compress&cs=tinysrgb&w=800",
@@ -37,6 +44,7 @@ const Services: React.FC = () => {
       description:
         "Affirming and inclusive therapy for LGBTQIA+ individuals and couples.",
       color: "from-accent-yellow to-accent-orange",
+      category: "LGBTQIA+"
     },
   ];
 
@@ -91,7 +99,10 @@ const Services: React.FC = () => {
                 </div>
 
                 {/* Button always at the bottom */}
-                <button className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200 flex items-center space-x-2 group text-sm mt-auto">
+                <button 
+                  onClick={() => onViewAllTherapists(service.category)}
+                  className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200 flex items-center space-x-2 group text-sm mt-auto"
+                >
                   <span>Get Started</span>
                   <svg
                     className="w-3 h-3 group-hover:translate-x-1 transition-transform duration-200"
