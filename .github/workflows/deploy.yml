@@ -25,6 +25,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Test secret
+        run: echo "🔒 VITE_APP_ENV is $VITE_APP_ENV"
+        env:
+          VITE_APP_ENV: ${{ secrets.VITE_APP_ENV }}
+
       - name: Create .env file from GitHub Secrets
         run: |
           echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> .env
