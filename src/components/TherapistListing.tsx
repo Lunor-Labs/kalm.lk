@@ -1,20 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Users, SlidersHorizontal, Search, Clock, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Users, SlidersHorizontal, Search, Clock } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { therapistsData, TherapistData } from '../data/therapists';
+import TherapistCard from './TherapistCard';
 
 interface TherapistListingProps {
   onBack: () => void;
   initialFilter?: string; // For filtering by service category
-}
-
-// Simplified therapist data structure matching landing page
-interface SimpleTherapist {
-  name: string;
-  specialty: string;
-  image: string;
-  languages: string[];
-  credentials: string;
-  availability: string;
-  serviceCategory: string; // Added to map to service categories
+  onOpenAuth: (mode: 'login' | 'signup' | 'anonymous') => void;
 }
 
 // Simple filters for the simplified structure
@@ -25,10 +19,17 @@ interface SimpleFilters {
   serviceCategory?: string;
 }
 
-const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilter }) => {
+const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilter, onOpenAuth }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<SimpleFilters>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'specialty' | 'availability'>('name');
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Set initial filter based on service category
   useEffect(() => {
@@ -36,82 +37,6 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
       setFilters({ serviceCategory: initialFilter });
     }
   }, [initialFilter]);
-
-  // Simplified therapist data matching landing page with service categories
-  const therapistsData: SimpleTherapist[] = [
-    {
-      name: 'Dr. Priya Perera',
-      specialty: 'Anxiety & Depression',
-      image: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English', 'Sinhala'],
-      credentials: 'PhD Clinical Psychology',
-      availability: 'Available Today',
-      serviceCategory: 'INDIVIDUALS'
-    },
-    {
-      name: 'Dr. Rohan Silva',
-      specialty: 'Relationship Counseling',
-      image: 'https://images.pexels.com/photos/5327921/pexels-photo-5327921.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English', 'Sinhala', 'Tamil'],
-      credentials: 'MSc Counseling Psychology',
-      availability: 'Available Tomorrow',
-      serviceCategory: 'FAMILY & COUPLES'
-    },
-    {
-      name: 'Dr. Amara Fernando',
-      specialty: 'Stress & Trauma',
-      image: 'https://images.pexels.com/photos/5327656/pexels-photo-5327656.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English', 'Sinhala'],
-      credentials: 'PhD Trauma Psychology',
-      availability: 'Available Today',
-      serviceCategory: 'INDIVIDUALS'
-    },
-    {
-      name: 'Dr. Kavitha Raj',
-      specialty: 'Family Therapy',
-      image: 'https://images.pexels.com/photos/5327647/pexels-photo-5327647.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English', 'Tamil'],
-      credentials: 'MSc Family Therapy',
-      availability: 'Available This Week',
-      serviceCategory: 'FAMILY & COUPLES'
-    },
-    {
-      name: 'Dr. Nuwan Jayasinghe',
-      specialty: 'Addiction Recovery',
-      image: 'https://images.pexels.com/photos/5327585/pexels-photo-5327585.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English', 'Sinhala'],
-      credentials: 'PhD Clinical Psychology',
-      availability: 'Next Week',
-      serviceCategory: 'INDIVIDUALS'
-    },
-    {
-      name: 'Dr. Sanduni Wickramasinghe',
-      specialty: 'Teen Counseling',
-      image: 'https://images.pexels.com/photos/5327653/pexels-photo-5327653.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English', 'Sinhala'],
-      credentials: 'MSc Clinical Psychology',
-      availability: 'Available Today',
-      serviceCategory: 'TEENS'
-    },
-    {
-      name: 'Dr. Malini Perera',
-      specialty: 'LGBTQIA+ Counseling',
-      image: 'https://images.pexels.com/photos/5327647/pexels-photo-5327647.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English', 'Sinhala'],
-      credentials: 'MSc Inclusive Psychology',
-      availability: 'Available Today',
-      serviceCategory: 'LGBTQIA+'
-    },
-    {
-      name: 'Dr. Chamara Silva',
-      specialty: 'Adolescent Psychology',
-      image: 'https://images.pexels.com/photos/5327921/pexels-photo-5327921.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English', 'Sinhala', 'Tamil'],
-      credentials: 'PhD Adolescent Psychology',
-      availability: 'Available Tomorrow',
-      serviceCategory: 'TEENS'
-    }
-  ];
 
   // Get unique values for filters
   const specialties = [...new Set(therapistsData.map(t => t.specialty))];
@@ -181,16 +106,34 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
 
   const hasActiveFilters = Object.keys(filters).length > 0 || searchQuery.length > 0;
 
-  const handleBookNow = (therapist: SimpleTherapist) => {
-    alert(`Booking system for ${therapist.name} would be implemented here.`);
+  const handleBookNow = (therapist: TherapistData) => {
+    if (user) {
+      // User is logged in, proceed to booking with pre-selected therapist
+      navigate('/client/book', { 
+        state: { 
+          preSelectedTherapist: therapist.id,
+          therapistName: therapist.name,
+          returnTo: 'booking'
+        } 
+      });
+    } else {
+      // User not logged in, store intended action and prompt for auth
+      sessionStorage.setItem('pendingBooking', JSON.stringify({
+        therapistId: therapist.id,
+        therapistName: therapist.name,
+        action: 'book',
+        timestamp: Date.now()
+      }));
+      onOpenAuth('signup'); // Default to signup for new users
+    }
   };
 
   const getServiceCategoryDisplayName = (category: string) => {
     switch (category) {
       case 'TEENS': return 'Teen Therapy (13-17)';
       case 'INDIVIDUALS': return 'Individual Therapy (18+)';
-      case 'FAMILY & COUPLES': return 'Family & Couples Therapy';
-      case 'LGBTQIA+': return 'LGBTQIA+ Therapy';
+      case 'FAMILY_COUPLES': return 'Family & Couples Therapy';
+      case 'LGBTQIA': return 'LGBTQIA+ Therapy';
       default: return category;
     }
   };
@@ -351,74 +294,15 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
           </select>
         </div>
 
-        {/* Therapist Grid - Using Landing Page Card Style with Dark Theme */}
+        {/* Therapist Grid - Using TherapistCard component */}
         {filteredTherapists.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredTherapists.map((therapist, index) => (
-              <div
-                key={index}
-                className="group bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-neutral-800"
-              >
-                {/* Large Image Section */}
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={therapist.image}
-                    alt={therapist.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-
-                  {/* Availability Badge */}
-                  <div className="absolute bottom-3 left-3 flex items-center space-x-1 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1">
-                    <Clock className="w-3 h-3 text-accent-green" />
-                    <span className={`text-xs font-medium ${
-                      therapist.availability.toLowerCase().includes('today') ? 'text-accent-green' : 'text-neutral-300'
-                    }`}>
-                      {therapist.availability}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Content Section */}
-                <div className="p-6">
-                  <div className="text-center mb-4">
-                    <h3 className="text-lg font-semibold text-white mb-1">
-                      {therapist.name}
-                    </h3>
-                    <p className="text-primary-500 font-medium text-sm">
-                      {therapist.specialty}
-                    </p>
-                  </div>
-
-                  <div className="space-y-3 mb-6">
-                    <div>
-                      <p className="text-xs text-neutral-400 mb-2 font-medium">Languages:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {therapist.languages.map((lang, langIndex) => (
-                          <span
-                            key={langIndex}
-                            className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full"
-                          >
-                            {lang}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-xs text-neutral-400 mb-1 font-medium">Credentials:</p>
-                      <p className="text-xs text-neutral-300">{therapist.credentials}</p>
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={() => handleBookNow(therapist)}
-                    className="w-full bg-primary-500 text-white py-3 rounded-2xl hover:bg-primary-600 transition-colors duration-200 font-medium flex items-center justify-center space-x-2 text-sm"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>Book Session</span>
-                  </button>
-                </div>
-              </div>
+            {filteredTherapists.map((therapist) => (
+              <TherapistCard
+                key={therapist.id}
+                therapist={therapist}
+                onBookNow={handleBookNow}
+              />
             ))}
           </div>
         ) : (

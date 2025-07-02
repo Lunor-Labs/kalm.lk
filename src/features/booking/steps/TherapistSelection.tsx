@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Star, Clock, MessageCircle, Video, Phone, Award } from 'lucide-react';
+import { therapistsData, getTherapistsByCategory, TherapistData } from '../../../data/therapists';
 
 interface TherapistSelectionProps {
   serviceType?: string;
@@ -8,89 +9,14 @@ interface TherapistSelectionProps {
   onBack: () => void;
 }
 
-interface Therapist {
-  id: string;
-  name: string;
-  specialty: string;
-  image: string;
-  languages: string[];
-  credentials: string;
-  availability: string;
-  rating: number;
-  reviewCount: number;
-  hourlyRate: number;
-  sessionFormats: string[];
-  serviceCategory: string;
-}
-
 const TherapistSelection: React.FC<TherapistSelectionProps> = ({
   serviceType,
   selectedTherapist,
   onTherapistSelect,
   onBack
 }) => {
-  const [therapists, setTherapists] = useState<Therapist[]>([]);
+  const [therapists, setTherapists] = useState<TherapistData[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Mock therapist data - in real app, this would come from Firestore
-  const mockTherapists: Therapist[] = [
-    {
-      id: '1',
-      name: 'Dr. Priya Perera',
-      specialty: 'Anxiety & Depression',
-      image: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English', 'Sinhala'],
-      credentials: 'PhD Clinical Psychology',
-      availability: 'Available Today',
-      rating: 4.9,
-      reviewCount: 127,
-      hourlyRate: 4500,
-      sessionFormats: ['video', 'audio', 'chat'],
-      serviceCategory: 'INDIVIDUALS'
-    },
-    {
-      id: '2',
-      name: 'Dr. Rohan Silva',
-      specialty: 'Relationship Counseling',
-      image: 'https://images.pexels.com/photos/5327921/pexels-photo-5327921.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English', 'Sinhala', 'Tamil'],
-      credentials: 'MSc Counseling Psychology',
-      availability: 'Available Tomorrow',
-      rating: 4.8,
-      reviewCount: 89,
-      hourlyRate: 5000,
-      sessionFormats: ['video', 'audio'],
-      serviceCategory: 'FAMILY_COUPLES'
-    },
-    {
-      id: '3',
-      name: 'Dr. Sanduni Wickramasinghe',
-      specialty: 'Teen Counseling',
-      image: 'https://images.pexels.com/photos/5327653/pexels-photo-5327653.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English', 'Sinhala'],
-      credentials: 'MSc Clinical Psychology',
-      availability: 'Available Today',
-      rating: 4.9,
-      reviewCount: 78,
-      hourlyRate: 3500,
-      sessionFormats: ['video', 'chat'],
-      serviceCategory: 'TEENS'
-    },
-    {
-      id: '4',
-      name: 'Dr. Malini Perera',
-      specialty: 'LGBTQIA+ Counseling',
-      image: 'https://images.pexels.com/photos/5327647/pexels-photo-5327647.jpeg?auto=compress&cs=tinysrgb&w=400',
-      languages: ['English', 'Sinhala'],
-      credentials: 'MSc Inclusive Psychology',
-      availability: 'Available Today',
-      rating: 4.8,
-      reviewCount: 65,
-      hourlyRate: 4500,
-      sessionFormats: ['video', 'audio', 'chat'],
-      serviceCategory: 'LGBTQIA'
-    }
-  ];
 
   useEffect(() => {
     // Simulate API call
@@ -99,8 +25,8 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
       
       // Filter therapists by service type
       const filteredTherapists = serviceType 
-        ? mockTherapists.filter(t => t.serviceCategory === serviceType)
-        : mockTherapists;
+        ? getTherapistsByCategory(serviceType)
+        : therapistsData;
       
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 1000));
