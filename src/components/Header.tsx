@@ -69,7 +69,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
           {/* Logo */}
           <div className="flex items-center space-x-2 flex-shrink-0">
             <img 
-              src="/logo icon (1).jpg" 
+              src="/kalm.lk/logo.jpg" 
               alt="Kalm Logo" 
               className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg"
             />
