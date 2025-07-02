@@ -100,7 +100,7 @@ const LandingPage: React.FC = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router basename="/kalm.lk">
         <div className="App">
           <Routes>
             {/* Landing Page - unchanged */}
