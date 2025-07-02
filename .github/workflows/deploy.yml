@@ -49,8 +49,10 @@ jobs:
           echo "VITE_APP_ENV=${{ secrets.VITE_APP_ENV }}" >> .env
           echo "VITE_APP_URL=${{ secrets.VITE_APP_URL }}" >> .env
 
-      - name: Build project
-        run: npm run build
+      - name: Build and prepare 404.html
+        run: |
+          npm run build
+          cp dist/index.html dist/404.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
