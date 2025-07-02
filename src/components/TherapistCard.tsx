@@ -42,7 +42,7 @@ const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onViewProfile,
   ];
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-cream-200 overflow-hidden">
+    <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-cream-200/100 overflow-hidden">
       {/* Header with Photo and Availability */}
       <div className="relative">
         <div className="h-48 overflow-hidden">

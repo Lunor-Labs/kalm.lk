@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Phone } from 'lucide-react';
+import { Menu, X, Phone, User, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { signOut } from '../lib/auth';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 interface HeaderProps {
   onOpenAuth: (mode: 'login' | 'signup') => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,6 +23,31 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success('Signed out successfully');
+      setShowProfileMenu(false);
+      // Stay on landing page after logout
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to sign out');
+    }
+  };
+
+  const goToDashboard = () => {
+    if (user) {
+      const getRoleRedirectPath = (role: string): string => {
+        switch (role) {
+          case 'admin': return '/admin/dashboard';
+          case 'therapist': return '/therapist/schedule';
+          case 'client': return '/client/home';
+          default: return '/client/home';
+        }
+      };
+      navigate(getRoleRedirectPath(user.role));
+    }
+  };
 
   const navItems = [
     { label: 'About', href: '#about' },
@@ -37,7 +69,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
           {/* Logo */}
           <div className="flex items-center space-x-2 flex-shrink-0">
             <img 
-              src="/kalm.lk/logo.jpg" 
+              src="/logo icon (1).jpg" 
               alt="Kalm Logo" 
               className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg"
             />
@@ -65,27 +97,83 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             </div>
           </nav>
 
-          {/* Desktop Auth Buttons */}
+          {/* Desktop Auth/Profile Section */}
           <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
-            {/* Desktop - Show phone number */}
-            <div className={`flex items-center space-x-2 font-medium text-sm px-4 py-2 rounded-lg ${
-              isScrolled 
-                ? 'text-primary-500' 
-                : 'text-white'
-            }`}>
-              <Phone className="w-4 h-4" />
-              <span>{phoneNumber}</span>
-            </div>
-            <button
-              onClick={() => onOpenAuth('login')}
-              className={`transition-colors duration-200 font-medium text-sm px-5 py-2.5 rounded-full ${
-                isScrolled 
-                  ? 'bg-primary-500 text-white hover:bg-primary-600' 
-                  : 'bg-primary-500 text-white hover:bg-primary-600'
-              }`}
-            >
-              Login
-            </button>
+            {!user ? (
+              <>
+                {/* Desktop - Show phone number */}
+                <div className={`flex items-center space-x-2 font-medium text-sm px-4 py-2 rounded-lg ${
+                  isScrolled 
+                    ? 'text-primary-500' 
+                    : 'text-white'
+                }`}>
+                  <Phone className="w-4 h-4" />
+                  <span>{phoneNumber}</span>
+                </div>
+                <button
+                  onClick={() => onOpenAuth('login')}
+                  className={`transition-colors duration-200 font-medium text-sm px-5 py-2.5 rounded-full ${
+                    isScrolled 
+                      ? 'bg-primary-500 text-white hover:bg-primary-600' 
+                      : 'bg-primary-500 text-white hover:bg-primary-600'
+                  }`}
+                >
+                  Login
+                </button>
+              </>
+            ) : (
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center space-x-3 bg-black/20 backdrop-blur-sm rounded-full px-4 py-2 hover:bg-black/30 transition-colors duration-200"
+                >
+                  <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">
+                      {user.displayName?.charAt(0) || 'U'}
+                    </span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-white font-medium text-sm">
+                      {user.displayName || 'User'}
+                    </p>
+                    <p className="text-neutral-300 text-xs capitalize">
+                      {user.role} {user.isAnonymous && '(Anonymous)'}
+                    </p>
+                  </div>
+                </button>
+
+                {/* Profile Dropdown */}
+                {showProfileMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 backdrop-blur-sm border border-neutral-700 rounded-2xl shadow-xl">
+                    <div className="p-4 border-b border-neutral-700">
+                      <p className="text-white font-medium">{user.displayName || 'User'}</p>
+                      <p className="text-neutral-300 text-sm">
+                        {user.isAnonymous ? 'Anonymous Account' : user.email}
+                      </p>
+                      <p className="text-primary-500 text-xs capitalize mt-1">
+                        {user.role}
+                      </p>
+                    </div>
+                    <div className="p-2">
+                      <button
+                        onClick={goToDashboard}
+                        className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-white hover:bg-neutral-800 transition-colors duration-200"
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Go to Dashboard</span>
+                      </button>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors duration-200"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -101,7 +189,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
           </button>
         </div>
 
-        {/* Mobile Menu - Centered content */}
+        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 bg-neutral-900/95 backdrop-blur-md shadow-xl rounded-b-2xl border-t border-neutral-700">
             <div className="px-4 py-4 space-y-3">
@@ -121,30 +209,80 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
               
               {/* Centered action buttons */}
               <div className="pt-3 border-t border-neutral-700 space-y-2 text-center">
-                {/* Mobile - Clickable call button */}
-                <a
-                  href={`tel:${phoneNumberForCall}`}
-                  className="inline-flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200 font-medium py-2 text-sm"
-                >
-                  <Phone className="w-4 h-4" />
-                  <span>Call Us</span>
-                </a>
-                <div>
-                  <button
-                    onClick={() => {
-                      onOpenAuth('login');
-                      setIsMenuOpen(false);
-                    }}
-                    className="bg-primary-500 text-white px-6 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm"
-                  >
-                    Login
-                  </button>
-                </div>
+                {!user ? (
+                  <>
+                    {/* Mobile - Clickable call button */}
+                    <a
+                      href={`tel:${phoneNumberForCall}`}
+                      className="inline-flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200 font-medium py-2 text-sm"
+                    >
+                      <Phone className="w-4 h-4" />
+                      <span>Call Us</span>
+                    </a>
+                    <div>
+                      <button
+                        onClick={() => {
+                          onOpenAuth('login');
+                          setIsMenuOpen(false);
+                        }}
+                        className="bg-primary-500 text-white px-6 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm"
+                      >
+                        Login
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Mobile Profile Info */}
+                    <div className="bg-black/30 rounded-2xl p-4 text-center">
+                      <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span className="text-white font-semibold">
+                          {user.displayName?.charAt(0) || 'U'}
+                        </span>
+                      </div>
+                      <p className="text-white font-medium">{user.displayName || 'User'}</p>
+                      <p className="text-neutral-300 text-sm">
+                        {user.isAnonymous ? 'Anonymous Account' : user.email}
+                      </p>
+                      <p className="text-primary-500 text-xs capitalize mt-1">
+                        {user.role}
+                      </p>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        goToDashboard();
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full bg-primary-500 text-white px-6 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm"
+                    >
+                      Go to Dashboard
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMenuOpen(false);
+                      }}
+                      className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm"
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Click outside to close profile menu */}
+      {showProfileMenu && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowProfileMenu(false)}
+        />
+      )}
     </header>
   );
 };

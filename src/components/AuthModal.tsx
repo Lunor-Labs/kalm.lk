@@ -143,12 +143,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
       if (user) {
         toast.success('Welcome to Kalm!');
-        onClose();
+        onClose(); // Close modal first
         
-        setTimeout(() => {
-          const redirectPath = getRoleRedirectPath(user.role);
-          navigate(redirectPath, { replace: true });
-        }, 100);
+        // Navigate to appropriate dashboard based on user role
+        const redirectPath = getRoleRedirectPath(user.role);
+        navigate(redirectPath, { replace: true });
       }
     } catch (error: any) {
       toast.error(error.message || 'Authentication failed');
@@ -162,12 +161,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     try {
       const user = await signInWithGoogle();
       toast.success('Welcome to Kalm!');
-      onClose();
+      onClose(); // Close modal first
       
-      setTimeout(() => {
-        const redirectPath = getRoleRedirectPath(user.role);
-        navigate(redirectPath, { replace: true });
-      }, 100);
+      // Navigate to appropriate dashboard based on user role
+      const redirectPath = getRoleRedirectPath(user.role);
+      navigate(redirectPath, { replace: true });
     } catch (error: any) {
       toast.error(error.message || 'Google sign-in failed');
     } finally {
@@ -286,9 +284,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                 className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
-    errors.displayName ? 'border-red-500' : 'border-black'
-  }`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                    errors.email ? 'border-red-500' : 'border-cream-200'
+                  }`}
                   placeholder="Enter your email"
                 />
               </div>
@@ -302,7 +300,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
             <>
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Name
+                Full Name
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
@@ -311,17 +309,20 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   name="displayName"
                   value={formData.displayName}
                   onChange={handleInputChange}
-                 className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
-    errors.displayName ? 'border-red-500' : 'border-black'
-  }`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                    errors.displayName ? 'border-red-500' : 'border-cream-200'
+                  }`}
                   placeholder="Enter your full name"
                   required
                 />
               </div>
+              {errors.displayName && (
+                <p className="text-red-500 text-xs mt-1">{errors.displayName}</p>
+              )}
             </div>
             <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Phone Number
+                  Phone Number (Optional)
                 </label>
                 <div className="relative flex items-center">
                   <Phone className="absolute left-3 w-5 h-5 text-neutral-400 z-10" />
@@ -330,7 +331,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-cream-200 rounded-2xl focus:border-neutral-400 transition-all duration-200"
+                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                      errors.phone ? 'border-red-500' : 'border-cream-200'
+                    }`}
                     placeholder="Enter your phone number"
                     aria-describedby="phone-error"
                   />
@@ -354,9 +357,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                 className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
-    errors.displayName ? 'border-red-500' : 'border-black'
-  }`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                    errors.username ? 'border-red-500' : 'border-cream-200'
+                  }`}
                   placeholder="Choose a unique username"
                 />
               </div>
@@ -381,9 +384,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-              className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
-    errors.displayName ? 'border-red-500' : 'border-black'
-  }`}
+                className={`w-full pl-10 pr-12 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                  errors.password ? 'border-red-500' : 'border-cream-200'
+                }`}
                 placeholder="Enter your password"
               />
               <button
@@ -416,9 +419,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                className={`w-full pl-10 pr-4 py-3 border border-black rounded-2xl transition-all duration-200 ${
-    errors.displayName ? 'border-red-500' : 'border-black'
-  }`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                    errors.confirmPassword ? 'border-red-500' : 'border-cream-200'
+                  }`}
                   placeholder="Confirm your password"
                 />
               </div>
@@ -445,6 +448,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
               <input 
                 type="checkbox" 
                 className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
+                required
               />
               <p className="text-sm text-neutral-600">
                 I agree to the{' '}
@@ -460,6 +464,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
               <input 
                 type="checkbox" 
                 className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
+                required
               />
               <p className="text-sm text-neutral-600">
                 I agree to the{' '}
