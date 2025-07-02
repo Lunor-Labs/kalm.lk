@@ -45,8 +45,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     };
     let isValid = true;
 
-    // Email validation
-    if (mode === 'login' || mode === 'signup') {
+    // Email/Username validation for login
+    if (mode === 'login') {
+      if (!formData.email) {
+        newErrors.email = 'Email or username is required';
+        isValid = false;
+      }
+    }
+
+    // Email validation for signup
+    if (mode === 'signup') {
       if (!formData.email) {
         newErrors.email = 'Email is required';
         isValid = false;
@@ -124,7 +132,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       
       if (mode === 'login') {
         user = await signIn({
-          email: formData.email,
+          email: formData.email, // This can now be either email or username
           password: formData.password
         });
       } else if (mode === 'signup') {
@@ -272,55 +280,81 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
         )}
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6" noValidate >
-          {(mode === 'signup' || mode === 'login') && (
+          {mode === 'login' && (
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Email Address
+                Email or Username
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
                 <input
-                  type="email"
+                  type="text"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
                   className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
                     errors.email ? 'border-red-500' : 'border-cream-200'
                   }`}
-                  placeholder="Enter your email"
+                  placeholder="Enter your email or username"
                 />
               </div>
               {errors.email && (
                 <p className="text-red-500 text-xs mt-1">{errors.email}</p>
               )}
+              <p className="text-xs text-neutral-500 mt-1">
+                You can sign in with either your email address or username
+              </p>
             </div>
           )}
 
           {mode === 'signup' && (
             <>
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                <input
-                  type="text"
-                  name="displayName"
-                  value={formData.displayName}
-                  onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                    errors.displayName ? 'border-red-500' : 'border-cream-200'
-                  }`}
-                  placeholder="Enter your full name"
-                  required
-                />
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                      errors.email ? 'border-red-500' : 'border-cream-200'
+                    }`}
+                    placeholder="Enter your email"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                )}
               </div>
-              {errors.displayName && (
-                <p className="text-red-500 text-xs mt-1">{errors.displayName}</p>
-              )}
-            </div>
-            <div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <input
+                    type="text"
+                    name="displayName"
+                    value={formData.displayName}
+                    onChange={handleInputChange}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                      errors.displayName ? 'border-red-500' : 'border-cream-200'
+                    }`}
+                    placeholder="Enter your full name"
+                    required
+                  />
+                </div>
+                {errors.displayName && (
+                  <p className="text-red-500 text-xs mt-1">{errors.displayName}</p>
+                )}
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Phone Number (Optional)
                 </label>
@@ -341,8 +375,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                 {errors.phone && (
                   <p id="phone-error" className="text-red-500 text-xs mt-1">{errors.phone}</p>
                 )}
-            </div>
-          </>
+              </div>
+            </>
           )}
 
           {mode === 'anonymous' && (
