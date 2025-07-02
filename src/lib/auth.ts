@@ -130,6 +130,7 @@ export const signInWithGoogle = async (): Promise<User> => {
 
 export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promise<User> => {
   try {
+    // First, sign in anonymously with Firebase
     const userCredential = await signInAnonymously(auth);
     const firebaseUser = userCredential.user;
     
@@ -141,7 +142,8 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
       username: anonymousData.username,
       role: 'client' as UserRole,
       isAnonymous: true,
-      anonymousPassword: anonymousData.password, // Store for future login
+      // Note: We don't store the password in Firestore for security
+      // Anonymous users will need to remember their username for identification
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -158,7 +160,18 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
       updatedAt: new Date(),
     };
   } catch (error: any) {
-    throw new Error(error.message || 'Failed to create anonymous account');
+    console.error('Anonymous sign up error:', error);
+    
+    // Provide more specific error messages
+    if (error.code === 'auth/operation-not-allowed') {
+      throw new Error('Anonymous authentication is not enabled. Please contact support.');
+    } else if (error.code === 'auth/network-request-failed') {
+      throw new Error('Network error. Please check your connection and try again.');
+    } else if (error.code === 'auth/too-many-requests') {
+      throw new Error('Too many requests. Please wait a moment and try again.');
+    } else {
+      throw new Error(error.message || 'Failed to create anonymous account');
+    }
   }
 };
 
