@@ -60,6 +60,19 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
   const phoneNumber = '+94 (76) 633 0360';
   const phoneNumberForCall = '+94766330360'; // Without spaces for tel: link
 
+  // Smooth scroll handler for nav items
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const id = href.replace('#', '');
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+        setIsMenuOpen(false); // close mobile menu if open
+      }
+    }
+  };
+
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled ? 'bg-neutral-900/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
@@ -87,6 +100,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                 <a
                   key={item.label}
                   href={item.href}
+                  onClick={e => handleNavClick(e, item.href)}
                   className={`hover:text-primary-500 transition-colors duration-200 font-medium text-sm whitespace-nowrap ${
                     isScrolled ? 'text-neutral-300' : 'text-white/90 hover:text-white'
                   }`}
@@ -199,7 +213,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                   <a
                     key={item.label}
                     href={item.href}
-                    onClick={() => setIsMenuOpen(false)}
+                    onClick={e => handleNavClick(e, item.href)}
                     className="block text-neutral-300 hover:text-primary-500 transition-colors duration-200 font-medium py-2 text-sm"
                   >
                     {item.label}
