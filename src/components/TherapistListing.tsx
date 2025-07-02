@@ -124,7 +124,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
         action: 'book',
         timestamp: Date.now()
       }));
-      onOpenAuth('signup'); // Default to signup for new users
+      onOpenAuth('login'); // Show login first for better UX
     }
   };
 

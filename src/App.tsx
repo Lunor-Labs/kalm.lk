@@ -60,7 +60,17 @@ const LandingPage: React.FC = () => {
   };
 
   if (currentView === 'therapists') {
-    return <TherapistListing onBack={backToHome} initialFilter={serviceFilter} onOpenAuth={openAuthModal} />;
+    return (
+      <>
+        <TherapistListing onBack={backToHome} initialFilter={serviceFilter} onOpenAuth={openAuthModal} />
+        <AuthModal 
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          mode={authMode}
+          onSwitchMode={setAuthMode}
+        />
+      </>
+    );
   }
 
   return (

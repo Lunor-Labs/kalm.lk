@@ -34,7 +34,7 @@ const Therapists: React.FC<TherapistsProps> = ({ onViewAllTherapists, onOpenAuth
         action: 'book',
         timestamp: Date.now()
       }));
-      onOpenAuth('signup'); // Default to signup for new users
+      onOpenAuth('login'); // Show login first for better UX
     }
   };
 
