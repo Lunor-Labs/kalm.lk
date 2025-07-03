@@ -190,25 +190,25 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
 <div className="bg-cream-50 backdrop-blur-sm rounded-3xl shadow-lg border border-cream-200 p-6 mb-8">
   <div className="grid md:grid-cols-5 gap-4 mb-4">
     {/* Search */}
-    <div className="md:col-span-2">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-cream-600" />
-        <input
-          type="text"
-          placeholder="Search therapists..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 border border-cream-300 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white text-cream-900 placeholder-cream-400"
-        />
-      </div>
-    </div>
+          <div className="md:col-span-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-cream-600" />
+              <input
+                type="text"
+                placeholder="Search therapists..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-black rounded-2xl focus:outline-none focus:border-black transition-all duration-200 text-sm bg-white text-cream-900 placeholder-cream-400"
+              />
+            </div>
+          </div>
 
     {/* Service Category Filter */}
     <div>
       <select
         value={filters.serviceCategory || ''}
         onChange={(e) => setFilters({ ...filters, serviceCategory: e.target.value || undefined })}
-        className="w-full p-3 border border-cream-300 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white text-cream-900"
+        className="w-full p-3 border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-1 focus:ring-gray-200 transition-all duration-200 text-sm bg-white text-gray-900"
       >
         <option value="">All Services</option>
         {serviceCategories.map((category) => (
@@ -222,7 +222,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
       <select
         value={filters.specialty || ''}
         onChange={(e) => setFilters({ ...filters, specialty: e.target.value || undefined })}
-        className="w-full p-3 border border-cream-300 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white text-cream-900"
+        className="w-full p-3 border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-1 focus:ring-gray-200 transition-all duration-200 text-sm bg-white text-gray-900"
       >
         {specialties.map((spec) => (
           <option key={spec} value={spec}>{spec}</option>
@@ -235,7 +235,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
       <select
         value={filters.language || ''}
         onChange={(e) => setFilters({ ...filters, language: e.target.value || undefined })}
-        className="w-full p-3 border border-cream-300 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white text-cream-900"
+        className="w-full p-3 border border-black rounded-2xl focus:outline-none focus:border-black focus:ring-1 focus:ring-gray-200 transition-all duration-200 text-sm bg-white text-gray-900"
       >
         {languages.map((lang) => (
           <option key={lang} value={lang}>{lang}</option>
