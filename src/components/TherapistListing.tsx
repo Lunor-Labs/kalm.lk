@@ -187,99 +187,91 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
         </div>
 
         {/* Simplified Filters */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-3xl shadow-lg border border-neutral-800 p-6 mb-8">
-          <div className="grid md:grid-cols-5 gap-4 mb-4">
-            {/* Search */}
-            <div className="md:col-span-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                <input
-                  type="text"
-                  placeholder="Search therapists..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-neutral-800 text-white placeholder-neutral-400"
-                />
-              </div>
-            </div>
+<div className="bg-cream-50 backdrop-blur-sm rounded-3xl shadow-lg border border-cream-200 p-6 mb-8">
+  <div className="grid md:grid-cols-5 gap-4 mb-4">
+    {/* Search */}
+    <div className="md:col-span-2">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-cream-600" />
+        <input
+          type="text"
+          placeholder="Search therapists..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-3 border border-cream-300 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white text-cream-900 placeholder-cream-400"
+        />
+      </div>
+    </div>
 
-            {/* Service Category Filter */}
-            <div>
-              <select
-                value={filters.serviceCategory || ''}
-                onChange={(e) => setFilters({ ...filters, serviceCategory: e.target.value || undefined })}
-                className="w-full p-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-neutral-800 text-white"
-              >
-                <option value="">All Services</option>
-                {serviceCategories.map((category) => (
-                  <option key={category} value={category}>{getServiceCategoryDisplayName(category)}</option>
-                ))}
-              </select>
-            </div>
+    {/* Service Category Filter */}
+    <div>
+      <select
+        value={filters.serviceCategory || ''}
+        onChange={(e) => setFilters({ ...filters, serviceCategory: e.target.value || undefined })}
+        className="w-full p-3 border border-cream-300 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white text-cream-900"
+      >
+        <option value="">All Services</option>
+        {serviceCategories.map((category) => (
+          <option key={category} value={category}>{getServiceCategoryDisplayName(category)}</option>
+        ))}
+      </select>
+    </div>
 
-            {/* Specialty Filter */}
-            <div>
-              <select
-                value={filters.specialty || ''}
-                onChange={(e) => setFilters({ ...filters, specialty: e.target.value || undefined })}
-                className="w-full p-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-neutral-800 text-white"
-              >
-                <option value="">All Specialties</option>
-                {specialties.map((spec) => (
-                  <option key={spec} value={spec}>{spec}</option>
-                ))}
-              </select>
-            </div>
+    {/* Specialty Filter */}
+    <div>
+      <select
+        value={filters.specialty || ''}
+        onChange={(e) => setFilters({ ...filters, specialty: e.target.value || undefined })}
+        className="w-full p-3 border border-cream-300 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white text-cream-900"
+      >
+        {specialties.map((spec) => (
+          <option key={spec} value={spec}>{spec}</option>
+        ))}
+      </select>
+    </div>
 
-            {/* Language Filter */}
-            <div>
-              <select
-                value={filters.language || ''}
-                onChange={(e) => setFilters({ ...filters, language: e.target.value || undefined })}
-                className="w-full p-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-neutral-800 text-white"
-              >
-                <option value="">All Languages</option>
-                {languages.map((lang) => (
-                  <option key={lang} value={lang}>{lang}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+    {/* Language Filter */}
+    <div>
+      <select
+        value={filters.language || ''}
+        onChange={(e) => setFilters({ ...filters, language: e.target.value || undefined })}
+        className="w-full p-3 border border-cream-300 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white text-cream-900"
+      >
+        {languages.map((lang) => (
+          <option key={lang} value={lang}>{lang}</option>
+        ))}
+      </select>
+    </div>
+  </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setFilters({ 
-                  ...filters, 
-                  availability: filters.availability === 'available' ? undefined : 'available' 
-                })}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-full border transition-all duration-200 text-sm font-medium ${
-                  filters.availability === 'available'
-                    ? 'bg-accent-green/20 text-accent-green border-accent-green/30'
-                    : 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:border-neutral-600'
-                }`}
-              >
-                <Clock className="w-4 h-4" />
-                <span>Available Today</span>
-              </button>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-neutral-300">
-                <span className="font-medium text-white">{filteredTherapists.length}</span> therapist{filteredTherapists.length !== 1 ? 's' : ''} found
-              </div>
-              
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-neutral-400 hover:text-neutral-200 transition-colors duration-200"
-                >
-                  Clear all
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+  <div className="flex items-center justify-between">
+    <div className="flex items-center space-x-4">
+      <button
+        onClick={() => setFilters({ 
+          ...filters, 
+          availability: filters.availability === 'available' ? undefined : 'available' 
+        })}
+        className={`flex items-center space-x-2 px-4 py-2 rounded-full border transition-all duration-200 text-sm font-medium whitespace-nowrap ${
+          filters.availability === 'available'
+            ? 'bg-cream-200 text-cream-800 border-cream-300'
+            : 'bg-white text-cream-700 border-cream-300 hover:border-cream-400'
+        }`}
+      >
+        <Clock className="w-4 h-4" />
+        <span>Available Today</span>
+      </button>
+    </div>
+    
+    {hasActiveFilters && (
+      <button
+        onClick={clearFilters}
+        className="text-sm text-cream-600 hover:text-cream-800 transition-colors duration-200"
+      >
+        Clear all
+      </button>
+    )}
+  </div>
+</div>
 
         {/* Mobile Sort */}
         <div className="md:hidden mb-6">
