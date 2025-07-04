@@ -63,25 +63,16 @@ class DailyService {
       name: roomName,
       privacy: options.privacy || 'private',
       properties: {
-        start_video_off: options.properties?.start_video_off ?? false,
-        start_audio_off: options.properties?.start_audio_off ?? false,
-        // enable_chat: options.properties?.enable_chat ?? true,
+        start_video_off: options.properties?.start_video_off ?? true,
+        start_audio_off: options.properties?.start_audio_off ?? true,
+        enable_chat: options.properties?.enable_chat ?? true,
         enable_screenshare: options.properties?.enable_screenshare ?? true,
         max_participants: options.properties?.max_participants ?? 2,
         exp: options.properties?.exp || Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
         enable_prejoin_ui: false,
-        enable_network_ui: false,
-        enable_people_ui: false,
-        enable_pip_ui: false,
-        enable_fullscreen_toggle: false,
-        enable_device_ui: false,
-        enable_recording: false,
-        enable_transcription: false,
-        enable_knocking: false,
-        enable_background_blur: true,
-        enable_noise_cancellation: true,
-        autojoin: false,
-        lang: 'en'
+        enable_network_ui: true,
+        enable_people_ui: true,
+        enable_pip_ui: true
       },
     };
 
@@ -108,9 +99,7 @@ class DailyService {
         enable_screenshare: true,
         enable_recording: false,
         start_video_off: false,
-        start_audio_off: false,
-        // enable_chat: true,
-        enable_prejoin_ui: false
+        start_audio_off: false
       },
     };
 
@@ -125,9 +114,10 @@ class DailyService {
   }
 
   // Client-side Daily.co integration
-  static createCallObject(options: any = {}) {
+  static createCallObject() {
     return DailyIframe.createCallObject({
-      // Only include supported options for call object mode
+      showLeaveButton: false,
+      showFullscreenButton: true,
       theme: {
         colors: {
           accent: '#00BFA5',
@@ -141,20 +131,15 @@ class DailyService {
           mainAreaText: '#FFFFFF',
           supportiveText: '#B3B0A9'
         }
-      },
-      ...options
+      }
     });
   }
 
-  static async joinRoom(roomUrl: string, token?: string, options: any = {}) {
+  static async joinRoom(roomUrl: string, token?: string) {
     const callObject = this.createCallObject();
     
     const joinOptions: any = {
       url: roomUrl,
-      startVideoOff: options.startVideoOff || false,
-      startAudioOff: options.startAudioOff || false,
-      userName: options.userName || 'User',
-      ...options
     };
 
     if (token) {
