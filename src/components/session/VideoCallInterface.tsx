@@ -29,19 +29,32 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
   isChatOpen
 }) => {
   const callFrameRef = useRef<HTMLDivElement>(null);
-  const [callObject, setCallObject] = useState<any>(null);
+  const callObjectRef = useRef<any>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(session.sessionType === 'audio');
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
+  const [isInitializing, setIsInitializing] = useState(false);
 
   useEffect(() => {
-    if (!session.dailyRoomUrl || !callFrameRef.current) return;
+    if (!session.dailyRoomUrl || !callFrameRef.current || isInitializing) return;
 
     const initializeCall = async () => {
       try {
-        // Create call object
+        setIsInitializing(true);
+        
+        // Clean up any existing call object first
+        if (callObjectRef.current) {
+          try {
+            await callObjectRef.current.destroy();
+          } catch (error) {
+            console.warn('Error destroying previous call object:', error);
+          }
+          callObjectRef.current = null;
+        }
+
+        // Create new call object
         const call = DailyIframe.createCallObject({
           showLeaveButton: false,
           showFullscreenButton: true,
@@ -49,12 +62,13 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           showParticipantsBar: false,
         });
 
-        setCallObject(call);
+        callObjectRef.current = call;
 
         // Set up event listeners
         call.on('joined-meeting', () => {
           console.log('Joined meeting');
           setIsConnected(true);
+          updateParticipants(call);
         });
 
         call.on('left-meeting', () => {
@@ -92,32 +106,46 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
         // Set initial audio/video state
         if (session.sessionType === 'audio') {
           await call.setLocalVideo(false);
+          setIsVideoOff(true);
         }
 
       } catch (error) {
         console.error('Failed to initialize call:', error);
+        setIsInitializing(false);
+      } finally {
+        setIsInitializing(false);
       }
     };
 
     initializeCall();
 
+    // Cleanup function
     return () => {
-      if (callObject) {
-        callObject.destroy();
+      if (callObjectRef.current) {
+        try {
+          callObjectRef.current.destroy();
+        } catch (error) {
+          console.warn('Error destroying call object on cleanup:', error);
+        }
+        callObjectRef.current = null;
       }
     };
-  }, [session.dailyRoomUrl, token]);
+  }, [session.dailyRoomUrl, token, session.sessionType]);
 
   const updateParticipants = (call: any) => {
-    const participants = call.participants();
-    setParticipants(Object.values(participants));
+    try {
+      const participants = call.participants();
+      setParticipants(Object.values(participants));
+    } catch (error) {
+      console.warn('Error updating participants:', error);
+    }
   };
 
   const toggleMute = async () => {
-    if (!callObject) return;
+    if (!callObjectRef.current) return;
     
     try {
-      await callObject.setLocalAudio(!isMuted);
+      await callObjectRef.current.setLocalAudio(!isMuted);
       setIsMuted(!isMuted);
     } catch (error) {
       console.error('Failed to toggle mute:', error);
@@ -125,10 +153,10 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
   };
 
   const toggleVideo = async () => {
-    if (!callObject || session.sessionType === 'audio') return;
+    if (!callObjectRef.current || session.sessionType === 'audio') return;
     
     try {
-      await callObject.setLocalVideo(!isVideoOff);
+      await callObjectRef.current.setLocalVideo(!isVideoOff);
       setIsVideoOff(!isVideoOff);
     } catch (error) {
       console.error('Failed to toggle video:', error);
@@ -136,13 +164,13 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
   };
 
   const toggleScreenShare = async () => {
-    if (!callObject || session.sessionType === 'audio') return;
+    if (!callObjectRef.current || session.sessionType === 'audio') return;
     
     try {
       if (isScreenSharing) {
-        await callObject.stopScreenShare();
+        await callObjectRef.current.stopScreenShare();
       } else {
-        await callObject.startScreenShare();
+        await callObjectRef.current.startScreenShare();
       }
       setIsScreenSharing(!isScreenSharing);
     } catch (error) {
@@ -151,10 +179,10 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
   };
 
   const leaveCall = async () => {
-    if (!callObject) return;
+    if (!callObjectRef.current) return;
     
     try {
-      await callObject.leave();
+      await callObjectRef.current.leave();
     } catch (error) {
       console.error('Failed to leave call:', error);
     }
@@ -167,11 +195,13 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
         <div ref={callFrameRef} className="w-full h-full" />
         
         {/* Connection Status */}
-        {!isConnected && (
+        {(!isConnected || isInitializing) && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/80">
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-white text-lg">Connecting to session...</p>
+              <p className="text-white text-lg">
+                {isInitializing ? 'Initializing session...' : 'Connecting to session...'}
+              </p>
             </div>
           </div>
         )}
@@ -206,7 +236,8 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           {/* Mute Toggle */}
           <button
             onClick={toggleMute}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-200 ${
+            disabled={!isConnected}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
               isMuted 
                 ? 'bg-red-500 hover:bg-red-600' 
                 : 'bg-neutral-700 hover:bg-neutral-600'
@@ -223,7 +254,8 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           {session.sessionType === 'video' && (
             <button
               onClick={toggleVideo}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-200 ${
+              disabled={!isConnected}
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                 isVideoOff 
                   ? 'bg-red-500 hover:bg-red-600' 
                   : 'bg-neutral-700 hover:bg-neutral-600'
@@ -241,7 +273,8 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           {session.sessionType === 'video' && (
             <button
               onClick={toggleScreenShare}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-200 ${
+              disabled={!isConnected}
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                 isScreenSharing 
                   ? 'bg-primary-500 hover:bg-primary-600' 
                   : 'bg-neutral-700 hover:bg-neutral-600'
@@ -268,14 +301,18 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           </button>
 
           {/* Settings */}
-          <button className="w-12 h-12 rounded-full bg-neutral-700 hover:bg-neutral-600 flex items-center justify-center transition-colors duration-200">
+          <button 
+            disabled={!isConnected}
+            className="w-12 h-12 rounded-full bg-neutral-700 hover:bg-neutral-600 flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <Settings className="w-6 h-6 text-white" />
           </button>
 
           {/* End Call */}
           <button
             onClick={leaveCall}
-            className="w-12 h-12 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors duration-200"
+            disabled={!isConnected}
+            className="w-12 h-12 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Phone className="w-6 h-6 text-white transform rotate-[135deg]" />
           </button>

@@ -18,9 +18,10 @@ const SessionRoom: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (!sessionId || !user) return;
+    if (!sessionId || !user || isInitialized) return;
 
     const initializeSession = async () => {
       try {
@@ -58,6 +59,7 @@ const SessionRoom: React.FC = () => {
           setSession(prev => prev ? { ...prev, status: 'active' } : null);
         }
 
+        setIsInitialized(true);
       } catch (err: any) {
         console.error('Failed to initialize session:', err);
         setError(err.message || 'Failed to load session');
@@ -68,6 +70,11 @@ const SessionRoom: React.FC = () => {
     };
 
     initializeSession();
+
+    // Cleanup function
+    return () => {
+      setIsInitialized(false);
+    };
   }, [sessionId, user]);
 
   const handleEndSession = async () => {
@@ -202,13 +209,15 @@ const SessionRoom: React.FC = () => {
 
           {/* Video Interface */}
           <div className="flex-1">
-            <VideoCallInterface
-              session={session}
-              token={meetingToken}
-              onEndCall={handleEndSession}
-              onToggleChat={() => setIsChatOpen(!isChatOpen)}
-              isChatOpen={isChatOpen}
-            />
+            {isInitialized && meetingToken && (
+              <VideoCallInterface
+                session={session}
+                token={meetingToken}
+                onEndCall={handleEndSession}
+                onToggleChat={() => setIsChatOpen(!isChatOpen)}
+                isChatOpen={isChatOpen}
+              />
+            )}
           </div>
         </div>
 
