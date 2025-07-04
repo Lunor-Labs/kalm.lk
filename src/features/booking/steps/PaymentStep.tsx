@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowLeft, CreditCard, Shield, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CreditCard, Shield, CheckCircle, Video, MessageCircle, Phone } from 'lucide-react';
 import { BookingData } from '../../../types/booking';
+import { createSession } from '../../../lib/sessions';
+import { useAuth } from '../../../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 interface PaymentStepProps {
   bookingData: BookingData;
@@ -13,10 +16,17 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   onPaymentComplete,
   onBack
 }) => {
+  const { user } = useAuth();
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>('video');
 
   const handlePayment = async () => {
+    if (!user || !bookingData.therapistId || !bookingData.sessionTime) {
+      toast.error('Missing required booking information');
+      return;
+    }
+
     setProcessing(true);
 
     try {
@@ -24,15 +34,41 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       // For demo purposes, we'll simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 3000));
       
+      // Create the session in Firebase after successful payment
+      const sessionId = await createSession({
+        bookingId: `booking-${Date.now()}`, // In real app, this would come from the booking
+        therapistId: bookingData.therapistId,
+        clientId: user.uid,
+        sessionType: sessionType,
+        status: 'scheduled',
+        scheduledTime: bookingData.sessionTime,
+        duration: bookingData.duration || 60,
+      });
+
+      toast.success('Payment successful! Session booked.');
+      console.log('Session created with ID:', sessionId);
+      
       // Simulate successful payment
       onPaymentComplete();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment failed:', error);
+      toast.error('Payment failed. Please try again.');
       setProcessing(false);
     }
   };
 
   const finalAmount = (bookingData.amount || 0) - (bookingData.discountAmount || 0);
+  const sessionTypeDiscount = sessionType === 'audio' ? 500 : sessionType === 'chat' ? 1000 : 0;
+  const totalAmount = finalAmount - sessionTypeDiscount;
+
+  const getSessionTypeIcon = (type: string) => {
+    switch (type) {
+      case 'video': return <Video className="w-4 h-4" />;
+      case 'audio': return <Phone className="w-4 h-4" />;
+      case 'chat': return <MessageCircle className="w-4 h-4" />;
+      default: return <Video className="w-4 h-4" />;
+    }
+  };
 
   if (processing) {
     return (
@@ -41,7 +77,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
             <h3 className="text-xl font-semibold text-white mb-2">Processing Payment</h3>
-            <p className="text-neutral-300">Please wait while we process your payment...</p>
+            <p className="text-neutral-300 mb-4">Please wait while we process your payment and create your session...</p>
             <div className="mt-6 p-4 bg-accent-green/10 border border-accent-green/20 rounded-2xl">
               <p className="text-accent-green text-sm">
                 <Shield className="w-4 h-4 inline mr-2" />
@@ -73,6 +109,50 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Payment Methods */}
         <div className="space-y-6">
+          {/* Session Type Selection */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-4">Final Session Type</h3>
+            <div className="space-y-3">
+              {[
+                { type: 'video' as const, label: 'Video Session', discount: 0, description: 'Face-to-face with video and audio' },
+                { type: 'audio' as const, label: 'Audio Session', discount: 500, description: 'Voice-only communication' },
+                { type: 'chat' as const, label: 'Chat Session', discount: 1000, description: 'Text-based messaging' }
+              ].map((option) => (
+                <label
+                  key={option.type}
+                  className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
+                    sessionType === option.type
+                      ? 'border-primary-500 bg-primary-500/10'
+                      : 'border-neutral-800 hover:border-neutral-700 bg-black/30'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="sessionType"
+                    value={option.type}
+                    checked={sessionType === option.type}
+                    onChange={(e) => setSessionType(e.target.value as any)}
+                    className="sr-only"
+                  />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {getSessionTypeIcon(option.type)}
+                      <div>
+                        <p className="font-medium text-white">{option.label}</p>
+                        <p className="text-sm text-neutral-300">{option.description}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {option.discount > 0 && (
+                        <p className="text-accent-green text-sm">-LKR {option.discount}</p>
+                      )}
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div>
             <h3 className="text-lg font-semibold text-white mb-4">Payment Method</h3>
             
@@ -173,13 +253,22 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-neutral-300">Session Fee</span>
+                <span className="text-neutral-300">Base Session Fee</span>
                 <span className="text-white">LKR {(bookingData.amount || 0).toLocaleString()}</span>
               </div>
               
+              {sessionTypeDiscount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-accent-green">
+                    {sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Session Discount
+                  </span>
+                  <span className="text-accent-green">-LKR {sessionTypeDiscount.toLocaleString()}</span>
+                </div>
+              )}
+              
               {bookingData.discountAmount && bookingData.discountAmount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-accent-green">Discount</span>
+                  <span className="text-accent-green">Coupon Discount</span>
                   <span className="text-accent-green">-LKR {bookingData.discountAmount.toLocaleString()}</span>
                 </div>
               )}
@@ -188,10 +277,21 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                 <div className="flex justify-between">
                   <span className="text-xl font-semibold text-white">Total</span>
                   <span className="text-xl font-semibold text-primary-500">
-                    LKR {finalAmount.toLocaleString()}
+                    LKR {totalAmount.toLocaleString()}
                   </span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Session Details */}
+          <div className="bg-primary-500/10 border border-primary-500/20 rounded-2xl p-4">
+            <h4 className="font-medium text-primary-500 text-sm mb-2">Session Details</h4>
+            <div className="space-y-1 text-xs text-neutral-300">
+              <p>• {sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} session with your therapist</p>
+              <p>• {bookingData.duration || 60} minutes duration</p>
+              <p>• Secure and private communication</p>
+              <p>• Session recording available upon request</p>
             </div>
           </div>
 
@@ -201,14 +301,14 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             className="w-full bg-primary-500 text-white py-4 rounded-2xl hover:bg-primary-600 transition-colors duration-200 font-semibold text-lg flex items-center justify-center space-x-2"
           >
             <CreditCard className="w-5 h-5" />
-            <span>Pay LKR {finalAmount.toLocaleString()}</span>
+            <span>Pay LKR {totalAmount.toLocaleString()}</span>
           </button>
 
           {/* Payment Features */}
           <div className="space-y-3">
             <div className="flex items-center space-x-3 text-sm text-neutral-300">
               <CheckCircle className="w-4 h-4 text-accent-green" />
-              <span>Instant confirmation</span>
+              <span>Instant session creation</span>
             </div>
             <div className="flex items-center space-x-3 text-sm text-neutral-300">
               <CheckCircle className="w-4 h-4 text-accent-green" />

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Calendar, Clock, User, CreditCard, Edit, Tag } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, CreditCard, Edit, Tag, Video, MessageCircle, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { BookingData } from '../../../types/booking';
+import { getTherapistById } from '../../../data/therapists';
 
 interface BookingConfirmationProps {
   bookingData: BookingData;
@@ -19,6 +20,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discount, setDiscount] = useState(0);
+  const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>('video');
 
   // Mock data - in real app, this would come from API calls
   const serviceNames = {
@@ -28,7 +30,9 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
     'LGBTQIA': 'LGBTQIA+ Support'
   };
 
-  const therapistName = 'Dr. Priya Perera'; // Would be fetched based on therapistId
+  // Get therapist details
+  const therapist = bookingData.therapistId ? getTherapistById(bookingData.therapistId) : null;
+  const therapistName = therapist?.name || 'Dr. Priya Perera';
 
   const applyCoupon = () => {
     // Mock coupon validation
@@ -55,6 +59,24 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   };
 
   const finalAmount = (bookingData.amount || 0) - discount;
+
+  const getSessionTypeIcon = (type: string) => {
+    switch (type) {
+      case 'video': return <Video className="w-5 h-5 text-primary-500" />;
+      case 'audio': return <Phone className="w-5 h-5 text-accent-green" />;
+      case 'chat': return <MessageCircle className="w-5 h-5 text-accent-yellow" />;
+      default: return <Video className="w-5 h-5 text-primary-500" />;
+    }
+  };
+
+  const getSessionTypeDescription = (type: string) => {
+    switch (type) {
+      case 'video': return 'Face-to-face video session with full audio and video';
+      case 'audio': return 'Voice-only session without video';
+      case 'chat': return 'Text-based session with real-time messaging';
+      default: return 'Video session';
+    }
+  };
 
   return (
     <div className="p-8">
@@ -105,7 +127,21 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 <Edit className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-neutral-300">{therapistName}</p>
+            <div className="flex items-center space-x-3">
+              {therapist && (
+                <img
+                  src={therapist.image}
+                  alt={therapist.name}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+              )}
+              <div>
+                <p className="text-neutral-300 font-medium">{therapistName}</p>
+                {therapist && (
+                  <p className="text-neutral-400 text-sm">{therapist.specialty}</p>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Date & Time */}
@@ -135,6 +171,52 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 </p>
               </div>
             )}
+          </div>
+
+          {/* Session Type Selection */}
+          <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
+            <h3 className="text-lg font-semibold text-white mb-4">Session Type</h3>
+            <div className="space-y-3">
+              {[
+                { type: 'video' as const, label: 'Video Session', price: 0 },
+                { type: 'audio' as const, label: 'Audio Session', price: -500 },
+                { type: 'chat' as const, label: 'Chat Session', price: -1000 }
+              ].map((option) => (
+                <label
+                  key={option.type}
+                  className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                    sessionType === option.type
+                      ? 'border-primary-500 bg-primary-500/10'
+                      : 'border-neutral-700 hover:border-neutral-600'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="radio"
+                      name="sessionType"
+                      value={option.type}
+                      checked={sessionType === option.type}
+                      onChange={(e) => setSessionType(e.target.value as any)}
+                      className="sr-only"
+                    />
+                    {getSessionTypeIcon(option.type)}
+                    <div>
+                      <p className="text-white font-medium">{option.label}</p>
+                      <p className="text-neutral-400 text-sm">{getSessionTypeDescription(option.type)}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {option.price === 0 ? (
+                      <span className="text-neutral-300">Included</span>
+                    ) : (
+                      <span className="text-accent-green">
+                        {option.price > 0 ? '+' : ''}LKR {option.price.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -189,9 +271,23 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-neutral-300">Session Fee</span>
+                <span className="text-neutral-300">Base Session Fee</span>
                 <span className="text-white">LKR {(bookingData.amount || 0).toLocaleString()}</span>
               </div>
+              
+              {sessionType === 'audio' && (
+                <div className="flex justify-between">
+                  <span className="text-neutral-300">Audio Session Discount</span>
+                  <span className="text-accent-green">-LKR 500</span>
+                </div>
+              )}
+              
+              {sessionType === 'chat' && (
+                <div className="flex justify-between">
+                  <span className="text-neutral-300">Chat Session Discount</span>
+                  <span className="text-accent-green">-LKR 1,000</span>
+                </div>
+              )}
               
               {discount > 0 && (
                 <div className="flex justify-between">
@@ -204,9 +300,24 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 <div className="flex justify-between">
                   <span className="text-lg font-semibold text-white">Total</span>
                   <span className="text-lg font-semibold text-primary-500">
-                    LKR {finalAmount.toLocaleString()}
+                    LKR {(finalAmount - (sessionType === 'audio' ? 500 : sessionType === 'chat' ? 1000 : 0)).toLocaleString()}
                   </span>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Session Type Info */}
+          <div className="bg-primary-500/10 border border-primary-500/20 rounded-2xl p-4">
+            <div className="flex items-start space-x-3">
+              {getSessionTypeIcon(sessionType)}
+              <div>
+                <h4 className="font-medium text-primary-500 text-sm mb-1">
+                  {sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Session Selected
+                </h4>
+                <p className="text-xs text-neutral-300">
+                  {getSessionTypeDescription(sessionType)}
+                </p>
               </div>
             </div>
           </div>

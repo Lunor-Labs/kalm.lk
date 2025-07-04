@@ -1,11 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MessageCircle, User, Clock, Plus, Video, Star } from 'lucide-react';
+import { Calendar, MessageCircle, User, Clock, Plus, Video, Star, Search, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTherapists } from '../../hooks/useTherapists';
+import TherapistCard from '../../components/TherapistCard';
 
 const ClientHome: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Fetch therapists for the "Find Therapist" section
+  const { therapists, loading: therapistsLoading } = useTherapists({ useFirebase: false });
+  const featuredTherapists = therapists.slice(0, 3); // Show top 3 therapists
 
   // Mock data - in real app, this would come from Firestore
   const upcomingSessions = [
@@ -51,27 +57,37 @@ const ClientHome: React.FC = () => {
       action: () => navigate('/client/book')
     },
     {
-      title: 'Find Therapists',
-      description: 'Browse our network of mental health professionals',
-      icon: User,
-      color: 'bg-accent-green',
-      action: () => navigate('/client/therapists')
-    },
-    {
       title: 'My Sessions',
-      description: 'View and manage your appointments',
+      description: 'View and join your appointments',
       icon: Calendar,
-      color: 'bg-accent-yellow',
+      color: 'bg-accent-green',
       action: () => navigate('/client/sessions')
     },
     {
       title: 'Messages',
       description: 'Chat with your therapists',
       icon: MessageCircle,
-      color: 'bg-accent-orange',
+      color: 'bg-accent-yellow',
       action: () => navigate('/client/messages')
+    },
+    {
+      title: 'Find Therapists',
+      description: 'Browse our network of professionals',
+      icon: Search,
+      color: 'bg-accent-orange',
+      action: () => navigate('/client/therapists')
     }
   ];
+
+  const handleBookSession = (therapist: any) => {
+    navigate('/client/book', { 
+      state: { 
+        preSelectedTherapist: therapist.id,
+        therapistName: therapist.name,
+        returnTo: 'booking'
+      } 
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -161,7 +177,10 @@ const ClientHome: React.FC = () => {
                     <span className="bg-accent-green/20 text-accent-green px-3 py-1 rounded-full text-xs">
                       {session.status}
                     </span>
-                    <button className="bg-primary-500 text-white px-4 py-2 rounded-xl hover:bg-primary-600 transition-colors duration-200 text-sm">
+                    <button 
+                      onClick={() => navigate('/client/sessions')}
+                      className="bg-primary-500 text-white px-4 py-2 rounded-xl hover:bg-primary-600 transition-colors duration-200 text-sm"
+                    >
                       Join
                     </button>
                   </div>
@@ -204,6 +223,117 @@ const ClientHome: React.FC = () => {
               <p className="text-neutral-300">No recent activity</p>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Featured Therapists Section */}
+      <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-semibold text-white mb-2">Featured Therapists</h2>
+            <p className="text-neutral-300 text-sm">Connect with our top-rated mental health professionals</p>
+          </div>
+          <button
+            onClick={() => navigate('/client/therapists')}
+            className="text-primary-500 hover:text-primary-600 transition-colors duration-200 text-sm font-medium"
+          >
+            View All Therapists
+          </button>
+        </div>
+
+        {therapistsLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : featuredTherapists.length > 0 ? (
+          <div className="grid md:grid-cols-3 gap-6">
+            {featuredTherapists.map((therapist) => (
+              <div key={therapist.id} className="bg-neutral-800/50 rounded-2xl p-4 hover:bg-neutral-800/70 transition-colors duration-200">
+                <div className="flex items-center space-x-4 mb-4">
+                  <img
+                    src={therapist.image}
+                    alt={therapist.name}
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold">{therapist.name}</h3>
+                    <p className="text-primary-500 text-sm">{therapist.specialty}</p>
+                    <div className="flex items-center space-x-1 mt-1">
+                      <Star className="w-4 h-4 text-accent-yellow fill-current" />
+                      <span className="text-neutral-300 text-sm">{therapist.rating}</span>
+                      <span className="text-neutral-400 text-sm">({therapist.reviewCount})</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-neutral-400">Languages:</span>
+                    <span className="text-neutral-300">{therapist.languages.join(', ')}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-neutral-400">Rate:</span>
+                    <span className="text-accent-green font-medium">LKR {therapist.hourlyRate.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-neutral-400">Availability:</span>
+                    <span className={`${therapist.isAvailable ? 'text-accent-green' : 'text-neutral-400'}`}>
+                      {therapist.availability}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleBookSession(therapist)}
+                  className="w-full bg-primary-500 text-white py-2 rounded-xl hover:bg-primary-600 transition-colors duration-200 text-sm font-medium"
+                >
+                  Book Session
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Users className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
+            <p className="text-neutral-300 mb-2">No therapists available</p>
+            <button
+              onClick={() => navigate('/client/therapists')}
+              className="text-primary-500 hover:text-primary-600 transition-colors duration-200 text-sm"
+            >
+              Browse All Therapists
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Session Types Info */}
+      <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+        <h2 className="text-xl font-semibold text-white mb-6">Available Session Types</h2>
+        
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="text-center p-4 bg-neutral-800/50 rounded-2xl">
+            <div className="w-16 h-16 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Video className="w-8 h-8 text-primary-500" />
+            </div>
+            <h3 className="text-white font-semibold mb-2">Video Sessions</h3>
+            <p className="text-neutral-300 text-sm">Face-to-face therapy with full video and audio communication</p>
+          </div>
+          
+          <div className="text-center p-4 bg-neutral-800/50 rounded-2xl">
+            <div className="w-16 h-16 bg-accent-green/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageCircle className="w-8 h-8 text-accent-green" />
+            </div>
+            <h3 className="text-white font-semibold mb-2">Audio Sessions</h3>
+            <p className="text-neutral-300 text-sm">Voice-only therapy sessions for those who prefer audio communication</p>
+          </div>
+          
+          <div className="text-center p-4 bg-neutral-800/50 rounded-2xl">
+            <div className="w-16 h-16 bg-accent-yellow/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageCircle className="w-8 h-8 text-accent-yellow" />
+            </div>
+            <h3 className="text-white font-semibold mb-2">Chat Sessions</h3>
+            <p className="text-neutral-300 text-sm">Text-based therapy sessions for written communication</p>
+          </div>
         </div>
       </div>
 
