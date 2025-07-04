@@ -118,9 +118,6 @@ class DailyService {
     return DailyIframe.createCallObject({
       showLeaveButton: false,
       showFullscreenButton: true,
-      showLocalVideo: true,
-      showParticipantsBar: false,
-      activeSpeakerMode: true,
       theme: {
         colors: {
           accent: '#00BFA5',
