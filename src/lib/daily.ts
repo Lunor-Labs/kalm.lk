@@ -69,13 +69,10 @@ class DailyService {
         enable_screenshare: options.properties?.enable_screenshare ?? true,
         max_participants: options.properties?.max_participants ?? 2,
         exp: options.properties?.exp || Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
-        enable_recording: false,
         enable_prejoin_ui: false,
         enable_network_ui: true,
         enable_people_ui: true,
-        enable_pip_ui: true,
-        enable_fullscreen_toggle: true,
-        enable_device_ui: true
+        enable_pip_ui: true
       },
     };
 
