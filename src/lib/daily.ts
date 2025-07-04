@@ -70,7 +70,6 @@ class DailyService {
         max_participants: options.properties?.max_participants ?? 2,
         exp: options.properties?.exp || Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
         enable_recording: false,
-        enable_transcription: false,
         enable_prejoin_ui: false,
         enable_network_ui: true,
         enable_people_ui: true,
@@ -102,7 +101,6 @@ class DailyService {
         exp: options.exp || Math.floor(Date.now() / 1000) + (4 * 60 * 60), // 4 hours from now
         enable_screenshare: true,
         enable_recording: false,
-        enable_transcription: false,
         start_video_off: false,
         start_audio_off: false
       },
