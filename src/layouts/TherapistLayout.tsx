@@ -23,8 +23,8 @@ const TherapistLayout: React.FC = () => {
 
   const navigation = [
     { name: 'Schedule', href: '/therapist/schedule', icon: Calendar },
-    { name: 'Availability', href: '/therapist/availability', icon: Clock },
     { name: 'Sessions', href: '/therapist/sessions', icon: Video },
+    { name: 'Availability', href: '/therapist/availability', icon: Clock },
     { name: 'Clients', href: '/therapist/clients', icon: Users },
     { name: 'Earnings', href: '/therapist/earnings', icon: CreditCard },
     { name: 'Settings', href: '/therapist/settings', icon: Settings },

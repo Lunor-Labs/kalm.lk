@@ -44,6 +44,47 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // Sessions collection
+    match /sessions/{sessionId} {
+      // Participants can read and update their own sessions
+      allow read, update: if request.auth != null && 
+                            (request.auth.uid == resource.data.therapistId || 
+                             request.auth.uid == resource.data.clientId);
+      
+      // Only system can create sessions (via booking flow)
+      allow create: if request.auth != null;
+      
+      // Admins can read all sessions
+      allow read: if isAdmin();
+    }
+
+    // Chat messages collection
+    match /chatMessages/{messageId} {
+      // Participants can read messages from their sessions
+      allow read: if request.auth != null && 
+                    request.auth.uid in get(/databases/$(database)/documents/sessions/$(resource.data.sessionId)).data.keys();
+      
+      // Participants can create messages in their sessions
+      allow create: if request.auth != null && 
+                      request.auth.uid == request.resource.data.senderId;
+      
+      // No updates or deletes allowed
+      allow update, delete: if false;
+    }
+
+    // Session participants collection
+    match /sessionParticipants/{participantId} {
+      // Participants can read and update their own participation status
+      allow read, update: if request.auth != null && 
+                            request.auth.uid == resource.data.userId;
+      
+      // System can create participant records
+      allow create: if request.auth != null;
+      
+      // Admins can read all participant records
+      allow read: if isAdmin();
+    }
+
     // Bookings collection
     match /bookings/{bookingId} {
       // Clients can read and create their own bookings

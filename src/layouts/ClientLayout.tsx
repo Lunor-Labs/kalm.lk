@@ -10,7 +10,8 @@ import {
   LogOut,
   Menu,
   X,
-  Search
+  Search,
+  Video
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '../lib/auth';
@@ -24,8 +25,8 @@ const ClientLayout: React.FC = () => {
 
   const navigation = [
     { name: 'Home', href: '/client/home', icon: Home },
+    { name: 'My Sessions', href: '/client/sessions', icon: Video },
     { name: 'Find Therapists', href: '/client/therapists', icon: Search },
-    { name: 'My Sessions', href: '/client/sessions', icon: Calendar },
     { name: 'Messages', href: '/client/messages', icon: MessageCircle },
     { name: 'Payments', href: '/client/payments', icon: CreditCard },
     { name: 'Profile', href: '/client/profile', icon: User },

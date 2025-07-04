@@ -33,7 +33,12 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import TherapistManagement from './pages/admin/TherapistManagement';
 import TherapistSchedule from './pages/therapist/TherapistSchedule';
+import TherapistSessions from './pages/therapist/TherapistSessions';
 import ClientHome from './pages/client/ClientHome';
+import ClientSessions from './pages/client/ClientSessions';
+
+// Session Components
+import SessionRoom from './components/session/SessionRoom';
 
 // Booking Flow
 import BookingFlow from './features/booking/BookingFlow';
@@ -133,8 +138,9 @@ function App() {
               </ProtectedRoute>
             }>
               <Route path="schedule" element={<TherapistSchedule />} />
+              <Route path="sessions" element={<TherapistSessions />} />
+              <Route path="session/:sessionId" element={<SessionRoom />} />
               <Route path="availability" element={<div className="text-white">Availability Management</div>} />
-              <Route path="sessions" element={<div className="text-white">Sessions</div>} />
               <Route path="clients" element={<div className="text-white">Clients</div>} />
               <Route path="earnings" element={<div className="text-white">Earnings</div>} />
               <Route path="settings" element={<div className="text-white">Settings</div>} />
@@ -149,8 +155,9 @@ function App() {
             }>
               <Route path="home" element={<ClientHome />} />
               <Route path="book" element={<BookingFlow />} />
+              <Route path="sessions" element={<ClientSessions />} />
+              <Route path="session/:sessionId" element={<SessionRoom />} />
               <Route path="therapists" element={<div className="text-white">Find Therapists</div>} />
-              <Route path="sessions" element={<div className="text-white">My Sessions</div>} />
               <Route path="messages" element={<div className="text-white">Messages</div>} />
               <Route path="payments" element={<div className="text-white">Payment History</div>} />
               <Route path="profile" element={<div className="text-white">Profile</div>} />
