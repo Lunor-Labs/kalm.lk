@@ -48,6 +48,8 @@ jobs:
           echo "VITE_PAYHERE_CANCEL_URL=${{ secrets.VITE_PAYHERE_CANCEL_URL }}" >> .env
           echo "VITE_APP_ENV=${{ secrets.VITE_APP_ENV }}" >> .env
           echo "VITE_APP_URL=${{ secrets.VITE_APP_URL }}" >> .env
+          echo "VITE_DAILY_API_KEY=${{ secrets.VITE_DAILY_API_KEY }}" >> .env
+          echo "VITE_DAILY_DOMAIN=${{ secrets.VITE_DAILY_DOMAIN }}" >> .env
 
       - name: Build
         run: npm run build
