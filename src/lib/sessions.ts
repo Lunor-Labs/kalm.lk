@@ -24,14 +24,23 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
 
     if (sessionData.sessionType === 'video' || sessionData.sessionType === 'audio') {
       const roomOptions = {
+        name: `kalm-session-${sessionData.therapistId}-${sessionData.clientId}-${Date.now()}`,
         privacy: 'private' as const,
         properties: {
-          start_video_off: sessionData.sessionType === 'audio',
-          start_audio_off: false,
+          start_video_off: true, // Let users turn on their video manually
+          start_audio_off: true, // Let users turn on their audio manually
           enable_chat: true,
           enable_screenshare: sessionData.sessionType === 'video',
           max_participants: 2,
-          exp: Math.floor(sessionData.scheduledTime.getTime() / 1000) + (2 * 60 * 60), // 2 hours after scheduled time
+          exp: Math.floor(sessionData.scheduledTime.getTime() / 1000) + (4 * 60 * 60), // 4 hours after scheduled time
+          enable_recording: false,
+          enable_transcription: false,
+          enable_prejoin_ui: false,
+          enable_network_ui: true,
+          enable_people_ui: true,
+          enable_pip_ui: true,
+          enable_fullscreen_toggle: true,
+          enable_device_ui: true
         },
       };
 
@@ -182,7 +191,7 @@ export const generateMeetingToken = async (sessionId: string, userId: string, us
       user_name: userName,
       user_id: userId,
       is_owner: isTherapist,
-      exp: Math.floor(Date.now() / 1000) + (2 * 60 * 60), // 2 hours
+      exp: Math.floor(Date.now() / 1000) + (4 * 60 * 60), // 4 hours
     });
 
     return tokenResponse.token;

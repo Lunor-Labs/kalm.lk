@@ -57,18 +57,26 @@ class DailyService {
   }
 
   async createRoom(options: CreateRoomOptions = {}) {
-    const roomName = options.name || `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const roomName = options.name || `kalm-session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     const roomConfig = {
       name: roomName,
       privacy: options.privacy || 'private',
       properties: {
-        start_video_off: options.properties?.start_video_off ?? false,
-        start_audio_off: options.properties?.start_audio_off ?? false,
+        start_video_off: options.properties?.start_video_off ?? true,
+        start_audio_off: options.properties?.start_audio_off ?? true,
         enable_chat: options.properties?.enable_chat ?? true,
-        enable_screenshare: options.properties?.enable_screenshare ?? false,
+        enable_screenshare: options.properties?.enable_screenshare ?? true,
         max_participants: options.properties?.max_participants ?? 2,
         exp: options.properties?.exp || Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
+        enable_recording: false,
+        enable_transcription: false,
+        enable_prejoin_ui: false,
+        enable_network_ui: true,
+        enable_people_ui: true,
+        enable_pip_ui: true,
+        enable_fullscreen_toggle: true,
+        enable_device_ui: true
       },
     };
 
@@ -91,7 +99,12 @@ class DailyService {
         user_name: options.user_name,
         user_id: options.user_id,
         is_owner: options.is_owner || false,
-        exp: options.exp || Math.floor(Date.now() / 1000) + (2 * 60 * 60), // 2 hours from now
+        exp: options.exp || Math.floor(Date.now() / 1000) + (4 * 60 * 60), // 4 hours from now
+        enable_screenshare: true,
+        enable_recording: false,
+        enable_transcription: false,
+        start_video_off: false,
+        start_audio_off: false
       },
     };
 
@@ -108,10 +121,25 @@ class DailyService {
   // Client-side Daily.co integration
   static createCallObject() {
     return DailyIframe.createCallObject({
-      showLeaveButton: true,
+      showLeaveButton: false,
       showFullscreenButton: true,
       showLocalVideo: true,
-      showParticipantsBar: true,
+      showParticipantsBar: false,
+      activeSpeakerMode: true,
+      theme: {
+        colors: {
+          accent: '#00BFA5',
+          accentText: '#FFFFFF',
+          background: '#202020',
+          backgroundAccent: '#464440',
+          baseText: '#FFFFFF',
+          border: '#464440',
+          mainAreaBg: '#202020',
+          mainAreaBgAccent: '#464440',
+          mainAreaText: '#FFFFFF',
+          supportiveText: '#B3B0A9'
+        }
+      }
     });
   }
 
