@@ -81,6 +81,7 @@ const SessionRoom: React.FC = () => {
     if (!session) return;
 
     try {
+      // End session without notes for now
       await endSession(session.id);
       toast.success('Session ended successfully');
       

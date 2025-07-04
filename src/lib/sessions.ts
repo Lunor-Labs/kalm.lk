@@ -152,11 +152,18 @@ export const endSession = async (sessionId: string, notes?: string): Promise<voi
       }
     }
 
-    await updateSession(sessionId, {
+    // Prepare update data, only include notes if it's provided
+    const updateData: Partial<Session> = {
       status: 'completed',
       endTime: new Date(),
-      notes,
-    });
+    };
+
+    // Only add notes if it's provided and not undefined
+    if (notes !== undefined && notes !== null && notes.trim() !== '') {
+      updateData.notes = notes.trim();
+    }
+
+    await updateSession(sessionId, updateData);
   } catch (error: any) {
     console.error('Error ending session:', error);
     throw new Error(error.message || 'Failed to end session');
