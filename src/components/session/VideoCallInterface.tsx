@@ -52,13 +52,9 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           hasToken: !!token
         });
 
-        // Create call object with proper configuration
+        // Create call object with proper configuration for call object mode
         const call = DailyIframe.createCallObject({
-          showLeaveButton: false,
-          showFullscreenButton: false,
-          showLocalVideo: session.sessionType === 'video',
-          showParticipantsBar: false,
-          activeSpeakerMode: true,
+          // Remove unsupported options for call object mode
           theme: {
             colors: {
               accent: '#00BFA5',
@@ -155,17 +151,26 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
         console.log('Joining with config:', joinConfig);
         await call.join(joinConfig);
 
-        // Embed the call in the container
-        if (callFrameRef.current) {
-          call.iframe().style.width = '100%';
-          call.iframe().style.height = '100%';
-          call.iframe().style.border = 'none';
-          call.iframe().style.borderRadius = '16px';
-          
-          // Clear container and append iframe
-          callFrameRef.current.innerHTML = '';
-          callFrameRef.current.appendChild(call.iframe());
-        }
+        // Wait for DOM to be ready and then embed the call
+        setTimeout(() => {
+          if (callFrameRef.current && call.iframe()) {
+            try {
+              const iframe = call.iframe();
+              if (iframe) {
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                iframe.style.borderRadius = '16px';
+                
+                // Clear container and append iframe
+                callFrameRef.current.innerHTML = '';
+                callFrameRef.current.appendChild(iframe);
+              }
+            } catch (iframeError) {
+              console.error('Error embedding iframe:', iframeError);
+            }
+          }
+        }, 100);
 
         console.log('Call initialization completed');
 
@@ -259,6 +264,33 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
     }
   };
 
+  const retryConnection = () => {
+    setError(null);
+    setIsInitializing(false);
+    
+    // Cleanup existing call object
+    if (callObjectRef.current) {
+      try {
+        callObjectRef.current.destroy();
+      } catch (error) {
+        console.warn('Error destroying call object during retry:', error);
+      }
+      callObjectRef.current = null;
+    }
+    
+    // Clear the iframe container
+    if (callFrameRef.current) {
+      callFrameRef.current.innerHTML = '';
+    }
+    
+    // Reset states
+    setIsConnected(false);
+    setParticipants([]);
+    setIsMuted(false);
+    setIsVideoOff(session.sessionType === 'audio');
+    setIsScreenSharing(false);
+  };
+
   return (
     <div className="flex flex-col h-full bg-neutral-900">
       {/* Video Container */}
@@ -291,15 +323,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
               <p className="text-neutral-300 mb-6">{error}</p>
               <div className="space-y-3">
                 <button
-                  onClick={() => {
-                    setError(null);
-                    setIsInitializing(false);
-                    // Trigger re-initialization
-                    if (callObjectRef.current) {
-                      callObjectRef.current.destroy();
-                      callObjectRef.current = null;
-                    }
-                  }}
+                  onClick={retryConnection}
                   className="w-full bg-primary-500 text-white py-3 rounded-2xl hover:bg-primary-600 transition-colors duration-200"
                 >
                   Try Again
