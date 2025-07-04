@@ -24,12 +24,14 @@ const AdminLayout: React.FC = () => {
 
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'User Management', href: '/admin/users', icon: UserCheck },
+    { name: 'Users', href: '/admin/users', icon: UserCheck },
     { name: 'Therapists', href: '/admin/therapists', icon: Users },
-    { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
-    { name: 'Payments', href: '/admin/payments', icon: CreditCard },
+   /* 
+   { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
+   { name: 'Payments', href: '/admin/payments', icon: CreditCard },
     { name: 'Notifications', href: '/admin/notifications', icon: Bell },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
+    */
   ];
 
   const handleSignOut = async () => {
@@ -61,7 +63,7 @@ const AdminLayout: React.FC = () => {
           <div className="flex items-center justify-between p-6 border-b border-neutral-800">
             <div className="flex items-center space-x-2">
               <img 
-                src="/kalm.lk/logo.jpg" 
+                src="/logo icon (1).jpg" 
                 alt="Kalm Logo" 
                 className="w-8 h-8 rounded-lg"
               />

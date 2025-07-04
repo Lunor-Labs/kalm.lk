@@ -31,6 +31,7 @@ import TherapistListing from './components/TherapistListing';
 // Dashboard Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
+import TherapistManagement from './pages/admin/TherapistManagement';
 import TherapistSchedule from './pages/therapist/TherapistSchedule';
 import ClientHome from './pages/client/ClientHome';
 
@@ -117,7 +118,7 @@ function App() {
             }>
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="users" element={<UserManagement />} />
-              <Route path="therapists" element={<div className="text-white">Therapists Management</div>} />
+              <Route path="therapists" element={<TherapistManagement />} />
               <Route path="bookings" element={<div className="text-white">Bookings Management</div>} />
               <Route path="payments" element={<div className="text-white">Payments Management</div>} />
               <Route path="notifications" element={<div className="text-white">Notifications</div>} />
