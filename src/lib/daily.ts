@@ -65,7 +65,7 @@ class DailyService {
       properties: {
         start_video_off: options.properties?.start_video_off ?? false,
         start_audio_off: options.properties?.start_audio_off ?? false,
-        enable_chat: options.properties?.enable_chat ?? true,
+        // enable_chat: options.properties?.enable_chat ?? true,
         enable_screenshare: options.properties?.enable_screenshare ?? true,
         max_participants: options.properties?.max_participants ?? 2,
         exp: options.properties?.exp || Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
@@ -109,7 +109,7 @@ class DailyService {
         enable_recording: false,
         start_video_off: false,
         start_audio_off: false,
-        enable_chat: true,
+        // enable_chat: true,
         enable_prejoin_ui: false
       },
     };
