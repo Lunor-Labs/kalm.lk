@@ -1,55 +1,50 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   Search, 
-  Filter, 
   Plus, 
   Edit, 
-  Eye, 
-  MoreVertical, 
-  Star, 
-  Clock, 
-  Award,
-  X,
+  Trash2, 
+  Upload, 
+  X, 
   Save,
-  Trash2,
-  UserCheck,
-  MapPin,
-  Upload,
-  Camera
+  Star,
+  Clock,
+  Award,
+  Languages,
+  Video,
+  Phone,
+  MessageCircle,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  Mail,
+  Calendar,
+  DollarSign
 } from 'lucide-react';
 import { 
   collection, 
   getDocs, 
-  doc, 
-  setDoc, 
+  addDoc, 
   updateDoc, 
   deleteDoc, 
+  doc, 
   query, 
-  orderBy, 
+  orderBy,
   serverTimestamp 
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL, 
-  deleteObject 
-} from 'firebase/storage';
-import { 
-  createUserWithEmailAndPassword, 
-  updateProfile 
-} from 'firebase/auth';
-import { db, storage, auth } from '../../lib/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { db, auth } from '../../lib/firebase';
+import { uploadTherapistPhoto, deleteTherapistPhoto, getStoragePathFromUrl, validateImageFile } from '../../lib/storage';
 import { updateUserRole } from '../../lib/auth';
 import toast from 'react-hot-toast';
 
-interface TherapistProfile {
+interface Therapist {
   id: string;
-  userId?: string;
+  userId: string;
   firstName: string;
   lastName: string;
   email: string;
-  phone?: string;
   credentials: string[];
   specializations: string[];
   languages: string[];
@@ -63,87 +58,104 @@ interface TherapistProfile {
   hourlyRate: number;
   profilePhoto: string;
   nextAvailableSlot: string;
-  location?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: any;
+  updatedAt: any;
+}
+
+interface TherapistFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  credentials: string[];
+  specializations: string[];
+  languages: string[];
+  services: string[];
+  sessionFormats: string[];
+  bio: string;
+  experience: number;
+  hourlyRate: number;
+  nextAvailableSlot: string;
+  profilePhoto: string;
 }
 
 const TherapistManagement: React.FC = () => {
-  const [therapists, setTherapists] = useState<TherapistProfile[]>([]);
+  const [therapists, setTherapists] = useState<Therapist[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'unavailable'>('all');
-  const [selectedTherapist, setSelectedTherapist] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [editingTherapist, setEditingTherapist] = useState<TherapistProfile | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Form state for add/edit
-  const [formData, setFormData] = useState<Partial<TherapistProfile>>({
+  const [editingTherapist, setEditingTherapist] = useState<Therapist | null>(null);
+  const [viewingTherapist, setViewingTherapist] = useState<Therapist | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [formData, setFormData] = useState<TherapistFormData>({
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
+    password: '',
     credentials: [],
     specializations: [],
     languages: [],
     services: [],
-    isAvailable: true,
     sessionFormats: [],
     bio: '',
-    experience: 0,
-    rating: 5.0,
-    reviewCount: 0,
+    experience: 1,
     hourlyRate: 4500,
-    profilePhoto: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
-    nextAvailableSlot: 'Available today',
-    location: 'Colombo, Sri Lanka'
+    nextAvailableSlot: 'Please set availability',
+    profilePhoto: ''
   });
+  const [uploading, setUploading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Password for new therapist account
-  const [therapistPassword, setTherapistPassword] = useState('');
+  // Predefined options
+  const credentialOptions = [
+    'PhD Clinical Psychology',
+    'MSc Counseling Psychology',
+    'MSc Clinical Psychology',
+    'MSc Family Therapy',
+    'Licensed Therapist',
+    'Certified Counselor',
+    'EMDR Certified',
+    'CBT Certified'
+  ];
 
-  const predefinedOptions = {
-    credentials: [
-      'PhD Clinical Psychology',
-      'MSc Counseling Psychology',
-      'MSc Clinical Psychology',
-      'PhD Trauma Psychology',
-      'MSc Family Therapy',
-      'MSc Inclusive Psychology',
-      'PhD Adolescent Psychology',
-      'Licensed Therapist',
-      'Certified Counselor'
-    ],
-    specializations: [
-      'Anxiety & Depression',
-      'Relationship Counseling',
-      'Stress & Trauma',
-      'Family Therapy',
-      'Addiction Recovery',
-      'Teen Counseling',
-      'LGBTQIA+ Counseling',
-      'Adolescent Psychology',
-      'Couples Therapy',
-      'Individual Therapy',
-      'Group Therapy'
-    ],
-    languages: ['English', 'Sinhala', 'Tamil'],
-    services: [
-      'Individual Therapy',
-      'Couples Therapy',
-      'Family Therapy',
-      'Group Therapy',
-      'Teen Counseling',
-      'Crisis Intervention',
-      'Addiction Counseling'
-    ],
-    sessionFormats: ['video', 'audio', 'chat']
-  };
+  const specializationOptions = [
+    'Anxiety Disorders',
+    'Depression',
+    'Trauma & PTSD',
+    'Relationship Counseling',
+    'Family Therapy',
+    'Addiction Recovery',
+    'Teen Counseling',
+    'LGBTQIA+ Counseling',
+    'Stress Management',
+    'Grief Counseling',
+    'Eating Disorders',
+    'Sleep Disorders'
+  ];
+
+  const languageOptions = [
+    'English',
+    'Sinhala',
+    'Tamil',
+    'Hindi'
+  ];
+
+  const serviceOptions = [
+    'Individual Therapy',
+    'Couples Therapy',
+    'Family Therapy',
+    'Group Therapy',
+    'Teen Counseling',
+    'LGBTQIA+ Support',
+    'Crisis Intervention',
+    'Addiction Counseling'
+  ];
+
+  const sessionFormatOptions = [
+    'video',
+    'audio',
+    'chat'
+  ];
 
   useEffect(() => {
     loadTherapists();
@@ -158,10 +170,8 @@ const TherapistManagement: React.FC = () => {
       
       const therapistsData = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      })) as TherapistProfile[];
+        ...doc.data()
+      })) as Therapist[];
       
       setTherapists(therapistsData);
     } catch (error) {
@@ -172,199 +182,161 @@ const TherapistManagement: React.FC = () => {
     }
   };
 
-  const handleImageUpload = async (file: File): Promise<string> => {
-    try {
-      setUploadingImage(true);
-      
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        throw new Error('Please select a valid image file');
-      }
-      
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error('Image size must be less than 5MB');
-      }
-      
-      // Create a unique filename
-      const timestamp = Date.now();
-      const filename = `therapist-photos/${timestamp}-${file.name}`;
-      const storageRef = ref(storage, filename);
-      
-      // Upload the file
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      
-      return downloadURL;
-    } catch (error: any) {
-      console.error('Error uploading image:', error);
-      throw new Error(error.message || 'Failed to upload image');
-    } finally {
-      setUploadingImage(false);
+  const handleImageUpload = async (file: File) => {
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      toast.error(validation.error!);
+      return;
     }
-  };
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+    setUploading(true);
     try {
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      // Upload to Firebase Storage
-      const downloadURL = await handleImageUpload(file);
-      
-      // Update form data
-      setFormData({ ...formData, profilePhoto: downloadURL });
-      
+      const result = await uploadTherapistPhoto(file, editingTherapist?.id);
+      setFormData(prev => ({ ...prev, profilePhoto: result.url }));
       toast.success('Image uploaded successfully');
     } catch (error: any) {
-      toast.error(error.message);
-      setImagePreview(null);
+      console.error('Upload error:', error);
+      toast.error(error.message || 'Failed to upload image');
+    } finally {
+      setUploading(false);
     }
   };
 
-  const createTherapistAccount = async (email: string, password: string, displayName: string): Promise<string> => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.firstName || !formData.lastName || !formData.email) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (!editingTherapist && !formData.password) {
+      toast.error('Password is required for new therapists');
+      return;
+    }
+
+    if (formData.credentials.length === 0) {
+      toast.error('Please select at least one credential');
+      return;
+    }
+
+    if (formData.specializations.length === 0) {
+      toast.error('Please select at least one specialization');
+      return;
+    }
+
+    if (formData.languages.length === 0) {
+      toast.error('Please select at least one language');
+      return;
+    }
+
+    if (formData.services.length === 0) {
+      toast.error('Please select at least one service');
+      return;
+    }
+
+    if (formData.sessionFormats.length === 0) {
+      toast.error('Please select at least one session format');
+      return;
+    }
+
+    setLoading(true);
     try {
-      // Create Firebase Auth account
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      
-      // Update display name
-      await updateProfile(user, { displayName });
-      
-      // Create user document in Firestore with therapist role
-      const userData = {
-        uid: user.uid,
-        email: user.email,
-        displayName: displayName,
-        role: 'therapist',
-        isAnonymous: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-      
-      await setDoc(doc(db, 'users', user.uid), userData);
-      
-      return user.uid;
-    } catch (error: any) {
-      console.error('Error creating therapist account:', error);
-      
-      // Provide more specific error messages
-      if (error.code === 'auth/email-already-in-use') {
-        throw new Error('An account with this email already exists');
-      } else if (error.code === 'auth/weak-password') {
-        throw new Error('Password should be at least 6 characters');
-      } else if (error.code === 'auth/invalid-email') {
-        throw new Error('Invalid email address');
+      if (editingTherapist) {
+        // Update existing therapist
+        const therapistRef = doc(db, 'therapists', editingTherapist.id);
+        await updateDoc(therapistRef, {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          credentials: formData.credentials,
+          specializations: formData.specializations,
+          languages: formData.languages,
+          services: formData.services,
+          sessionFormats: formData.sessionFormats,
+          bio: formData.bio,
+          experience: formData.experience,
+          hourlyRate: formData.hourlyRate,
+          nextAvailableSlot: formData.nextAvailableSlot,
+          profilePhoto: formData.profilePhoto,
+          updatedAt: serverTimestamp()
+        });
+        
+        toast.success('Therapist updated successfully');
       } else {
-        throw new Error(error.message || 'Failed to create therapist account');
+        // Create new therapist account
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        const user = userCredential.user;
+        
+        // Update display name
+        await updateProfile(user, {
+          displayName: `${formData.firstName} ${formData.lastName}`
+        });
+        
+        // Update user role to therapist
+        await updateUserRole(user.uid, 'therapist');
+        
+        // Create therapist document
+        const therapistData = {
+          userId: user.uid,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          credentials: formData.credentials,
+          specializations: formData.specializations,
+          languages: formData.languages,
+          services: formData.services,
+          isAvailable: false,
+          sessionFormats: formData.sessionFormats,
+          bio: formData.bio,
+          experience: formData.experience,
+          rating: 5.0,
+          reviewCount: 0,
+          hourlyRate: formData.hourlyRate,
+          profilePhoto: formData.profilePhoto || 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
+          nextAvailableSlot: formData.nextAvailableSlot,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+        
+        await addDoc(collection(db, 'therapists'), therapistData);
+        toast.success('Therapist added successfully');
       }
-    }
-  };
-
-  const handleAddTherapist = async () => {
-    try {
-      if (!formData.firstName || !formData.lastName || !formData.email) {
-        toast.error('Please fill in all required fields');
-        return;
-      }
-
-      if (!therapistPassword || therapistPassword.length < 6) {
-        toast.error('Please provide a password (minimum 6 characters)');
-        return;
-      }
-
-      const displayName = `${formData.firstName} ${formData.lastName}`;
       
-      // Create therapist account first
-      const userId = await createTherapistAccount(formData.email, therapistPassword, displayName);
-      
-      // Create therapist profile
-      const therapistId = `therapist_${Date.now()}`;
-      const therapistData = {
-        ...formData,
-        id: therapistId,
-        userId: userId,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-
-      await setDoc(doc(db, 'therapists', therapistId), therapistData);
-      
-      toast.success('Therapist account and profile created successfully');
+      // Reset form and close modal
+      resetForm();
       setShowAddModal(false);
-      resetForm();
-      loadTherapists();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to add therapist');
-    }
-  };
-
-  const handleEditTherapist = async () => {
-    try {
-      if (!editingTherapist || !formData.firstName || !formData.lastName || !formData.email) {
-        toast.error('Please fill in all required fields');
-        return;
-      }
-
-      await updateDoc(doc(db, 'therapists', editingTherapist.id), {
-        ...formData,
-        updatedAt: serverTimestamp(),
-      });
-      
-      toast.success('Therapist updated successfully');
-      setShowEditModal(false);
       setEditingTherapist(null);
-      resetForm();
       loadTherapists();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update therapist');
+      console.error('Error saving therapist:', error);
+      toast.error(error.message || 'Failed to save therapist');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteTherapist = async (therapistId: string) => {
-    if (!confirm('Are you sure you want to delete this therapist? This action cannot be undone.')) {
+  const handleDelete = async (therapist: Therapist) => {
+    if (!confirm(`Are you sure you want to delete ${therapist.firstName} ${therapist.lastName}?`)) {
       return;
     }
 
     try {
-      const therapist = therapists.find(t => t.id === therapistId);
-      
-      // Delete profile photo from storage if it's not a default image
-      if (therapist?.profilePhoto && therapist.profilePhoto.includes('firebase')) {
-        try {
-          const photoRef = ref(storage, therapist.profilePhoto);
-          await deleteObject(photoRef);
-        } catch (error) {
-          console.warn('Could not delete profile photo:', error);
+      // Delete profile photo if it exists and is not a default image
+      if (therapist.profilePhoto && !therapist.profilePhoto.includes('pexels.com')) {
+        const photoPath = getStoragePathFromUrl(therapist.profilePhoto);
+        if (photoPath) {
+          await deleteTherapistPhoto(photoPath);
         }
       }
       
-      await deleteDoc(doc(db, 'therapists', therapistId));
+      // Delete therapist document
+      await deleteDoc(doc(db, 'therapists', therapist.id));
       toast.success('Therapist deleted successfully');
       loadTherapists();
     } catch (error: any) {
+      console.error('Error deleting therapist:', error);
       toast.error(error.message || 'Failed to delete therapist');
-    }
-  };
-
-  const handleToggleAvailability = async (therapist: TherapistProfile) => {
-    try {
-      await updateDoc(doc(db, 'therapists', therapist.id), {
-        isAvailable: !therapist.isAvailable,
-        updatedAt: serverTimestamp(),
-      });
-      
-      toast.success(`Therapist ${therapist.isAvailable ? 'disabled' : 'enabled'} successfully`);
-      loadTherapists();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update availability');
     }
   };
 
@@ -373,63 +345,66 @@ const TherapistManagement: React.FC = () => {
       firstName: '',
       lastName: '',
       email: '',
-      phone: '',
+      password: '',
       credentials: [],
       specializations: [],
       languages: [],
       services: [],
-      isAvailable: true,
       sessionFormats: [],
       bio: '',
-      experience: 0,
-      rating: 5.0,
-      reviewCount: 0,
+      experience: 1,
       hourlyRate: 4500,
-      profilePhoto: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
-      nextAvailableSlot: 'Available today',
-      location: 'Colombo, Sri Lanka'
+      nextAvailableSlot: 'Please set availability',
+      profilePhoto: ''
     });
-    setTherapistPassword('');
-    setImagePreview(null);
   };
 
-  const openEditModal = (therapist: TherapistProfile) => {
+  const openEditModal = (therapist: Therapist) => {
+    setFormData({
+      firstName: therapist.firstName,
+      lastName: therapist.lastName,
+      email: therapist.email,
+      password: '', // Don't populate password for security
+      credentials: therapist.credentials,
+      specializations: therapist.specializations,
+      languages: therapist.languages,
+      services: therapist.services,
+      sessionFormats: therapist.sessionFormats,
+      bio: therapist.bio,
+      experience: therapist.experience,
+      hourlyRate: therapist.hourlyRate,
+      nextAvailableSlot: therapist.nextAvailableSlot,
+      profilePhoto: therapist.profilePhoto
+    });
     setEditingTherapist(therapist);
-    setFormData(therapist);
-    setImagePreview(therapist.profilePhoto);
-    setShowEditModal(true);
+    setShowAddModal(true);
   };
 
-  const openViewModal = (therapist: TherapistProfile) => {
-    setEditingTherapist(therapist);
-    setShowViewModal(true);
+  const filteredTherapists = therapists.filter(therapist =>
+    `${therapist.firstName} ${therapist.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    therapist.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    therapist.specializations.some(spec => spec.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const handleArrayFieldChange = (field: keyof TherapistFormData, value: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: checked 
+        ? [...(prev[field] as string[]), value]
+        : (prev[field] as string[]).filter(item => item !== value)
+    }));
   };
 
-  const filteredTherapists = therapists.filter(therapist => {
-    const matchesSearch = 
-      therapist.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      therapist.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      therapist.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      therapist.specializations.some(spec => spec.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesStatus = 
-      statusFilter === 'all' || 
-      (statusFilter === 'available' && therapist.isAvailable) ||
-      (statusFilter === 'unavailable' && !therapist.isAvailable);
-    
-    return matchesSearch && matchesStatus;
-  });
-
-  const handleArrayFieldChange = (field: keyof TherapistProfile, value: string) => {
-    const currentArray = (formData[field] as string[]) || [];
-    const newArray = currentArray.includes(value)
-      ? currentArray.filter(item => item !== value)
-      : [...currentArray, value];
-    
-    setFormData({ ...formData, [field]: newArray });
+  const getSessionFormatIcon = (format: string) => {
+    switch (format) {
+      case 'video': return <Video className="w-3 h-3" />;
+      case 'audio': return <Phone className="w-3 h-3" />;
+      case 'chat': return <MessageCircle className="w-3 h-3" />;
+      default: return null;
+    }
   };
 
-  if (loading) {
+  if (loading && therapists.length === 0) {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
@@ -446,20 +421,50 @@ const TherapistManagement: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Therapist Management</h1>
-          <p className="text-neutral-300">Manage therapist profiles and availability</p>
+          <p className="text-neutral-300">Manage therapist profiles and accounts</p>
         </div>
         
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-primary-500 text-white px-6 py-3 rounded-2xl hover:bg-primary-600 transition-colors duration-200 flex items-center space-x-2"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Add Therapist</span>
-        </button>
+        <div className="flex items-center space-x-4">
+          {/* View Mode Toggle */}
+          <div className="flex bg-neutral-800 rounded-2xl p-1">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${
+                viewMode === 'grid' 
+                  ? 'bg-primary-500 text-white' 
+                  : 'text-neutral-300 hover:text-white'
+              }`}
+            >
+              Grid
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${
+                viewMode === 'table' 
+                  ? 'bg-primary-500 text-white' 
+                  : 'text-neutral-300 hover:text-white'
+              }`}
+            >
+              Table
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              resetForm();
+              setEditingTherapist(null);
+              setShowAddModal(true);
+            }}
+            className="bg-primary-500 text-white px-6 py-3 rounded-2xl hover:bg-primary-600 transition-colors duration-200 flex items-center space-x-2"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Therapist</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
           <div className="flex items-center space-x-3 mb-2">
             <Users className="w-5 h-5 text-primary-500" />
@@ -470,8 +475,8 @@ const TherapistManagement: React.FC = () => {
         
         <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
           <div className="flex items-center space-x-3 mb-2">
-            <UserCheck className="w-5 h-5 text-accent-green" />
-            <span className="text-neutral-300 text-sm">Available</span>
+            <Clock className="w-5 h-5 text-accent-green" />
+            <span className="text-neutral-300 text-sm">Available Now</span>
           </div>
           <p className="text-2xl font-bold text-white">
             {therapists.filter(t => t.isAvailable).length}
@@ -480,17 +485,7 @@ const TherapistManagement: React.FC = () => {
         
         <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
           <div className="flex items-center space-x-3 mb-2">
-            <Clock className="w-5 h-5 text-accent-yellow" />
-            <span className="text-neutral-300 text-sm">Unavailable</span>
-          </div>
-          <p className="text-2xl font-bold text-white">
-            {therapists.filter(t => !t.isAvailable).length}
-          </p>
-        </div>
-        
-        <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-          <div className="flex items-center space-x-3 mb-2">
-            <Star className="w-5 h-5 text-accent-orange" />
+            <Star className="w-5 h-5 text-accent-yellow" />
             <span className="text-neutral-300 text-sm">Avg Rating</span>
           </div>
           <p className="text-2xl font-bold text-white">
@@ -502,325 +497,611 @@ const TherapistManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Search */}
       <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-        <div className="grid md:grid-cols-2 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-            <input
-              type="text"
-              placeholder="Search therapists..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400"
-            />
-          </div>
-
-          {/* Status Filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="w-full pl-10 pr-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-            >
-              <option value="all">All Status</option>
-              <option value="available">Available</option>
-              <option value="unavailable">Unavailable</option>
-            </select>
-          </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+          <input
+            type="text"
+            placeholder="Search therapists..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400"
+          />
         </div>
       </div>
 
-      {/* Therapists Table */}
-      <div className="bg-black/50 backdrop-blur-sm rounded-3xl border border-neutral-800 overflow-hidden">
-        <div className="p-6 border-b border-neutral-800">
-          <h2 className="text-xl font-semibold text-white">
-            Therapists ({filteredTherapists.length})
-          </h2>
-        </div>
+      {/* Therapists Display */}
+      {viewMode === 'grid' ? (
+        /* Grid View */
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredTherapists.map((therapist) => (
+            <div
+              key={therapist.id}
+              className="bg-black/50 backdrop-blur-sm rounded-3xl border border-neutral-800 overflow-hidden hover:border-neutral-700 transition-all duration-300 hover:-translate-y-2"
+            >
+              {/* Profile Image - Centered */}
+              <div className="relative p-6 pb-0">
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <img
+                      src={therapist.profilePhoto}
+                      alt={`${therapist.firstName} ${therapist.lastName}`}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-neutral-700"
+                    />
+                    <div className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-2 border-neutral-800 ${
+                      therapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-500'
+                    }`}></div>
+                  </div>
+                </div>
+              </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-neutral-800/50">
-              <tr>
-                <th className="text-left p-4 text-neutral-300 font-medium">Therapist</th>
-                <th className="text-left p-4 text-neutral-300 font-medium">Specialization</th>
-                <th className="text-left p-4 text-neutral-300 font-medium">Rating</th>
-                <th className="text-left p-4 text-neutral-300 font-medium">Rate</th>
-                <th className="text-left p-4 text-neutral-300 font-medium">Status</th>
-                <th className="text-left p-4 text-neutral-300 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTherapists.map((therapist) => (
-                <tr key={therapist.id} className="border-t border-neutral-800 hover:bg-neutral-800/30">
-                  <td className="p-4">
-                    <div className="flex items-center space-x-3">
-                      <img
-                        src={therapist.profilePhoto}
-                        alt={`${therapist.firstName} ${therapist.lastName}`}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div>
-                        <p className="text-white font-medium">
-                          {therapist.firstName} {therapist.lastName}
-                        </p>
-                        <p className="text-neutral-400 text-sm">{therapist.email}</p>
+              {/* Content */}
+              <div className="p-6 pt-4 text-center">
+                <h3 className="text-lg font-semibold text-white mb-1">
+                  {therapist.firstName} {therapist.lastName}
+                </h3>
+                <p className="text-neutral-400 text-sm mb-3">{therapist.email}</p>
+
+                {/* Rating */}
+                <div className="flex items-center justify-center space-x-1 mb-3">
+                  <Star className="w-4 h-4 text-accent-yellow fill-current" />
+                  <span className="text-white font-medium">{therapist.rating}</span>
+                  <span className="text-neutral-400 text-sm">({therapist.reviewCount})</span>
+                </div>
+
+                {/* Specializations */}
+                <div className="mb-4">
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {therapist.specializations.slice(0, 2).map((spec, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-primary-500/20 text-primary-500 rounded-full text-xs"
+                      >
+                        {spec}
+                      </span>
+                    ))}
+                    {therapist.specializations.length > 2 && (
+                      <span className="px-2 py-1 bg-neutral-700 text-neutral-300 rounded-full text-xs">
+                        +{therapist.specializations.length - 2}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Info */}
+                <div className="grid grid-cols-2 gap-4 mb-4 text-xs">
+                  <div className="text-center">
+                    <p className="text-neutral-400">Experience</p>
+                    <p className="text-white font-medium">{therapist.experience} years</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-neutral-400">Rate</p>
+                    <p className="text-white font-medium">LKR {therapist.hourlyRate.toLocaleString()}</p>
+                  </div>
+                </div>
+
+                {/* Session Formats */}
+                <div className="flex items-center justify-center space-x-3 mb-4">
+                  {therapist.sessionFormats.map((format, index) => (
+                    <div key={index} className="flex items-center space-x-1 text-neutral-300">
+                      {getSessionFormatIcon(format)}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-center space-x-2">
+                  <button
+                    onClick={() => setViewingTherapist(therapist)}
+                    className="p-2 bg-neutral-800 text-neutral-300 hover:text-primary-500 rounded-xl transition-colors duration-200"
+                    title="View details"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => openEditModal(therapist)}
+                    className="p-2 bg-neutral-800 text-neutral-300 hover:text-accent-yellow rounded-xl transition-colors duration-200"
+                    title="Edit therapist"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(therapist)}
+                    className="p-2 bg-neutral-800 text-neutral-300 hover:text-red-500 rounded-xl transition-colors duration-200"
+                    title="Delete therapist"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Table View */
+        <div className="bg-black/50 backdrop-blur-sm rounded-3xl border border-neutral-800 overflow-hidden">
+          <div className="p-6 border-b border-neutral-800">
+            <h2 className="text-xl font-semibold text-white">
+              Therapists ({filteredTherapists.length})
+            </h2>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-neutral-800/50">
+                <tr>
+                  <th className="text-left p-4 text-neutral-300 font-medium">Therapist</th>
+                  <th className="text-left p-4 text-neutral-300 font-medium">Specializations</th>
+                  <th className="text-left p-4 text-neutral-300 font-medium">Experience</th>
+                  <th className="text-left p-4 text-neutral-300 font-medium">Rate</th>
+                  <th className="text-left p-4 text-neutral-300 font-medium">Status</th>
+                  <th className="text-left p-4 text-neutral-300 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTherapists.map((therapist) => (
+                  <tr key={therapist.id} className="border-t border-neutral-800 hover:bg-neutral-800/30">
+                    <td className="p-4">
+                      <div className="flex items-center space-x-3">
+                        <img
+                          src={therapist.profilePhoto}
+                          alt={`${therapist.firstName} ${therapist.lastName}`}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div>
+                          <p className="text-white font-medium">
+                            {therapist.firstName} {therapist.lastName}
+                          </p>
+                          <p className="text-neutral-400 text-sm">{therapist.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-wrap gap-1">
+                        {therapist.specializations.slice(0, 2).map((spec, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-primary-500/20 text-primary-500 rounded-full text-xs"
+                          >
+                            {spec}
+                          </span>
+                        ))}
+                        {therapist.specializations.length > 2 && (
+                          <span className="px-2 py-1 bg-neutral-700 text-neutral-300 rounded-full text-xs">
+                            +{therapist.specializations.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <p className="text-neutral-300">{therapist.experience} years</p>
+                    </td>
+                    <td className="p-4">
+                      <p className="text-neutral-300">LKR {therapist.hourlyRate.toLocaleString()}</p>
+                    </td>
+                    <td className="p-4">
+                      <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${
+                        therapist.isAvailable 
+                          ? 'bg-accent-green/20 text-accent-green' 
+                          : 'bg-neutral-700 text-neutral-300'
+                      }`}>
+                        <div className={`w-2 h-2 rounded-full ${
+                          therapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-400'
+                        }`}></div>
+                        <span>{therapist.isAvailable ? 'Available' : 'Unavailable'}</span>
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setViewingTherapist(therapist)}
+                          className="p-2 text-neutral-400 hover:text-primary-500 transition-colors duration-200"
+                          title="View details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => openEditModal(therapist)}
+                          className="p-2 text-neutral-400 hover:text-accent-yellow transition-colors duration-200"
+                          title="Edit therapist"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(therapist)}
+                          className="p-2 text-neutral-400 hover:text-red-500 transition-colors duration-200"
+                          title="Delete therapist"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {filteredTherapists.length === 0 && (
+            <div className="text-center py-16">
+              <Users className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
+              <p className="text-neutral-300 mb-2">No therapists found</p>
+              <p className="text-neutral-400 text-sm">
+                {searchQuery 
+                  ? 'Try adjusting your search query'
+                  : 'Add your first therapist to get started'
+                }
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* View Therapist Modal */}
+      {viewingTherapist && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setViewingTherapist(null)}
+          ></div>
+
+          <div className="relative bg-neutral-900 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-neutral-800">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-800">
+              <h2 className="text-2xl font-bold text-white">Therapist Details</h2>
+              <button
+                onClick={() => setViewingTherapist(null)}
+                className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center transition-colors duration-200"
+              >
+                <X className="w-5 h-5 text-neutral-400" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* Profile Header */}
+              <div className="text-center mb-8">
+                <div className="relative inline-block">
+                  <img
+                    src={viewingTherapist.profilePhoto}
+                    alt={`${viewingTherapist.firstName} ${viewingTherapist.lastName}`}
+                    className="w-32 h-32 rounded-full object-cover border-4 border-neutral-700 mx-auto"
+                  />
+                  <div className={`absolute bottom-2 right-2 w-8 h-8 rounded-full border-4 border-neutral-800 ${
+                    viewingTherapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-500'
+                  }`}></div>
+                </div>
+                <h3 className="text-2xl font-bold text-white mt-4">
+                  {viewingTherapist.firstName} {viewingTherapist.lastName}
+                </h3>
+                <p className="text-neutral-400">{viewingTherapist.email}</p>
+                
+                {/* Rating */}
+                <div className="flex items-center justify-center space-x-2 mt-3">
+                  <Star className="w-5 h-5 text-accent-yellow fill-current" />
+                  <span className="text-white font-medium text-lg">{viewingTherapist.rating}</span>
+                  <span className="text-neutral-400">({viewingTherapist.reviewCount} reviews)</span>
+                </div>
+              </div>
+
+              {/* Details Grid */}
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Left Column */}
+                <div className="space-y-6">
+                  {/* Basic Info */}
+                  <div className="bg-neutral-800/50 rounded-2xl p-6">
+                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                      <Award className="w-5 h-5 text-primary-500" />
+                      <span>Professional Info</span>
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-3">
+                        <Calendar className="w-4 h-4 text-neutral-400" />
+                        <span className="text-neutral-300">{viewingTherapist.experience} years experience</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <DollarSign className="w-4 h-4 text-neutral-400" />
+                        <span className="text-neutral-300">LKR {viewingTherapist.hourlyRate.toLocaleString()} per session</span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Clock className="w-4 h-4 text-neutral-400" />
+                        <span className="text-neutral-300">{viewingTherapist.nextAvailableSlot}</span>
                       </div>
                     </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="space-y-1">
-                      {therapist.specializations.slice(0, 2).map((spec, index) => (
+                  </div>
+
+                  {/* Credentials */}
+                  <div className="bg-neutral-800/50 rounded-2xl p-6">
+                    <h4 className="text-lg font-semibold text-white mb-4">Credentials</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {viewingTherapist.credentials.map((credential, index) => (
                         <span
                           key={index}
-                          className="inline-block bg-primary-500/20 text-primary-500 px-2 py-1 rounded-full text-xs mr-1"
+                          className="px-3 py-1 bg-primary-500/20 text-primary-500 rounded-full text-sm"
+                        >
+                          {credential}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Languages */}
+                  <div className="bg-neutral-800/50 rounded-2xl p-6">
+                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+                      <Languages className="w-5 h-5 text-accent-green" />
+                      <span>Languages</span>
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {viewingTherapist.languages.map((language, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-accent-green/20 text-accent-green rounded-full text-sm"
+                        >
+                          {language}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
+                  {/* Specializations */}
+                  <div className="bg-neutral-800/50 rounded-2xl p-6">
+                    <h4 className="text-lg font-semibold text-white mb-4">Specializations</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {viewingTherapist.specializations.map((spec, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-accent-yellow/20 text-accent-yellow rounded-full text-sm"
                         >
                           {spec}
                         </span>
                       ))}
-                      {therapist.specializations.length > 2 && (
-                        <span className="text-neutral-400 text-xs">
-                          +{therapist.specializations.length - 2} more
+                    </div>
+                  </div>
+
+                  {/* Services */}
+                  <div className="bg-neutral-800/50 rounded-2xl p-6">
+                    <h4 className="text-lg font-semibold text-white mb-4">Services</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {viewingTherapist.services.map((service, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-accent-orange/20 text-accent-orange rounded-full text-sm"
+                        >
+                          {service}
                         </span>
-                      )}
+                      ))}
                     </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 text-accent-yellow fill-current" />
-                      <span className="text-white font-medium">{therapist.rating}</span>
-                      <span className="text-neutral-400 text-sm">({therapist.reviewCount})</span>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <p className="text-white font-medium">LKR {therapist.hourlyRate.toLocaleString()}</p>
-                    <p className="text-neutral-400 text-sm">per session</p>
-                  </td>
-                  <td className="p-4">
-                    <button
-                      onClick={() => handleToggleAvailability(therapist)}
-                      className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
-                        therapist.isAvailable
-                          ? 'bg-accent-green/20 text-accent-green'
-                          : 'bg-neutral-700 text-neutral-300'
-                      }`}
-                    >
-                      <div className={`w-2 h-2 rounded-full ${
-                        therapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-400'
-                      }`}></div>
-                      <span>{therapist.isAvailable ? 'Available' : 'Unavailable'}</span>
-                    </button>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => openViewModal(therapist)}
-                        className="p-2 text-neutral-400 hover:text-white transition-colors duration-200"
-                        title="View Details"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => openEditModal(therapist)}
-                        className="p-2 text-neutral-400 hover:text-white transition-colors duration-200"
-                        title="Edit"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTherapist(therapist.id)}
-                        className="p-2 text-neutral-400 hover:text-red-400 transition-colors duration-200"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
 
-        {filteredTherapists.length === 0 && (
-          <div className="text-center py-16">
-            <Users className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
-            <p className="text-neutral-300 mb-2">No therapists found</p>
-            <p className="text-neutral-400 text-sm">
-              {searchQuery || statusFilter !== 'all' 
-                ? 'Try adjusting your search or filters'
-                : 'Add your first therapist to get started'
-              }
-            </p>
+                  {/* Session Formats */}
+                  <div className="bg-neutral-800/50 rounded-2xl p-6">
+                    <h4 className="text-lg font-semibold text-white mb-4">Session Formats</h4>
+                    <div className="flex items-center space-x-4">
+                      {viewingTherapist.sessionFormats.map((format, index) => (
+                        <div key={index} className="flex items-center space-x-2 text-neutral-300">
+                          {getSessionFormatIcon(format)}
+                          <span className="text-sm capitalize">{format}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bio */}
+              {viewingTherapist.bio && (
+                <div className="mt-8 bg-neutral-800/50 rounded-2xl p-6">
+                  <h4 className="text-lg font-semibold text-white mb-4">About</h4>
+                  <p className="text-neutral-300 leading-relaxed">{viewingTherapist.bio}</p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex items-center justify-end space-x-4 mt-8 pt-6 border-t border-neutral-800">
+                <button
+                  onClick={() => {
+                    setViewingTherapist(null);
+                    openEditModal(viewingTherapist);
+                  }}
+                  className="px-6 py-3 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <Edit className="w-5 h-5" />
+                  <span>Edit Therapist</span>
+                </button>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Add Therapist Modal */}
+      {/* Add/Edit Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAddModal(false)}></div>
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => {
+              setShowAddModal(false);
+              setEditingTherapist(null);
+              resetForm();
+            }}
+          ></div>
+
           <div className="relative bg-neutral-900 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-neutral-800">
             <div className="flex items-center justify-between p-6 border-b border-neutral-800">
-              <h2 className="text-2xl font-bold text-white">Add New Therapist</h2>
+              <h2 className="text-2xl font-bold text-white">
+                {editingTherapist ? 'Edit Therapist' : 'Add New Therapist'}
+              </h2>
               <button
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setEditingTherapist(null);
+                  resetForm();
+                }}
                 className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center transition-colors duration-200"
               >
-                <X className="w-5 h-5 text-white" />
+                <X className="w-5 h-5 text-neutral-400" />
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
-              {/* Profile Photo Upload */}
-              <div className="text-center">
-                <label className="block text-sm font-medium text-neutral-300 mb-4">Profile Photo</label>
-                <div className="relative inline-block">
-                  <img
-                    src={imagePreview || formData.profilePhoto}
-                    alt="Profile preview"
-                    className="w-32 h-32 rounded-full object-cover border-4 border-neutral-700"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingImage}
-                    className="absolute bottom-0 right-0 w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors duration-200 disabled:opacity-50"
-                  >
-                    {uploadingImage ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {/* Profile Photo - Centered */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-3 text-center">
+                  Profile Photo
+                </label>
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="w-32 h-32 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center border-4 border-neutral-700">
+                    {formData.profilePhoto ? (
+                      <img
+                        src={formData.profilePhoto}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <Camera className="w-5 h-5 text-white" />
+                      <Users className="w-12 h-12 text-neutral-400" />
                     )}
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                </div>
-                <p className="text-neutral-400 text-xs mt-2">Click the camera icon to upload a photo (max 5MB)</p>
-              </div>
-
-              {/* Account Information */}
-              <div className="bg-neutral-800/30 rounded-2xl p-4">
-                <h3 className="text-lg font-semibold text-white mb-4">Account Information</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-2">Email *</label>
-                    <input
-                      type="email"
-                      value={formData.email || ''}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                      placeholder="Enter email address"
-                    />
-                    <p className="text-neutral-400 text-xs mt-1">This will be used for login</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-2">Password *</label>
+                  <div className="text-center">
                     <input
-                      type="password"
-                      value={therapistPassword}
-                      onChange={(e) => setTherapistPassword(e.target.value)}
-                      className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                      placeholder="Enter password (min 6 characters)"
-                      minLength={6}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file);
+                      }}
+                      className="hidden"
+                      id="profile-photo"
+                      disabled={uploading}
                     />
-                    <p className="text-neutral-400 text-xs mt-1">Minimum 6 characters</p>
+                    <label
+                      htmlFor="profile-photo"
+                      className={`inline-flex items-center space-x-2 px-4 py-2 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors duration-200 cursor-pointer ${
+                        uploading ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <Upload className="w-4 h-4" />
+                      <span>{uploading ? 'Uploading...' : 'Upload Photo'}</span>
+                    </label>
+                    <p className="text-xs text-neutral-400 mt-2">
+                      JPEG, PNG, or WebP. Max 5MB.
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* Basic Information */}
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-4">Personal Information</h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-2">First Name *</label>
-                    <input
-                      type="text"
-                      value={formData.firstName || ''}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                      placeholder="Enter first name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-2">Last Name *</label>
-                    <input
-                      type="text"
-                      value={formData.lastName || ''}
-                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                      placeholder="Enter last name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-2">Phone</label>
-                    <input
-                      type="tel"
-                      value={formData.phone || ''}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                      placeholder="Enter phone number"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-2">Location</label>
-                    <input
-                      type="text"
-                      value={formData.location || ''}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                      placeholder="Enter location"
-                    />
-                  </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                    className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400"
+                    placeholder="Enter first name"
+                    required
+                  />
                 </div>
-              </div>
 
-              {/* Professional Information */}
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-4">Professional Information</h3>
-                <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                    className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400"
+                    placeholder="Enter last name"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400"
+                    placeholder="Enter email address"
+                    required
+                  />
+                </div>
+
+                {!editingTherapist && (
                   <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-2">Experience (Years)</label>
-                    <input
-                      type="number"
-                      value={formData.experience || 0}
-                      onChange={(e) => setFormData({ ...formData, experience: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                      min="0"
-                    />
+                    <label className="block text-sm font-medium text-neutral-300 mb-2">
+                      Password *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={formData.password}
+                        onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                        className="w-full px-4 py-3 pr-12 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400"
+                        placeholder="Enter password"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-300"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-300 mb-2">Hourly Rate (LKR)</label>
-                    <input
-                      type="number"
-                      value={formData.hourlyRate || 4500}
-                      onChange={(e) => setFormData({ ...formData, hourlyRate: parseInt(e.target.value) || 4500 })}
-                      className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                      min="0"
-                    />
-                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    Experience (Years)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={formData.experience}
+                    onChange={(e) => setFormData(prev => ({ ...prev, experience: parseInt(e.target.value) || 1 }))}
+                    className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    Hourly Rate (LKR)
+                  </label>
+                  <input
+                    type="number"
+                    min="1000"
+                    max="50000"
+                    step="500"
+                    value={formData.hourlyRate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseInt(e.target.value) || 4500 }))}
+                    className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400"
+                  />
                 </div>
               </div>
 
               {/* Credentials */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Credentials</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {predefinedOptions.credentials.map((credential) => (
-                    <label key={credential} className="flex items-center space-x-2 cursor-pointer">
+                <label className="block text-sm font-medium text-neutral-300 mb-3">
+                  Credentials * (Select at least one)
+                </label>
+                <div className="grid md:grid-cols-2 gap-2">
+                  {credentialOptions.map((credential) => (
+                    <label key={credential} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={(formData.credentials || []).includes(credential)}
-                        onChange={() => handleArrayFieldChange('credentials', credential)}
+                        checked={formData.credentials.includes(credential)}
+                        onChange={(e) => handleArrayFieldChange('credentials', credential, e.target.checked)}
                         className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
                       />
                       <span className="text-neutral-300 text-sm">{credential}</span>
@@ -831,14 +1112,16 @@ const TherapistManagement: React.FC = () => {
 
               {/* Specializations */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Specializations</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {predefinedOptions.specializations.map((specialization) => (
-                    <label key={specialization} className="flex items-center space-x-2 cursor-pointer">
+                <label className="block text-sm font-medium text-neutral-300 mb-3">
+                  Specializations * (Select at least one)
+                </label>
+                <div className="grid md:grid-cols-3 gap-2">
+                  {specializationOptions.map((specialization) => (
+                    <label key={specialization} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={(formData.specializations || []).includes(specialization)}
-                        onChange={() => handleArrayFieldChange('specializations', specialization)}
+                        checked={formData.specializations.includes(specialization)}
+                        onChange={(e) => handleArrayFieldChange('specializations', specialization, e.target.checked)}
                         className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
                       />
                       <span className="text-neutral-300 text-sm">{specialization}</span>
@@ -849,14 +1132,16 @@ const TherapistManagement: React.FC = () => {
 
               {/* Languages */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Languages</label>
-                <div className="flex flex-wrap gap-2">
-                  {predefinedOptions.languages.map((language) => (
-                    <label key={language} className="flex items-center space-x-2 cursor-pointer">
+                <label className="block text-sm font-medium text-neutral-300 mb-3">
+                  Languages * (Select at least one)
+                </label>
+                <div className="grid md:grid-cols-4 gap-2">
+                  {languageOptions.map((language) => (
+                    <label key={language} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={(formData.languages || []).includes(language)}
-                        onChange={() => handleArrayFieldChange('languages', language)}
+                        checked={formData.languages.includes(language)}
+                        onChange={(e) => handleArrayFieldChange('languages', language, e.target.checked)}
                         className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
                       />
                       <span className="text-neutral-300 text-sm">{language}</span>
@@ -865,34 +1150,18 @@ const TherapistManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Session Formats */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Session Formats</label>
-                <div className="flex flex-wrap gap-2">
-                  {predefinedOptions.sessionFormats.map((format) => (
-                    <label key={format} className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={(formData.sessionFormats || []).includes(format)}
-                        onChange={() => handleArrayFieldChange('sessionFormats', format)}
-                        className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
-                      />
-                      <span className="text-neutral-300 text-sm capitalize">{format}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
               {/* Services */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Services Offered</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {predefinedOptions.services.map((service) => (
-                    <label key={service} className="flex items-center space-x-2 cursor-pointer">
+                <label className="block text-sm font-medium text-neutral-300 mb-3">
+                  Services * (Select at least one)
+                </label>
+                <div className="grid md:grid-cols-2 gap-2">
+                  {serviceOptions.map((service) => (
+                    <label key={service} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={(formData.services || []).includes(service)}
-                        onChange={() => handleArrayFieldChange('services', service)}
+                        checked={formData.services.includes(service)}
+                        onChange={(e) => handleArrayFieldChange('services', service, e.target.checked)}
                         className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
                       />
                       <span className="text-neutral-300 text-sm">{service}</span>
@@ -901,384 +1170,82 @@ const TherapistManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Bio */}
+              {/* Session Formats */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Bio</label>
-                <textarea
-                  value={formData.bio || ''}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                  placeholder="Enter therapist bio..."
-                />
-              </div>
-
-              {/* Availability Toggle */}
-              <div className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  id="isAvailable"
-                  checked={formData.isAvailable || false}
-                  onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })}
-                  className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
-                />
-                <label htmlFor="isAvailable" className="text-neutral-300">Available for bookings</label>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end space-x-4 p-6 border-t border-neutral-800">
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="px-6 py-3 border border-neutral-700 text-neutral-300 rounded-2xl hover:bg-neutral-800 transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddTherapist}
-                disabled={uploadingImage}
-                className="px-6 py-3 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
-              >
-                <Save className="w-5 h-5" />
-                <span>Create Therapist Account</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Modal - Similar structure but without account creation */}
-      {showEditModal && editingTherapist && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowEditModal(false)}></div>
-          <div className="relative bg-neutral-900 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-neutral-800">
-            <div className="flex items-center justify-between p-6 border-b border-neutral-800">
-              <h2 className="text-2xl font-bold text-white">Edit Therapist</h2>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center transition-colors duration-200"
-              >
-                <X className="w-5 h-5 text-white" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Profile Photo Upload */}
-              <div className="text-center">
-                <label className="block text-sm font-medium text-neutral-300 mb-4">Profile Photo</label>
-                <div className="relative inline-block">
-                  <img
-                    src={imagePreview || formData.profilePhoto}
-                    alt="Profile preview"
-                    className="w-32 h-32 rounded-full object-cover border-4 border-neutral-700"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingImage}
-                    className="absolute bottom-0 right-0 w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center hover:bg-primary-600 transition-colors duration-200 disabled:opacity-50"
-                  >
-                    {uploadingImage ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <Camera className="w-5 h-5 text-white" />
-                    )}
-                  </button>
-                </div>
-                <p className="text-neutral-400 text-xs mt-2">Click the camera icon to upload a new photo</p>
-              </div>
-
-              {/* Basic Information */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">First Name *</label>
-                  <input
-                    type="text"
-                    value={formData.firstName || ''}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                    placeholder="Enter first name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">Last Name *</label>
-                  <input
-                    type="text"
-                    value={formData.lastName || ''}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                    placeholder="Enter last name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">Email *</label>
-                  <input
-                    type="email"
-                    value={formData.email || ''}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                    placeholder="Enter email address"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">Phone</label>
-                  <input
-                    type="tel"
-                    value={formData.phone || ''}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                    placeholder="Enter phone number"
-                  />
-                </div>
-              </div>
-
-              {/* Professional Information */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">Experience (Years)</label>
-                  <input
-                    type="number"
-                    value={formData.experience || 0}
-                    onChange={(e) => setFormData({ ...formData, experience: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                    min="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutral-300 mb-2">Hourly Rate (LKR)</label>
-                  <input
-                    type="number"
-                    value={formData.hourlyRate || 4500}
-                    onChange={(e) => setFormData({ ...formData, hourlyRate: parseInt(e.target.value) || 4500 })}
-                    className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
-                    min="0"
-                  />
+                <label className="block text-sm font-medium text-neutral-300 mb-3">
+                  Session Formats * (Select at least one)
+                </label>
+                <div className="grid md:grid-cols-3 gap-2">
+                  {sessionFormatOptions.map((format) => (
+                    <label key={format} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.sessionFormats.includes(format)}
+                        onChange={(e) => handleArrayFieldChange('sessionFormats', format, e.target.checked)}
+                        className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
+                      />
+                      <div className="flex items-center space-x-2">
+                        {format === 'video' && <Video className="w-4 h-4 text-primary-500" />}
+                        {format === 'audio' && <Phone className="w-4 h-4 text-primary-500" />}
+                        {format === 'chat' && <MessageCircle className="w-4 h-4 text-primary-500" />}
+                        <span className="text-neutral-300 text-sm capitalize">{format}</span>
+                      </div>
+                    </label>
+                  ))}
                 </div>
               </div>
 
               {/* Bio */}
               <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-2">Bio</label>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Bio
+                </label>
                 <textarea
-                  value={formData.bio || ''}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                  value={formData.bio}
+                  onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                   rows={4}
-                  className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white"
+                  className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 resize-none"
                   placeholder="Enter therapist bio..."
                 />
               </div>
 
-              {/* Availability Toggle */}
-              <div className="flex items-center space-x-3">
+              {/* Next Available Slot */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Next Available Slot
+                </label>
                 <input
-                  type="checkbox"
-                  id="editIsAvailable"
-                  checked={formData.isAvailable || false}
-                  onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })}
-                  className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
+                  type="text"
+                  value={formData.nextAvailableSlot}
+                  onChange={(e) => setFormData(prev => ({ ...prev, nextAvailableSlot: e.target.value }))}
+                  className="w-full px-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400"
+                  placeholder="e.g., Available Today, Tomorrow 2 PM, etc."
                 />
-                <label htmlFor="editIsAvailable" className="text-neutral-300">Available for bookings</label>
               </div>
-            </div>
 
-            <div className="flex items-center justify-end space-x-4 p-6 border-t border-neutral-800">
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="px-6 py-3 border border-neutral-700 text-neutral-300 rounded-2xl hover:bg-neutral-800 transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleEditTherapist}
-                disabled={uploadingImage}
-                className="px-6 py-3 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
-              >
-                <Save className="w-5 h-5" />
-                <span>Update Therapist</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* View Modal - Same as before */}
-      {showViewModal && editingTherapist && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowViewModal(false)}></div>
-          <div className="relative bg-neutral-900 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-neutral-800">
-            <div className="flex items-center justify-between p-6 border-b border-neutral-800">
-              <h2 className="text-2xl font-bold text-white">Therapist Details</h2>
-              <button
-                onClick={() => setShowViewModal(false)}
-                className="w-10 h-10 rounded-full bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center transition-colors duration-200"
-              >
-                <X className="w-5 h-5 text-white" />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <div className="grid lg:grid-cols-3 gap-8">
-                {/* Profile Section */}
-                <div className="lg:col-span-1">
-                  <div className="text-center mb-6">
-                    <img
-                      src={editingTherapist.profilePhoto}
-                      alt={`${editingTherapist.firstName} ${editingTherapist.lastName}`}
-                      className="w-32 h-32 rounded-full object-cover mx-auto mb-4"
-                    />
-                    <h3 className="text-xl font-bold text-white">
-                      {editingTherapist.firstName} {editingTherapist.lastName}
-                    </h3>
-                    <p className="text-neutral-300">{editingTherapist.email}</p>
-                    {editingTherapist.phone && (
-                      <p className="text-neutral-400 text-sm">{editingTherapist.phone}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="bg-neutral-800/50 rounded-2xl p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Star className="w-4 h-4 text-accent-yellow" />
-                        <span className="text-white font-medium">Rating</span>
-                      </div>
-                      <p className="text-2xl font-bold text-white">
-                        {editingTherapist.rating} 
-                        <span className="text-sm text-neutral-400 ml-2">
-                          ({editingTherapist.reviewCount} reviews)
-                        </span>
-                      </p>
-                    </div>
-
-                    <div className="bg-neutral-800/50 rounded-2xl p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Award className="w-4 h-4 text-primary-500" />
-                        <span className="text-white font-medium">Experience</span>
-                      </div>
-                      <p className="text-2xl font-bold text-white">{editingTherapist.experience} years</p>
-                    </div>
-
-                    <div className="bg-neutral-800/50 rounded-2xl p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <span className="text-white font-medium">Rate</span>
-                      </div>
-                      <p className="text-2xl font-bold text-white">
-                        LKR {editingTherapist.hourlyRate.toLocaleString()}
-                        <span className="text-sm text-neutral-400 ml-2">per session</span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Details Section */}
-                <div className="lg:col-span-2 space-y-6">
-                  {/* Bio */}
-                  <div>
-                    <h4 className="text-lg font-semibold text-white mb-3">About</h4>
-                    <p className="text-neutral-300 leading-relaxed">{editingTherapist.bio}</p>
-                  </div>
-
-                  {/* Credentials */}
-                  <div>
-                    <h4 className="text-lg font-semibold text-white mb-3">Credentials</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {editingTherapist.credentials.map((credential, index) => (
-                        <span
-                          key={index}
-                          className="bg-primary-500/20 text-primary-500 px-3 py-1 rounded-full text-sm"
-                        >
-                          {credential}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Specializations */}
-                  <div>
-                    <h4 className="text-lg font-semibold text-white mb-3">Specializations</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {editingTherapist.specializations.map((spec, index) => (
-                        <span
-                          key={index}
-                          className="bg-accent-green/20 text-accent-green px-3 py-1 rounded-full text-sm"
-                        >
-                          {spec}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Languages */}
-                  <div>
-                    <h4 className="text-lg font-semibold text-white mb-3">Languages</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {editingTherapist.languages.map((language, index) => (
-                        <span
-                          key={index}
-                          className="bg-accent-yellow/20 text-accent-yellow px-3 py-1 rounded-full text-sm"
-                        >
-                          {language}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Session Formats */}
-                  <div>
-                    <h4 className="text-lg font-semibold text-white mb-3">Session Formats</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {editingTherapist.sessionFormats.map((format, index) => (
-                        <span
-                          key={index}
-                          className="bg-accent-orange/20 text-accent-orange px-3 py-1 rounded-full text-sm capitalize"
-                        >
-                          {format}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Services */}
-                  <div>
-                    <h4 className="text-lg font-semibold text-white mb-3">Services</h4>
-                    <div className="space-y-2">
-                      {editingTherapist.services.map((service, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
-                          <span className="text-neutral-300">{service}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Status */}
-                  <div>
-                    <h4 className="text-lg font-semibold text-white mb-3">Status</h4>
-                    <div className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full ${
-                      editingTherapist.isAvailable
-                        ? 'bg-accent-green/20 text-accent-green'
-                        : 'bg-neutral-700 text-neutral-300'
-                    }`}>
-                      <div className={`w-3 h-3 rounded-full ${
-                        editingTherapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-400'
-                      }`}></div>
-                      <span>{editingTherapist.isAvailable ? 'Available for bookings' : 'Currently unavailable'}</span>
-                    </div>
-                  </div>
-                </div>
+              {/* Submit Button */}
+              <div className="flex items-center justify-end space-x-4 pt-6 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setEditingTherapist(null);
+                    resetForm();
+                  }}
+                  className="px-6 py-3 border border-neutral-700 text-neutral-300 rounded-2xl hover:bg-neutral-800 transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || uploading}
+                  className="px-6 py-3 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save className="w-5 h-5" />
+                  <span>{loading ? 'Saving...' : editingTherapist ? 'Update Therapist' : 'Add Therapist'}</span>
+                </button>
               </div>
-            </div>
-
-            <div className="flex items-center justify-end space-x-4 p-6 border-t border-neutral-800">
-              <button
-                onClick={() => {
-                  setShowViewModal(false);
-                  openEditModal(editingTherapist);
-                }}
-                className="px-6 py-3 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors duration-200 flex items-center space-x-2"
-              >
-                <Edit className="w-5 h-5" />
-                <span>Edit Therapist</span>
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}
