@@ -10,7 +10,7 @@ import {
   Monitor,
   MonitorOff
 } from 'lucide-react';
-import DailyIframe from '@daily-co/daily-js';
+import DailyIframe, { DailyCall } from '@daily-co/daily-js';
 import { Session } from '../../types/session';
 
 interface VideoCallInterfaceProps {
@@ -29,17 +29,34 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
   isChatOpen
 }) => {
   const callFrameRef = useRef<HTMLDivElement>(null);
-  const callObjectRef = useRef<any>(null);
+  const callObjectRef = useRef<DailyCall | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(session.sessionType === 'audio');
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [participants, setParticipants] = useState<any[]>([]);
+  const [participants, setParticipants] = useState<any[]>([]); // Could use DailyParticipant[] if you import types
   const [isInitializing, setIsInitializing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!session.dailyRoomUrl || !callFrameRef.current || isInitializing || callObjectRef.current) return;
+    if (!session.dailyRoomUrl || !callFrameRef.current || isInitializing) return;
+
+    // Always destroy any previous call object before creating a new one
+    if (callObjectRef.current) {
+      (async () => {
+        try {
+          if (callObjectRef.current && callObjectRef.current.meetingState() !== 'left-meeting') {
+            await callObjectRef.current.leave();
+          }
+          if (callObjectRef.current) {
+            callObjectRef.current.destroy();
+          }
+        } catch (e) {
+          console.warn('Error destroying previous Daily call object:', e);
+        }
+        callObjectRef.current = null;
+      })();
+    }
 
     const initializeCall = async () => {
       try {
@@ -52,13 +69,9 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           hasToken: !!token
         });
 
-        // Create call object with proper configuration
+        // Create call object with supported options only
         const call = DailyIframe.createCallObject({
           showLeaveButton: false,
-          showFullscreenButton: false,
-          showLocalVideo: session.sessionType === 'video',
-          showParticipantsBar: false,
-          activeSpeakerMode: true,
           theme: {
             colors: {
               accent: '#00BFA5',
@@ -74,7 +87,6 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
             }
           }
         });
-
         callObjectRef.current = call;
 
         // Set up event listeners
@@ -142,7 +154,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
         // Join the room with proper configuration
         const joinConfig: any = {
           url: session.dailyRoomUrl,
-          userName: 'User',
+          userName: 'User', // Optionally, pass from props/context
           startVideoOff: session.sessionType === 'audio',
           startAudioOff: false
         };
@@ -156,15 +168,19 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
         await call.join(joinConfig);
 
         // Embed the call in the container
+        const iframe = call.iframe();
         if (callFrameRef.current) {
-          call.iframe().style.width = '100%';
-          call.iframe().style.height = '100%';
-          call.iframe().style.border = 'none';
-          call.iframe().style.borderRadius = '16px';
-          
-          // Clear container and append iframe
           callFrameRef.current.innerHTML = '';
-          callFrameRef.current.appendChild(call.iframe());
+          if (iframe) {
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            iframe.style.borderRadius = '16px';
+            callFrameRef.current.appendChild(iframe);
+          } else {
+            // Fallback: show error if iframe is not available
+            setError('Failed to load video call interface. Please try again.');
+          }
         }
 
         console.log('Call initialization completed');
@@ -182,21 +198,28 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
     // Cleanup function
     return () => {
       if (callObjectRef.current) {
-        try {
-          callObjectRef.current.destroy();
-        } catch (error) {
-          console.warn('Error destroying call object on cleanup:', error);
-        }
-        callObjectRef.current = null;
+        (async () => {
+          try {
+            if (callObjectRef.current && callObjectRef.current.meetingState() !== 'left-meeting') {
+              await callObjectRef.current.leave();
+            }
+            if (callObjectRef.current) {
+              callObjectRef.current.destroy();
+            }
+          } catch (error) {
+            console.warn('Error destroying call object on cleanup:', error);
+          }
+          callObjectRef.current = null;
+        })();
       }
     };
   }, [session.dailyRoomUrl, token, session.sessionType]);
 
-  const updateParticipants = (call: any) => {
+  const updateParticipants = (call: DailyCall) => {
     try {
-      const participants = call.participants();
-      setParticipants(Object.values(participants));
-      console.log('Updated participants:', Object.keys(participants).length);
+      const participantsObj = call.participants();
+      setParticipants(Object.values(participantsObj));
+      console.log('Updated participants:', Object.keys(participantsObj).length);
     } catch (error) {
       console.warn('Error updating participants:', error);
     }
@@ -291,12 +314,21 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
               <p className="text-neutral-300 mb-6">{error}</p>
               <div className="space-y-3">
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     setError(null);
                     setIsInitializing(false);
                     // Trigger re-initialization
                     if (callObjectRef.current) {
-                      callObjectRef.current.destroy();
+                      try {
+                        if (callObjectRef.current.meetingState() !== 'left-meeting') {
+                          await callObjectRef.current.leave();
+                        }
+                        if (callObjectRef.current) {
+                          callObjectRef.current.destroy();
+                        }
+                      } catch (e) {
+                        console.warn('Error destroying call object on retry:', e);
+                      }
                       callObjectRef.current = null;
                     }
                   }}

@@ -33,14 +33,6 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
           enable_screenshare: sessionData.sessionType === 'video',
           max_participants: 2,
           exp: Math.floor(sessionData.scheduledTime.getTime() / 1000) + (4 * 60 * 60), // 4 hours after scheduled time
-          enable_recording: false,
-          enable_transcription: false,
-          enable_prejoin_ui: false,
-          enable_network_ui: true,
-          enable_people_ui: true,
-          enable_pip_ui: true,
-          enable_fullscreen_toggle: true,
-          enable_device_ui: true
         },
       };
 
