@@ -14,8 +14,8 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
   session,
   token,
   onEndCall,
-  onToggleChat,
-  isChatOpen
+  // onToggleChat,
+  // isChatOpen
 }) => {
   const callFrameRef = useRef<HTMLDivElement>(null);
   const callObjectRef = useRef<DailyCall | null>(null);
@@ -194,7 +194,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
         <div ref={callFrameRef} className="w-full h-full" />
         
         {/* Loading State */}
-        {isInitializing && !error && (
+        {/* {isInitializing && !error && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -204,7 +204,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
               </p>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Error State */}
         {error && (
