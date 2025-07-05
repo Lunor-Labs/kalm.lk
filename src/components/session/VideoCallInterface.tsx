@@ -10,7 +10,7 @@ import {
   Monitor,
   MonitorOff
 } from 'lucide-react';
-import DailyIframe from '@daily-co/daily-js';
+import DailyIframe, { DailyCall } from '@daily-co/daily-js';
 import { Session } from '../../types/session';
 
 interface VideoCallInterfaceProps {
@@ -29,99 +29,132 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
   isChatOpen
 }) => {
   const callFrameRef = useRef<HTMLDivElement>(null);
-  const callObjectRef = useRef<any>(null);
+  const callObjectRef = useRef<DailyCall | null>(null);
+  // Track if leave was user-initiated
+  const userInitiatedLeave = useRef(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(session.sessionType === 'audio');
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [participants, setParticipants] = useState<any[]>([]);
+  const [participants, setParticipants] = useState<any[]>([]); // Could use DailyParticipant[] if you import types
   const [isInitializing, setIsInitializing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Move updateParticipants outside useEffect to make it stable
-  const updateParticipants = (call: any) => {
-    try {
-      const participants = call.participants();
-      setParticipants(Object.values(participants));
-      console.log('Updated participants:', Object.keys(participants).length);
-    } catch (error) {
-      console.warn('Error updating participants:', error);
-    }
-  };
+  // --- Robust async cleanup to prevent duplicate DailyIframe errors ---
+  const cleanupPromiseRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
-    if (!session.dailyRoomUrl || !callFrameRef.current || isInitializing || callObjectRef.current) return;
-    
-    // Track if this effect is still active
-    let isActive = true;
+    let isMounted = true;
+    let cancelled = false;
+    const callInstanceId = Symbol('callInstanceId');
+    (callObjectRef as any).currentInstanceId = callInstanceId;
+
+    const cleanupCallObject = async () => {
+      if (callObjectRef.current) {
+        try {
+          userInitiatedLeave.current = false;
+          if (callObjectRef.current.meetingState() !== 'left-meeting') {
+            await callObjectRef.current.leave();
+          }
+          callObjectRef.current.destroy();
+        } catch (e) {
+          console.warn('Error destroying previous Daily call object:', e);
+        }
+        callObjectRef.current = null;
+      }
+    };
 
     const initializeCall = async () => {
+      setIsInitializing(true);
+      setError(null);
+      // Await any previous cleanup before creating a new call object
+      await cleanupPromiseRef.current;
+      const cleanupPromise = cleanupCallObject();
+      cleanupPromiseRef.current = cleanupPromise;
+      await cleanupPromise;
+
+      if (!isMounted || !session.dailyRoomUrl || !callFrameRef.current) {
+        setIsInitializing(false);
+        return;
+      }
+
+      let call: DailyCall | null = null;
       try {
-        if (!isActive) return;
-        setIsInitializing(true);
-        setError(null);
-        
         console.log('Initializing Daily.co call with:', {
           roomUrl: session.dailyRoomUrl,
           sessionType: session.sessionType,
           hasToken: !!token
         });
 
-        // Create call object with proper configuration
-        const call = DailyIframe.createCallObject();
-
+        call = DailyIframe.createCallObject({
+          showLeaveButton: false,
+          theme: {
+            colors: {
+              accent: '#00BFA5',
+              accentText: '#FFFFFF',
+              background: '#202020',
+              backgroundAccent: '#464440',
+              baseText: '#FFFFFF',
+              border: '#464440',
+              mainAreaBg: '#202020',
+              mainAreaBgAccent: '#464440',
+              mainAreaText: '#FFFFFF',
+              supportiveText: '#B3B0A9'
+            }
+          }
+        });
         callObjectRef.current = call;
+        (callObjectRef as any).currentInstanceId = callInstanceId;
 
-        // Set up event listeners
+        const isCurrentCall = () => (callObjectRef.current === call && (callObjectRef as any).currentInstanceId === callInstanceId && !cancelled);
+
+        // ...existing event listeners and logic...
+
         call.on('joined-meeting', (event: any) => {
-          if (!isActive) return;
+          if (!isCurrentCall()) return;
           console.log('Successfully joined meeting:', event);
           setIsConnected(true);
-          updateParticipants(call);
+          updateParticipants(call!);
         });
-
         call.on('left-meeting', (event: any) => {
-          if (!isActive) return;
+          if (!isCurrentCall()) return;
           console.log('Left meeting:', event);
           setIsConnected(false);
-          onEndCall();
+          if (userInitiatedLeave.current) {
+            onEndCall();
+          }
         });
-
         call.on('participant-joined', (event: any) => {
-          if (!isActive) return;
+          if (!isCurrentCall()) return;
           console.log('Participant joined:', event.participant);
-          updateParticipants(call);
+          updateParticipants(call!);
         });
-
         call.on('participant-left', (event: any) => {
-          if (!isActive) return;
+          if (!isCurrentCall()) return;
           console.log('Participant left:', event.participant);
-          updateParticipants(call);
+          updateParticipants(call!);
         });
-
         call.on('participant-updated', (event: any) => {
-          if (!isActive) return;
+          if (!isCurrentCall()) return;
           console.log('Participant updated:', event.participant);
-          updateParticipants(call);
+          updateParticipants(call!);
         });
-
         call.on('camera-error', (event: any) => {
-          if (!isActive) return;
+          if (!isCurrentCall()) return;
           console.error('Camera error:', event);
           setError('Camera access denied or unavailable');
         });
-
         call.on('error', (event: any) => {
-          if (!isActive) return;
+          if (!isCurrentCall()) return;
           console.error('Daily.co error:', event);
           setError(`Connection error: ${event.errorMsg || 'Unknown error'}`);
         });
-
         call.on('loading', (event: any) => {
+          if (!isCurrentCall()) return;
           console.log('Loading state:', event);
         });
-
         call.on('loaded', (event: any) => {
+          if (!isCurrentCall()) return;
           console.log('Call loaded:', event);
         });
 
@@ -131,26 +164,24 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
             video: session.sessionType === 'video',
             audio: true
           };
-          
           console.log('Requesting media permissions:', mediaConstraints);
-          const stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
-          console.log('Media permissions granted');
-          
-          // Stop the test stream immediately as Daily.co will handle media
-          stream.getTracks().forEach(track => track.stop());
-        } catch (mediaError) {
-          console.error('Media permission error:', mediaError);
-          
-          if (mediaError.name === 'NotAllowedError' || mediaError.message === 'Permission denied') {
-            setError('Camera and microphone access denied. Please allow permissions and refresh the page to join the session.');
-          } else if (mediaError.name === 'NotFoundError') {
-            setError('No camera or microphone found. Please check your devices and try again.');
-          } else if (mediaError.name === 'NotReadableError') {
-            setError('Camera or microphone is already in use by another application.');
-          } else {
-            setError(`Media access error: ${mediaError.message}. Please check your camera and microphone settings.`);
+          await navigator.mediaDevices.getUserMedia(mediaConstraints);
+          if (!isCurrentCall()) {
+            if (call) {
+              call.destroy();
+              if (callObjectRef.current === call) callObjectRef.current = null;
+            }
+            setIsInitializing(false);
+            return;
           }
-          if (!isActive) return;
+          console.log('Media permissions granted');
+        } catch (mediaError) {
+          console.warn('Media permission error:', mediaError);
+          setError('Please allow camera and microphone access to join the session');
+          if (call) {
+            call.destroy();
+            if (callObjectRef.current === call) callObjectRef.current = null;
+          }
           setIsInitializing(false);
           return;
         }
@@ -163,55 +194,69 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           startAudioOff: false
         };
 
-        // Add token if available
         if (token && token.trim()) {
           joinConfig.token = token;
         }
 
         console.log('Joining with config:', joinConfig);
         await call.join(joinConfig);
-
-        if (!isActive) return;
+        if (!isCurrentCall()) {
+          if (call) {
+            call.destroy();
+            if (callObjectRef.current === call) callObjectRef.current = null;
+          }
+          setIsInitializing(false);
+          return;
+        }
 
         // Embed the call in the container
+        const iframe = call.iframe();
         if (callFrameRef.current) {
-          call.iframe().style.width = '100%';
-          call.iframe().style.height = '100%';
-          call.iframe().style.border = 'none';
-          call.iframe().style.borderRadius = '16px';
-          
-          // Clear container and append iframe
           callFrameRef.current.innerHTML = '';
-          callFrameRef.current.appendChild(call.iframe());
+          if (iframe) {
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            iframe.style.borderRadius = '16px';
+            callFrameRef.current.appendChild(iframe);
+          } else {
+            setError('Failed to load video call interface. Please try again.');
+          }
         }
 
         console.log('Call initialization completed');
 
       } catch (error: any) {
-        if (!isActive) return;
-        console.error('Failed to initialize call:', error);
-        setError(`Failed to join session: ${error.message || 'Unknown error'}`);
+        if (callObjectRef.current === call && !cancelled) {
+          console.error('Failed to initialize call:', error);
+          setError(`Failed to join session: ${error.message || 'Unknown error'}`);
+        }
       } finally {
-        if (!isActive) return;
-        setIsInitializing(false);
+        if (callObjectRef.current === call && !cancelled) setIsInitializing(false);
       }
     };
 
-    initializeCall();
+    // Only allow one initialization at a time, and always await previous cleanup
+    const initPromise = initializeCall();
+    cleanupPromiseRef.current = initPromise;
 
     // Cleanup function
     return () => {
-      isActive = false;
-      if (callObjectRef.current) {
-        try {
-          callObjectRef.current.destroy();
-        } catch (error) {
-          console.warn('Error destroying call object on cleanup:', error);
-        }
-        callObjectRef.current = null;
-      }
+      isMounted = false;
+      cancelled = true;
+      cleanupPromiseRef.current = cleanupPromiseRef.current.then(() => cleanupCallObject());
     };
-  }, [session.dailyRoomUrl, token, session.sessionType, updateParticipants]);
+  }, [session.dailyRoomUrl, token, session.sessionType]);
+
+  const updateParticipants = (call: DailyCall) => {
+    try {
+      const participantsObj = call.participants();
+      setParticipants(Object.values(participantsObj));
+      console.log('Updated participants:', Object.keys(participantsObj).length);
+    } catch (error) {
+      console.warn('Error updating participants:', error);
+    }
+  };
 
   const toggleMute = async () => {
     if (!callObjectRef.current || !isConnected) return;
@@ -259,7 +304,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
 
   const leaveCall = async () => {
     if (!callObjectRef.current) return;
-    
+    userInitiatedLeave.current = true;
     try {
       console.log('Leaving call...');
       await callObjectRef.current.leave();
@@ -267,6 +312,9 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
       console.error('Failed to leave call:', error);
       // Force end call even if leave fails
       onEndCall();
+    } finally {
+      // Reset after leave attempt
+      userInitiatedLeave.current = false;
     }
   };
 
@@ -301,27 +349,28 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
               <h3 className="text-xl font-bold text-white mb-2">Connection Error</h3>
               <p className="text-neutral-300 mb-6">{error}</p>
               <div className="space-y-3">
-                {error.includes('denied') && (
-                  <div className="bg-accent-yellow/10 border border-accent-yellow/20 rounded-2xl p-4 mb-4">
-                    <h4 className="text-accent-yellow font-medium text-sm mb-2">How to enable permissions:</h4>
-                    <ul className="text-neutral-300 text-xs space-y-1 text-left">
-                      <li>• Look for a camera/microphone icon in your browser's address bar (usually with a red X or slash)</li>
-                      <li>• Select "Allow" for both camera and microphone</li>
-                      <li>• If no icon appears, check your browser settings under Privacy & Security</li>
-                      <li>• Make sure this website is not blocked from accessing your camera/microphone</li>
-                      <li>• Click "Try Again" below after granting permissions</li>
-                    </ul>
-                  </div>
-                )}
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     setError(null);
                     setIsInitializing(false);
-                    window.location.reload();
+                    // Trigger re-initialization
+                    if (callObjectRef.current) {
+                      try {
+                        if (callObjectRef.current.meetingState() !== 'left-meeting') {
+                          await callObjectRef.current.leave();
+                        }
+                        if (callObjectRef.current) {
+                          callObjectRef.current.destroy();
+                        }
+                      } catch (e) {
+                        console.warn('Error destroying call object on retry:', e);
+                      }
+                      callObjectRef.current = null;
+                    }
                   }}
                   className="w-full bg-primary-500 text-white py-3 rounded-2xl hover:bg-primary-600 transition-colors duration-200"
                 >
-                  Refresh & Try Again
+                  Try Again
                 </button>
                 <button
                   onClick={onEndCall}
