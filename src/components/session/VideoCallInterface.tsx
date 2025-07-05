@@ -86,7 +86,8 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           hasToken: !!token
         });
 
-        call = DailyIframe.createCallObject({
+        // Use createFrame for embedded Daily UI
+        call = DailyIframe.createFrame(callFrameRef.current!, {
           showLeaveButton: false,
           theme: {
             colors: {
@@ -108,8 +109,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
 
         const isCurrentCall = () => (callObjectRef.current === call && (callObjectRef as any).currentInstanceId === callInstanceId && !cancelled);
 
-        // ...existing event listeners and logic...
-
+        // Set up event listeners
         call.on('joined-meeting', (event: any) => {
           if (!isCurrentCall()) return;
           console.log('Successfully joined meeting:', event);
@@ -209,21 +209,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           return;
         }
 
-        // Embed the call in the container
-        const iframe = call.iframe();
-        if (callFrameRef.current) {
-          callFrameRef.current.innerHTML = '';
-          if (iframe) {
-            iframe.style.width = '100%';
-            iframe.style.height = '100%';
-            iframe.style.border = 'none';
-            iframe.style.borderRadius = '16px';
-            callFrameRef.current.appendChild(iframe);
-          } else {
-            setError('Failed to load video call interface. Please try again.');
-          }
-        }
-
+        // No need to manually embed iframe, createFrame does it
         console.log('Call initialization completed');
 
       } catch (error: any) {
