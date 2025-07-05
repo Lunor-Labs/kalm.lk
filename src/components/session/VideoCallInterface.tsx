@@ -1,15 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { 
-  Mic, 
-  MicOff, 
-  Video, 
-  VideoOff, 
-  Phone, 
-  MessageCircle, 
-  Settings,
-  Monitor,
-  MonitorOff
-} from 'lucide-react';
 import DailyIframe, { DailyCall } from '@daily-co/daily-js';
 import { Session } from '../../types/session';
 
@@ -30,17 +19,12 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
 }) => {
   const callFrameRef = useRef<HTMLDivElement>(null);
   const callObjectRef = useRef<DailyCall | null>(null);
-  // Track if leave was user-initiated
   const userInitiatedLeave = useRef(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(session.sessionType === 'audio');
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [participants, setParticipants] = useState<any[]>([]); // Could use DailyParticipant[] if you import types
   const [isInitializing, setIsInitializing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // --- Robust async cleanup to prevent duplicate DailyIframe errors ---
+  // Robust async cleanup to prevent duplicate DailyIframe errors
   const cleanupPromiseRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
@@ -67,6 +51,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
     const initializeCall = async () => {
       setIsInitializing(true);
       setError(null);
+      
       // Await any previous cleanup before creating a new call object
       await cleanupPromiseRef.current;
       const cleanupPromise = cleanupCallObject();
@@ -86,9 +71,14 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           hasToken: !!token
         });
 
-        // Use createFrame for embedded Daily UI
+        // Create Daily.co iframe with default UI
         call = DailyIframe.createFrame(callFrameRef.current!, {
-          showLeaveButton: false,
+          // Use Daily.co's default UI - remove custom theme
+          showLeaveButton: true,
+          showFullscreenButton: true,
+          showLocalVideo: true,
+          showParticipantsBar: true,
+          // You can still customize some colors if needed
           theme: {
             colors: {
               accent: '#00BFA5',
@@ -104,6 +94,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
             }
           }
         });
+        
         callObjectRef.current = call;
         (callObjectRef as any).currentInstanceId = callInstanceId;
 
@@ -114,77 +105,40 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           if (!isCurrentCall()) return;
           console.log('Successfully joined meeting:', event);
           setIsConnected(true);
-          updateParticipants(call!);
+          setIsInitializing(false);
         });
+
         call.on('left-meeting', (event: any) => {
           if (!isCurrentCall()) return;
           console.log('Left meeting:', event);
           setIsConnected(false);
-          if (userInitiatedLeave.current) {
-            onEndCall();
-          }
+          // Always call onEndCall when leaving, regardless of who initiated
+          onEndCall();
         });
-        call.on('participant-joined', (event: any) => {
-          if (!isCurrentCall()) return;
-          console.log('Participant joined:', event.participant);
-          updateParticipants(call!);
-        });
-        call.on('participant-left', (event: any) => {
-          if (!isCurrentCall()) return;
-          console.log('Participant left:', event.participant);
-          updateParticipants(call!);
-        });
-        call.on('participant-updated', (event: any) => {
-          if (!isCurrentCall()) return;
-          console.log('Participant updated:', event.participant);
-          updateParticipants(call!);
-        });
+
         call.on('camera-error', (event: any) => {
           if (!isCurrentCall()) return;
           console.error('Camera error:', event);
           setError('Camera access denied or unavailable');
+          setIsInitializing(false);
         });
+
         call.on('error', (event: any) => {
           if (!isCurrentCall()) return;
           console.error('Daily.co error:', event);
           setError(`Connection error: ${event.errorMsg || 'Unknown error'}`);
+          setIsInitializing(false);
         });
+
         call.on('loading', (event: any) => {
           if (!isCurrentCall()) return;
           console.log('Loading state:', event);
         });
+
         call.on('loaded', (event: any) => {
           if (!isCurrentCall()) return;
           console.log('Call loaded:', event);
         });
-
-        // Request media permissions first
-        try {
-          const mediaConstraints = {
-            video: session.sessionType === 'video',
-            audio: true
-          };
-          console.log('Requesting media permissions:', mediaConstraints);
-          await navigator.mediaDevices.getUserMedia(mediaConstraints);
-          if (!isCurrentCall()) {
-            if (call) {
-              call.destroy();
-              if (callObjectRef.current === call) callObjectRef.current = null;
-            }
-            setIsInitializing(false);
-            return;
-          }
-          console.log('Media permissions granted');
-        } catch (mediaError) {
-          console.warn('Media permission error:', mediaError);
-          setError('Please allow camera and microphone access to join the session');
-          if (call) {
-            call.destroy();
-            if (callObjectRef.current === call) callObjectRef.current = null;
-          }
-          setIsInitializing(false);
-          return;
-        }
 
         // Join the room with proper configuration
         const joinConfig: any = {
@@ -200,6 +154,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
 
         console.log('Joining with config:', joinConfig);
         await call.join(joinConfig);
+        
         if (!isCurrentCall()) {
           if (call) {
             call.destroy();
@@ -209,16 +164,14 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           return;
         }
 
-        // No need to manually embed iframe, createFrame does it
         console.log('Call initialization completed');
 
       } catch (error: any) {
         if (callObjectRef.current === call && !cancelled) {
           console.error('Failed to initialize call:', error);
           setError(`Failed to join session: ${error.message || 'Unknown error'}`);
+          setIsInitializing(false);
         }
-      } finally {
-        if (callObjectRef.current === call && !cancelled) setIsInitializing(false);
       }
     };
 
@@ -232,92 +185,20 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
       cancelled = true;
       cleanupPromiseRef.current = cleanupPromiseRef.current.then(() => cleanupCallObject());
     };
-  }, [session.dailyRoomUrl, token, session.sessionType]);
-
-  const updateParticipants = (call: DailyCall) => {
-    try {
-      const participantsObj = call.participants();
-      setParticipants(Object.values(participantsObj));
-      console.log('Updated participants:', Object.keys(participantsObj).length);
-    } catch (error) {
-      console.warn('Error updating participants:', error);
-    }
-  };
-
-  const toggleMute = async () => {
-    if (!callObjectRef.current || !isConnected) return;
-    
-    try {
-      const newMutedState = !isMuted;
-      await callObjectRef.current.setLocalAudio(!newMutedState);
-      setIsMuted(newMutedState);
-      console.log('Audio toggled:', newMutedState ? 'muted' : 'unmuted');
-    } catch (error) {
-      console.error('Failed to toggle mute:', error);
-    }
-  };
-
-  const toggleVideo = async () => {
-    if (!callObjectRef.current || !isConnected || session.sessionType === 'audio') return;
-    
-    try {
-      const newVideoState = !isVideoOff;
-      await callObjectRef.current.setLocalVideo(!newVideoState);
-      setIsVideoOff(newVideoState);
-      console.log('Video toggled:', newVideoState ? 'off' : 'on');
-    } catch (error) {
-      console.error('Failed to toggle video:', error);
-    }
-  };
-
-  const toggleScreenShare = async () => {
-    if (!callObjectRef.current || !isConnected || session.sessionType === 'audio') return;
-    
-    try {
-      if (isScreenSharing) {
-        await callObjectRef.current.stopScreenShare();
-        setIsScreenSharing(false);
-        console.log('Screen sharing stopped');
-      } else {
-        await callObjectRef.current.startScreenShare();
-        setIsScreenSharing(true);
-        console.log('Screen sharing started');
-      }
-    } catch (error) {
-      console.error('Failed to toggle screen share:', error);
-    }
-  };
-
-  const leaveCall = async () => {
-    if (!callObjectRef.current) return;
-    userInitiatedLeave.current = true;
-    try {
-      console.log('Leaving call...');
-      await callObjectRef.current.leave();
-    } catch (error) {
-      console.error('Failed to leave call:', error);
-      // Force end call even if leave fails
-      onEndCall();
-    } finally {
-      // Reset after leave attempt
-      userInitiatedLeave.current = false;
-    }
-  };
+  }, [session.dailyRoomUrl, token, session.sessionType, onEndCall]);
 
   return (
     <div className="flex flex-col h-full bg-neutral-900">
-      {/* Video Container */}
+      {/* Daily.co Default UI Container */}
       <div className="flex-1 relative bg-black rounded-2xl overflow-hidden">
         <div ref={callFrameRef} className="w-full h-full" />
         
-        {/* Connection Status */}
-        {(!isConnected || isInitializing) && !error && (
+        {/* Loading State */}
+        {isInitializing && !error && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-white text-lg mb-2">
-                {isInitializing ? 'Initializing session...' : 'Connecting to session...'}
-              </p>
+              <p className="text-white text-lg mb-2">Initializing session...</p>
               <p className="text-neutral-300 text-sm">
                 Please allow camera and microphone access when prompted
               </p>
@@ -330,7 +211,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
             <div className="text-center max-w-md mx-auto p-6">
               <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Video className="w-8 h-8 text-red-500" />
+                <div className="w-8 h-8 text-red-500">⚠️</div>
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Connection Error</h3>
               <p className="text-neutral-300 mb-6">{error}</p>
@@ -368,131 +249,14 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
             </div>
           </div>
         )}
-
-        {/* Session Info Overlay */}
-        {isConnected && (
-          <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-sm rounded-2xl px-4 py-2 z-20">
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 rounded-full bg-accent-green"></div>
-              <div>
-                <p className="text-white font-medium text-sm">
-                  {session.sessionType === 'video' ? 'Video Session' : 'Audio Session'}
-                </p>
-                <p className="text-neutral-300 text-xs">
-                  {participants.length} participant{participants.length !== 1 ? 's' : ''} connected
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Chat Toggle (Mobile) */}
-        <button
-          onClick={onToggleChat}
-          className="absolute top-4 right-4 md:hidden w-12 h-12 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/80 transition-colors duration-200 z-20"
-        >
-          <MessageCircle className="w-6 h-6" />
-        </button>
       </div>
 
-      {/* Controls */}
-      <div className="p-6 bg-neutral-800/50 backdrop-blur-sm">
-        <div className="flex items-center justify-center space-x-4">
-          {/* Mute Toggle */}
-          <button
-            onClick={toggleMute}
-            disabled={!isConnected}
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-              isMuted 
-                ? 'bg-red-500 hover:bg-red-600' 
-                : 'bg-neutral-700 hover:bg-neutral-600'
-            }`}
-            title={isMuted ? 'Unmute' : 'Mute'}
-          >
-            {isMuted ? (
-              <MicOff className="w-6 h-6 text-white" />
-            ) : (
-              <Mic className="w-6 h-6 text-white" />
-            )}
-          </button>
-
-          {/* Video Toggle (only for video sessions) */}
-          {session.sessionType === 'video' && (
-            <button
-              onClick={toggleVideo}
-              disabled={!isConnected}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-                isVideoOff 
-                  ? 'bg-red-500 hover:bg-red-600' 
-                  : 'bg-neutral-700 hover:bg-neutral-600'
-              }`}
-              title={isVideoOff ? 'Turn on camera' : 'Turn off camera'}
-            >
-              {isVideoOff ? (
-                <VideoOff className="w-6 h-6 text-white" />
-              ) : (
-                <Video className="w-6 h-6 text-white" />
-              )}
-            </button>
-          )}
-
-          {/* Screen Share (only for video sessions) */}
-          {session.sessionType === 'video' && (
-            <button
-              onClick={toggleScreenShare}
-              disabled={!isConnected}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-                isScreenSharing 
-                  ? 'bg-primary-500 hover:bg-primary-600' 
-                  : 'bg-neutral-700 hover:bg-neutral-600'
-              }`}
-              title={isScreenSharing ? 'Stop sharing' : 'Share screen'}
-            >
-              {isScreenSharing ? (
-                <MonitorOff className="w-6 h-6 text-white" />
-              ) : (
-                <Monitor className="w-6 h-6 text-white" />
-              )}
-            </button>
-          )}
-
-          {/* Chat Toggle (Desktop) */}
-          <button
-            onClick={onToggleChat}
-            className={`hidden md:flex w-12 h-12 rounded-full items-center justify-center transition-colors duration-200 ${
-              isChatOpen 
-                ? 'bg-primary-500 hover:bg-primary-600' 
-                : 'bg-neutral-700 hover:bg-neutral-600'
-            }`}
-            title="Toggle chat"
-          >
-            <MessageCircle className="w-6 h-6 text-white" />
-          </button>
-
-          {/* Settings */}
-          <button 
-            disabled={!isConnected}
-            className="w-12 h-12 rounded-full bg-neutral-700 hover:bg-neutral-600 flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Settings"
-          >
-            <Settings className="w-6 h-6 text-white" />
-          </button>
-
-          {/* End Call */}
-          <button
-            onClick={leaveCall}
-            className="w-12 h-12 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors duration-200"
-            title="End call"
-          >
-            <Phone className="w-6 h-6 text-white transform rotate-[135deg]" />
-          </button>
-        </div>
-
-        {/* Connection Status */}
-        <div className="text-center mt-4">
+      {/* Optional: Connection Status Footer */}
+      <div className="p-4 bg-neutral-800/50 backdrop-blur-sm">
+        <div className="text-center">
           <p className="text-neutral-400 text-sm">
             {isConnected ? (
-              <span className="text-accent-green">● Connected</span>
+              <span className="text-accent-green">● Connected - Using Daily.co interface</span>
             ) : isInitializing ? (
               <span className="text-accent-yellow">● Connecting...</span>
             ) : error ? (
