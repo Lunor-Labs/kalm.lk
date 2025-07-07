@@ -227,6 +227,7 @@ const ClientHome: React.FC = () => {
       </div>
 
       {/* Featured Therapists Section */}
+      {/*
       <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -305,8 +306,10 @@ const ClientHome: React.FC = () => {
           </div>
         )}
       </div>
+      */}
 
       {/* Session Types Info */}
+      {/*
       <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
         <h2 className="text-xl font-semibold text-white mb-6">Available Session Types</h2>
         
@@ -336,6 +339,7 @@ const ClientHome: React.FC = () => {
           </div>
         </div>
       </div>
+        */}
 
       {/* Wellness Tips */}
       <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">

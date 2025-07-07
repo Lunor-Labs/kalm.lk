@@ -158,7 +158,7 @@ function App() {
               <Route path="book" element={<BookingFlow />} />
               <Route path="sessions" element={<ClientSessions />} />
               <Route path="session/:sessionId" element={<SessionRoom />} />
-              <Route path="therapists" element={<div className="text-white">Find Therapists</div>} />
+              <Route path="therapists" element={<TherapistListing onBack={() => window.history.back()} onOpenAuth={() => {}} />} />
               <Route path="messages" element={<div className="text-white">Messages</div>} />
               <Route path="payments" element={<div className="text-white">Payment History</div>} />
               <Route path="profile" element={<div className="text-white">Profile</div>} />
