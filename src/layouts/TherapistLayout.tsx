@@ -25,9 +25,11 @@ const TherapistLayout: React.FC = () => {
     { name: 'Schedule', href: '/therapist/schedule', icon: Calendar },
     { name: 'Sessions', href: '/therapist/sessions', icon: Video },
     { name: 'Availability', href: '/therapist/availability', icon: Clock },
+    /*
     { name: 'Clients', href: '/therapist/clients', icon: Users },
     { name: 'Earnings', href: '/therapist/earnings', icon: CreditCard },
     { name: 'Settings', href: '/therapist/settings', icon: Settings },
+*/   
   ];
 
   const handleSignOut = async () => {
