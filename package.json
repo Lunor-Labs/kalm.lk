@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@daily-co/daily-js": "latest",
+    "nodemailer": "latest", 
+    "node-cron": "latest", 
     "date-fns": "^2.30.0",
     "firebase": "^10.7.1",
     "lucide-react": "^0.344.0",

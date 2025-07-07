@@ -1,16 +1,7 @@
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  updateDoc, 
-  serverTimestamp,
-  query,
-  where,
-  getDocs
-} from 'firebase/firestore';
+import * as firestore from 'firebase/firestore';
 import { db } from './firebase';
 import { TherapistAvailability, DayAvailability, SpecialDate, AvailabilitySettings } from '../types/availability';
+import { scheduleSessionReminder, scheduleNewBookingNotification } from './notifications';
 
 export const saveTherapistAvailability = async (
   therapistId: string, 
@@ -26,19 +17,19 @@ export const saveTherapistAvailability = async (
       isActive: true,
     };
 
-    const docRef = doc(db, 'therapistAvailability', therapistId);
-    const existingDoc = await getDoc(docRef);
+    const docRef = firestore.doc(db, 'therapistAvailability', therapistId);
+    const existingDoc = await firestore.getDoc(docRef);
 
     if (existingDoc.exists()) {
-      await updateDoc(docRef, {
+      await firestore.updateDoc(docRef, {
         ...availabilityData,
-        updatedAt: serverTimestamp(),
+        updatedAt: firestore.serverTimestamp(),
       });
     } else {
-      await setDoc(docRef, {
+      await firestore.setDoc(docRef, {
         ...availabilityData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: firestore.serverTimestamp(),
+        updatedAt: firestore.serverTimestamp(),
       });
     }
   } catch (error: any) {
@@ -49,8 +40,8 @@ export const saveTherapistAvailability = async (
 
 export const getTherapistAvailability = async (therapistId: string): Promise<TherapistAvailability | null> => {
   try {
-    const docRef = doc(db, 'therapistAvailability', therapistId);
-    const docSnap = await getDoc(docRef);
+    const docRef = firestore.doc(db, 'therapistAvailability', therapistId);
+    const docSnap = await firestore.getDoc(docRef);
 
     if (!docSnap.exists()) {
       return null;
@@ -108,10 +99,10 @@ export const saveAvailabilitySettings = async (
   settings: AvailabilitySettings
 ): Promise<void> => {
   try {
-    const docRef = doc(db, 'therapistSettings', therapistId);
-    await setDoc(docRef, {
+    const docRef = firestore.doc(db, 'therapistSettings', therapistId);
+    await firestore.setDoc(docRef, {
       ...settings,
-      updatedAt: serverTimestamp(),
+      updatedAt: firestore.serverTimestamp(),
     }, { merge: true });
   } catch (error: any) {
     console.error('Error saving availability settings:', error);
@@ -121,8 +112,8 @@ export const saveAvailabilitySettings = async (
 
 export const getAvailabilitySettings = async (therapistId: string): Promise<AvailabilitySettings | null> => {
   try {
-    const docRef = doc(db, 'therapistSettings', therapistId);
-    const docSnap = await getDoc(docRef);
+    const docRef = firestore.doc(db, 'therapistSettings', therapistId);
+    const docSnap = await firestore.getDoc(docRef);
 
     if (!docSnap.exists()) {
       // Return default settings
@@ -190,5 +181,43 @@ export const bulkUpdateAvailability = async (
   } catch (error: any) {
     console.error('Error bulk updating availability:', error);
     throw new Error(error.message || 'Failed to bulk update availability');
+  }
+};
+
+// Integration with session booking to trigger notifications
+export const bookSessionWithNotifications = async (
+  therapistId: string,
+  therapistEmail: string,
+  therapistName: string,
+  sessionDate: Date,
+  clientName: string = 'Anonymous Client'
+): Promise<void> => {
+  try {
+    // Get therapist notification settings
+    const settings = await getAvailabilitySettings(therapistId);
+    
+    if (settings) {
+      // Schedule session reminder
+      if (settings.sessionTypes.video.enabled || settings.sessionTypes.audio.enabled || settings.sessionTypes.chat.enabled) {
+        await scheduleSessionReminder(
+          `session-${Date.now()}`, // This would be the actual session ID
+          therapistEmail,
+          therapistName,
+          sessionDate,
+          settings.cancellationPolicy.hoursBeforeSession
+        );
+      }
+      
+      // Send new booking notification
+      await scheduleNewBookingNotification(
+        therapistEmail,
+        therapistName,
+        sessionDate,
+        clientName
+      );
+    }
+  } catch (error: any) {
+    console.error('Error booking session with notifications:', error);
+    throw new Error(error.message || 'Failed to book session with notifications');
   }
 };

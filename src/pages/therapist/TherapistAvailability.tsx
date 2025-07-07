@@ -1,781 +1,1176 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Plus, Save, Trash2, Edit, Check, X, ChevronDown, ChevronUp, Settings, Copy } from 'lucide-react';
+import { Calendar, Clock, Plus, X, Save, Settings, Copy, Trash2, Edit3, ChevronLeft, ChevronRight } from 'lucide-react';
+import ReactCalendar from 'react-calendar';
+import { format, isSameDay, addDays, startOfDay, startOfWeek, addWeeks, subWeeks } from 'date-fns';
 import { useAuth } from '../../contexts/AuthContext';
-import { format, addDays, startOfWeek, isSameDay, parseISO, setHours, setMinutes } from 'date-fns';
+import { 
+  saveTherapistAvailability, 
+  getTherapistAvailability, 
+  saveAvailabilitySettings,
+  getAvailabilitySettings 
+} from '../../lib/availability';
+import { 
+  saveNotificationSettings, 
+  getNotificationSettings 
+} from '../../lib/notifications';
+import { DayAvailability, SpecialDate, TimeSlot, AvailabilitySettings } from '../../types/availability';
+import { NotificationSettings } from '../../lib/notifications';
 import toast from 'react-hot-toast';
-
-interface TimeSlot {
-  id: string;
-  startTime: string; // HH:mm format
-  endTime: string; // HH:mm format
-  isAvailable: boolean;
-  isRecurring: boolean;
-  price?: number;
-}
-
-interface DayAvailability {
-  dayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
-  dayName: string;
-  isAvailable: boolean;
-  timeSlots: TimeSlot[];
-}
-
-interface SpecialDate {
-  id: string;
-  date: string; // YYYY-MM-DD format
-  isAvailable: boolean;
-  reason?: string;
-  timeSlots?: TimeSlot[];
-}
+import 'react-calendar/dist/Calendar.css';
 
 const TherapistAvailability: React.FC = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'weekly' | 'special'>('weekly');
-  const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set([1, 2, 3, 4, 5])); // Expand weekdays by default
-  
-  // Weekly recurring availability
-  const [weeklyAvailability, setWeeklyAvailability] = useState<DayAvailability[]>([
-    { dayOfWeek: 1, dayName: 'Monday', isAvailable: true, timeSlots: [] },
-    { dayOfWeek: 2, dayName: 'Tuesday', isAvailable: true, timeSlots: [] },
-    { dayOfWeek: 3, dayName: 'Wednesday', isAvailable: true, timeSlots: [] },
-    { dayOfWeek: 4, dayName: 'Thursday', isAvailable: true, timeSlots: [] },
-    { dayOfWeek: 5, dayName: 'Friday', isAvailable: true, timeSlots: [] },
-    { dayOfWeek: 6, dayName: 'Saturday', isAvailable: false, timeSlots: [] },
-    { dayOfWeek: 0, dayName: 'Sunday', isAvailable: false, timeSlots: [] },
-  ]);
-
-  // Special dates (holidays, vacations, etc.)
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [weeklySchedule, setWeeklySchedule] = useState<DayAvailability[]>([]);
   const [specialDates, setSpecialDates] = useState<SpecialDate[]>([]);
-  
-  // UI state
-  const [editingDay, setEditingDay] = useState<number | null>(null);
-  const [newTimeSlot, setNewTimeSlot] = useState({ startTime: '09:00', endTime: '10:00', price: 4500 });
-  const [showAddSpecialDate, setShowAddSpecialDate] = useState(false);
-  const [newSpecialDate, setNewSpecialDate] = useState({
-    date: format(new Date(), 'yyyy-MM-dd'),
-    isAvailable: false,
-    reason: ''
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [activeView, setActiveView] = useState<'calendar' | 'weekly' | 'settings'>('calendar');
+  const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
+  const [editingTimeSlot, setEditingTimeSlot] = useState<TimeSlot | null>(null);
+  const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [newTimeSlot, setNewTimeSlot] = useState<Partial<TimeSlot>>({
+    startTime: '09:00',
+    endTime: '10:00',
+    isAvailable: true,
+    isRecurring: false,
+    sessionType: 'video',
+    price: 4500
   });
-  const [showQuickTemplates, setShowQuickTemplates] = useState(false);
+
+  // Settings states
+  const [availabilitySettings, setAvailabilitySettings] = useState<AvailabilitySettings | null>(null);
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings | null>(null);
 
   useEffect(() => {
-    loadAvailability();
+    if (user) {
+      loadAvailabilityData();
+    }
   }, [user]);
 
-  const loadAvailability = async () => {
+  const loadAvailabilityData = async () => {
     if (!user) return;
-    
-    setLoading(true);
+
     try {
-      // In a real app, this would fetch from Firestore
-      // For now, we'll use mock data
-      await new Promise(resolve => setTimeout(resolve, 500));
+      setLoading(true);
       
-      // Mock data with some pre-filled slots
-      const mockWeeklyAvailability = weeklyAvailability.map(day => {
-        if (day.dayOfWeek >= 1 && day.dayOfWeek <= 5) { // Weekdays
-          return {
-            ...day,
-            timeSlots: [
-              {
-                id: `${day.dayOfWeek}-1`,
-                startTime: '09:00',
-                endTime: '12:00',
-                isAvailable: true,
-                isRecurring: true,
-                price: 4500
-              },
-              {
-                id: `${day.dayOfWeek}-2`,
-                startTime: '14:00',
-                endTime: '17:00',
-                isAvailable: true,
-                isRecurring: true,
-                price: 4500
-              }
-            ]
-          };
-        }
-        return day;
-      });
-      
-      setWeeklyAvailability(mockWeeklyAvailability);
-      
-    } catch (error) {
+      // Load availability data
+      const availability = await getTherapistAvailability(user.uid);
+      if (availability) {
+        setWeeklySchedule(availability.weeklySchedule);
+        setSpecialDates(availability.specialDates);
+      } else {
+        // Initialize with default weekly schedule
+        setWeeklySchedule(getDefaultWeeklySchedule());
+      }
+
+      // Load settings
+      const settings = await getAvailabilitySettings(user.uid);
+      setAvailabilitySettings(settings);
+
+      const notifications = await getNotificationSettings(user.uid);
+      setNotificationSettings(notifications);
+
+    } catch (error: any) {
       console.error('Failed to load availability:', error);
-      toast.error('Failed to load availability');
+      toast.error('Failed to load availability data');
     } finally {
       setLoading(false);
     }
   };
 
+  const getDefaultWeeklySchedule = (): DayAvailability[] => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days.map((dayName, index) => ({
+      dayOfWeek: index,
+      dayName,
+      isAvailable: index >= 1 && index <= 5, // Monday to Friday
+      timeSlots: index >= 1 && index <= 5 ? [
+        {
+          id: `default-${index}-1`,
+          startTime: '09:00',
+          endTime: '12:00',
+          isAvailable: true,
+          isRecurring: true,
+          sessionType: 'video',
+          price: 4500
+        },
+        {
+          id: `default-${index}-2`,
+          startTime: '14:00',
+          endTime: '17:00',
+          isAvailable: true,
+          isRecurring: true,
+          sessionType: 'video',
+          price: 4500
+        }
+      ] : []
+    }));
+  };
+
   const saveAvailability = async () => {
-    setSaving(true);
+    if (!user) return;
+
     try {
-      // In a real app, this would save to Firestore
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      setSaving(true);
+      await saveTherapistAvailability(user.uid, weeklySchedule, specialDates);
       toast.success('Availability saved successfully');
-    } catch (error) {
-      console.error('Failed to save availability:', error);
-      toast.error('Failed to save availability');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save availability');
     } finally {
       setSaving(false);
     }
   };
 
-  const toggleDayAvailability = (dayOfWeek: number) => {
-    setWeeklyAvailability(prev => 
-      prev.map(day => 
-        day.dayOfWeek === dayOfWeek 
-          ? { ...day, isAvailable: !day.isAvailable, timeSlots: !day.isAvailable ? [] : day.timeSlots }
-          : day
-      )
-    );
+  const saveSettings = async () => {
+    if (!user || !availabilitySettings || !notificationSettings) return;
+
+    try {
+      setSaving(true);
+      await saveAvailabilitySettings(user.uid, availabilitySettings);
+      await saveNotificationSettings(user.uid, notificationSettings);
+      toast.success('Settings saved successfully');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const toggleDayExpansion = (dayOfWeek: number) => {
-    setExpandedDays(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(dayOfWeek)) {
-        newSet.delete(dayOfWeek);
-      } else {
-        newSet.add(dayOfWeek);
-      }
-      return newSet;
-    });
-  };
-
-  const addTimeSlot = (dayOfWeek: number) => {
-    const newSlot: TimeSlot = {
-      id: `${dayOfWeek}-${Date.now()}`,
-      startTime: newTimeSlot.startTime,
-      endTime: newTimeSlot.endTime,
-      isAvailable: true,
-      isRecurring: true,
-      price: newTimeSlot.price
-    };
-
-    setWeeklyAvailability(prev =>
-      prev.map(day =>
-        day.dayOfWeek === dayOfWeek
-          ? { ...day, timeSlots: [...day.timeSlots, newSlot] }
-          : day
-      )
-    );
-
-    setNewTimeSlot({ startTime: '09:00', endTime: '10:00', price: 4500 });
-    setEditingDay(null);
-    toast.success('Time slot added');
-  };
-
-  const removeTimeSlot = (dayOfWeek: number, slotId: string) => {
-    setWeeklyAvailability(prev =>
-      prev.map(day =>
-        day.dayOfWeek === dayOfWeek
-          ? { ...day, timeSlots: day.timeSlots.filter(slot => slot.id !== slotId) }
-          : day
-      )
-    );
-    toast.success('Time slot removed');
-  };
-
-  const copyDaySchedule = (fromDay: number, toDay: number) => {
-    const sourceDay = weeklyAvailability.find(day => day.dayOfWeek === fromDay);
-    if (!sourceDay) return;
-
-    setWeeklyAvailability(prev =>
-      prev.map(day =>
-        day.dayOfWeek === toDay
-          ? {
-              ...day,
-              isAvailable: sourceDay.isAvailable,
-              timeSlots: sourceDay.timeSlots.map(slot => ({
-                ...slot,
-                id: `${toDay}-${Date.now()}-${Math.random()}`
-              }))
-            }
-          : day
-      )
-    );
-    toast.success(`Schedule copied to ${weeklyAvailability.find(d => d.dayOfWeek === toDay)?.dayName}`);
-  };
-
-  const addSpecialDate = () => {
-    const specialDate: SpecialDate = {
-      id: Date.now().toString(),
-      date: newSpecialDate.date,
-      isAvailable: newSpecialDate.isAvailable,
-      reason: newSpecialDate.reason,
-      timeSlots: newSpecialDate.isAvailable ? [] : undefined
-    };
-
-    setSpecialDates(prev => [...prev, specialDate]);
-    setNewSpecialDate({
-      date: format(new Date(), 'yyyy-MM-dd'),
-      isAvailable: false,
-      reason: ''
-    });
-    setShowAddSpecialDate(false);
-    toast.success('Special date added');
-  };
-
-  const removeSpecialDate = (id: string) => {
-    setSpecialDates(prev => prev.filter(date => date.id !== id));
-    toast.success('Special date removed');
-  };
-
-  const generateQuickSchedule = (type: 'business' | 'flexible' | 'weekend') => {
-    let newSchedule: DayAvailability[] = [];
-
-    switch (type) {
-      case 'business':
-        newSchedule = weeklyAvailability.map(day => ({
-          ...day,
-          isAvailable: day.dayOfWeek >= 1 && day.dayOfWeek <= 5,
-          timeSlots: day.dayOfWeek >= 1 && day.dayOfWeek <= 5 ? [
-            {
-              id: `${day.dayOfWeek}-business`,
-              startTime: '09:00',
-              endTime: '17:00',
-              isAvailable: true,
-              isRecurring: true,
-              price: 4500
-            }
-          ] : []
-        }));
-        break;
-      
-      case 'flexible':
-        newSchedule = weeklyAvailability.map(day => ({
-          ...day,
-          isAvailable: true,
-          timeSlots: [
-            {
-              id: `${day.dayOfWeek}-morning`,
-              startTime: '08:00',
-              endTime: '12:00',
-              isAvailable: true,
-              isRecurring: true,
-              price: 4500
-            },
-            {
-              id: `${day.dayOfWeek}-evening`,
-              startTime: '18:00',
-              endTime: '21:00',
-              isAvailable: true,
-              isRecurring: true,
-              price: 5000
-            }
-          ]
-        }));
-        break;
-      
-      case 'weekend':
-        newSchedule = weeklyAvailability.map(day => ({
-          ...day,
-          isAvailable: day.dayOfWeek === 0 || day.dayOfWeek === 6,
-          timeSlots: day.dayOfWeek === 0 || day.dayOfWeek === 6 ? [
-            {
-              id: `${day.dayOfWeek}-weekend`,
-              startTime: '10:00',
-              endTime: '16:00',
-              isAvailable: true,
-              isRecurring: true,
-              price: 5500
-            }
-          ] : []
-        }));
-        break;
+  const getSelectedDateData = () => {
+    const dateString = format(selectedDate, 'yyyy-MM-dd');
+    const specialDate = specialDates.find(sd => sd.date === dateString);
+    
+    if (specialDate) {
+      return {
+        isSpecialDate: true,
+        isAvailable: specialDate.isAvailable,
+        timeSlots: specialDate.timeSlots || [],
+        reason: specialDate.reason
+      };
     }
 
-    setWeeklyAvailability(newSchedule);
-    setShowQuickTemplates(false);
-    toast.success('Quick schedule applied');
+    const dayOfWeek = selectedDate.getDay();
+    const weeklyDay = weeklySchedule.find(day => day.dayOfWeek === dayOfWeek);
+    
+    return {
+      isSpecialDate: false,
+      isAvailable: weeklyDay?.isAvailable || false,
+      timeSlots: weeklyDay?.timeSlots || [],
+      reason: undefined
+    };
   };
 
-  const getTotalWeeklyHours = () => {
-    return weeklyAvailability.reduce((total, day) => {
-      return total + day.timeSlots.reduce((dayTotal, slot) => {
-        const start = parseISO(`2000-01-01T${slot.startTime}`);
-        const end = parseISO(`2000-01-01T${slot.endTime}`);
-        return dayTotal + (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-      }, 0);
-    }, 0);
+  const updateSelectedDateAvailability = (isAvailable: boolean, reason?: string) => {
+    const dateString = format(selectedDate, 'yyyy-MM-dd');
+    const existingSpecialDateIndex = specialDates.findIndex(sd => sd.date === dateString);
+    
+    if (existingSpecialDateIndex !== -1) {
+      // Update existing special date
+      const updatedSpecialDates = [...specialDates];
+      updatedSpecialDates[existingSpecialDateIndex] = {
+        ...updatedSpecialDates[existingSpecialDateIndex],
+        isAvailable,
+        reason
+      };
+      setSpecialDates(updatedSpecialDates);
+    } else {
+      // Create new special date
+      const newSpecialDate: SpecialDate = {
+        id: `special-${Date.now()}`,
+        date: dateString,
+        isAvailable,
+        reason,
+        timeSlots: []
+      };
+      setSpecialDates([...specialDates, newSpecialDate]);
+    }
   };
+
+  const addTimeSlotToSelectedDate = (timeSlot: TimeSlot) => {
+    const selectedDateData = getSelectedDateData();
+    
+    if (selectedDateData.isSpecialDate) {
+      // Add to special date
+      const dateString = format(selectedDate, 'yyyy-MM-dd');
+      const updatedSpecialDates = specialDates.map(sd => {
+        if (sd.date === dateString) {
+          return {
+            ...sd,
+            timeSlots: [...(sd.timeSlots || []), timeSlot]
+          };
+        }
+        return sd;
+      });
+      setSpecialDates(updatedSpecialDates);
+    } else {
+      // Add to weekly schedule
+      const dayOfWeek = selectedDate.getDay();
+      const updatedWeeklySchedule = weeklySchedule.map(day => {
+        if (day.dayOfWeek === dayOfWeek) {
+          return {
+            ...day,
+            timeSlots: [...day.timeSlots, timeSlot]
+          };
+        }
+        return day;
+      });
+      setWeeklySchedule(updatedWeeklySchedule);
+    }
+  };
+
+  const removeTimeSlotFromSelectedDate = (timeSlotId: string) => {
+    const selectedDateData = getSelectedDateData();
+    
+    if (selectedDateData.isSpecialDate) {
+      // Remove from special date
+      const dateString = format(selectedDate, 'yyyy-MM-dd');
+      const updatedSpecialDates = specialDates.map(sd => {
+        if (sd.date === dateString) {
+          return {
+            ...sd,
+            timeSlots: (sd.timeSlots || []).filter(ts => ts.id !== timeSlotId)
+          };
+        }
+        return sd;
+      });
+      setSpecialDates(updatedSpecialDates);
+    } else {
+      // Remove from weekly schedule
+      const dayOfWeek = selectedDate.getDay();
+      const updatedWeeklySchedule = weeklySchedule.map(day => {
+        if (day.dayOfWeek === dayOfWeek) {
+          return {
+            ...day,
+            timeSlots: day.timeSlots.filter(ts => ts.id !== timeSlotId)
+          };
+        }
+        return day;
+      });
+      setWeeklySchedule(updatedWeeklySchedule);
+    }
+  };
+
+  const handleAddTimeSlot = () => {
+    if (!newTimeSlot.startTime || !newTimeSlot.endTime) {
+      toast.error('Please select start and end times');
+      return;
+    }
+
+    if (newTimeSlot.startTime >= newTimeSlot.endTime) {
+      toast.error('End time must be after start time');
+      return;
+    }
+
+    const timeSlot: TimeSlot = {
+      id: editingTimeSlot?.id || `slot-${Date.now()}`,
+      startTime: newTimeSlot.startTime!,
+      endTime: newTimeSlot.endTime!,
+      isAvailable: newTimeSlot.isAvailable ?? true,
+      isRecurring: newTimeSlot.isRecurring ?? false,
+      sessionType: newTimeSlot.sessionType || 'video',
+      price: newTimeSlot.price || 4500
+    };
+
+    if (editingTimeSlot) {
+      // Update existing time slot
+      const selectedDateData = getSelectedDateData();
+      
+      if (selectedDateData.isSpecialDate) {
+        const dateString = format(selectedDate, 'yyyy-MM-dd');
+        const updatedSpecialDates = specialDates.map(sd => {
+          if (sd.date === dateString) {
+            return {
+              ...sd,
+              timeSlots: (sd.timeSlots || []).map(ts => ts.id === editingTimeSlot.id ? timeSlot : ts)
+            };
+          }
+          return sd;
+        });
+        setSpecialDates(updatedSpecialDates);
+      } else {
+        const dayOfWeek = selectedDate.getDay();
+        const updatedWeeklySchedule = weeklySchedule.map(day => {
+          if (day.dayOfWeek === dayOfWeek) {
+            return {
+              ...day,
+              timeSlots: day.timeSlots.map(ts => ts.id === editingTimeSlot.id ? timeSlot : ts)
+            };
+          }
+          return day;
+        });
+        setWeeklySchedule(updatedWeeklySchedule);
+      }
+    } else {
+      // Add new time slot
+      addTimeSlotToSelectedDate(timeSlot);
+    }
+
+    // Reset form
+    setNewTimeSlot({
+      startTime: '09:00',
+      endTime: '10:00',
+      isAvailable: true,
+      isRecurring: false,
+      sessionType: 'video',
+      price: 4500
+    });
+    setEditingTimeSlot(null);
+    setShowTimeSlotModal(false);
+    toast.success(editingTimeSlot ? 'Time slot updated' : 'Time slot added');
+  };
+
+  const handleEditTimeSlot = (timeSlot: TimeSlot) => {
+    setEditingTimeSlot(timeSlot);
+    setNewTimeSlot({
+      startTime: timeSlot.startTime,
+      endTime: timeSlot.endTime,
+      isAvailable: timeSlot.isAvailable,
+      isRecurring: timeSlot.isRecurring,
+      sessionType: timeSlot.sessionType,
+      price: timeSlot.price
+    });
+    setShowTimeSlotModal(true);
+  };
+
+  const updateWeeklySchedule = (dayOfWeek: number, updates: Partial<DayAvailability>) => {
+    const updatedWeeklySchedule = weeklySchedule.map(day => {
+      if (day.dayOfWeek === dayOfWeek) {
+        return { ...day, ...updates };
+      }
+      return day;
+    });
+    setWeeklySchedule(updatedWeeklySchedule);
+  };
+
+  const addTimeSlotToWeeklyDay = (dayOfWeek: number) => {
+    const timeSlot: TimeSlot = {
+      id: `weekly-${dayOfWeek}-${Date.now()}`,
+      startTime: '09:00',
+      endTime: '10:00',
+      isAvailable: true,
+      isRecurring: true,
+      sessionType: 'video',
+      price: 4500
+    };
+
+    const updatedWeeklySchedule = weeklySchedule.map(day => {
+      if (day.dayOfWeek === dayOfWeek) {
+        return {
+          ...day,
+          timeSlots: [...day.timeSlots, timeSlot]
+        };
+      }
+      return day;
+    });
+    setWeeklySchedule(updatedWeeklySchedule);
+  };
+
+  const removeTimeSlotFromWeeklyDay = (dayOfWeek: number, timeSlotId: string) => {
+    const updatedWeeklySchedule = weeklySchedule.map(day => {
+      if (day.dayOfWeek === dayOfWeek) {
+        return {
+          ...day,
+          timeSlots: day.timeSlots.filter(ts => ts.id !== timeSlotId)
+        };
+      }
+      return day;
+    });
+    setWeeklySchedule(updatedWeeklySchedule);
+  };
+
+  const getTileContent = ({ date, view }: { date: Date; view: string }) => {
+    if (view !== 'month') return null;
+
+    const dateString = format(date, 'yyyy-MM-dd');
+    const specialDate = specialDates.find(sd => sd.date === dateString);
+    
+    let timeSlots: TimeSlot[] = [];
+    let isAvailable = false;
+
+    if (specialDate) {
+      timeSlots = specialDate.timeSlots || [];
+      isAvailable = specialDate.isAvailable;
+    } else {
+      const dayOfWeek = date.getDay();
+      const weeklyDay = weeklySchedule.find(day => day.dayOfWeek === dayOfWeek);
+      timeSlots = weeklyDay?.timeSlots || [];
+      isAvailable = weeklyDay?.isAvailable || false;
+    }
+
+    const availableSlots = timeSlots.filter(ts => ts.isAvailable).length;
+
+    return (
+      <div className="flex flex-col items-center mt-1">
+        {isAvailable && availableSlots > 0 && (
+          <div className="w-1.5 h-1.5 bg-accent-green rounded-full mb-1"></div>
+        )}
+        {availableSlots > 0 && (
+          <span className="text-xs text-cream-200 font-medium">{availableSlots}</span>
+        )}
+      </div>
+    );
+  };
+
+  const getTileClassName = ({ date, view }: { date: Date; view: string }) => {
+    if (view !== 'month') return '';
+
+    const dateString = format(date, 'yyyy-MM-dd');
+    const specialDate = specialDates.find(sd => sd.date === dateString);
+    const isSelected = isSameDay(date, selectedDate);
+    
+    let className = 'hover:bg-cream-100/10 transition-all duration-200 ';
+
+    if (isSelected) {
+      className += 'bg-accent-green text-black font-semibold ';
+    }
+
+    if (specialDate) {
+      if (specialDate.isAvailable) {
+        className += 'border-l-2 border-accent-green ';
+      } else {
+        className += 'border-l-2 border-red-400 ';
+      }
+    } else {
+      const dayOfWeek = date.getDay();
+      const weeklyDay = weeklySchedule.find(day => day.dayOfWeek === dayOfWeek);
+      if (weeklyDay?.isAvailable) {
+        className += 'border-l-2 border-cream-200 ';
+      }
+    }
+
+    return className;
+  };
+
+  const selectedDateData = getSelectedDateData();
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white">Loading availability...</p>
+          <div className="w-16 h-16 border-4 border-accent-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-cream-50">Loading availability...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 pb-6">
-      {/* Mobile-Optimized Header */}
-      <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">Manage Availability</h1>
-          <p className="text-cream-200 text-sm lg:text-base">Set your working hours and manage your schedule</p>
+          <h1 className="text-3xl font-bold text-cream-50 mb-2">Availability Management</h1>
+          <p className="text-cream-200">Manage your schedule and time slots</p>
         </div>
         
-        {/* Mobile-First Controls */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex items-center space-x-3">
           {/* View Toggle */}
-          <div className="flex bg-black/50 backdrop-blur-sm border border-cream-200/20 rounded-2xl p-1 flex-1 sm:flex-none">
-            <button
-              onClick={() => setViewMode('weekly')}
-              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${
-                viewMode === 'weekly' 
-                  ? 'bg-primary-500 text-white' 
-                  : 'text-cream-200 hover:text-white'
-              }`}
-            >
-              Weekly
-            </button>
-            <button
-              onClick={() => setViewMode('special')}
-              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${
-                viewMode === 'special' 
-                  ? 'bg-primary-500 text-white' 
-                  : 'text-cream-200 hover:text-white'
-              }`}
-            >
-              Special Dates
-            </button>
+          <div className="flex bg-black/30 border border-cream-200/20 rounded-2xl p-1">
+            {[
+              { key: 'calendar', label: 'Calendar', icon: Calendar },
+              { key: 'weekly', label: 'Weekly', icon: Clock },
+              { key: 'settings', label: 'Settings', icon: Settings }
+            ].map((view) => {
+              const Icon = view.icon;
+              return (
+                <button
+                  key={view.key}
+                  onClick={() => setActiveView(view.key as any)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    activeView === view.key 
+                      ? 'bg-accent-green text-black shadow-lg' 
+                      : 'text-cream-200 hover:text-cream-50 hover:bg-cream-100/5'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{view.label}</span>
+                </button>
+              );
+            })}
           </div>
           
-          {/* Save Button */}
           <button
-            onClick={saveAvailability}
+            onClick={activeView === 'settings' ? saveSettings : saveAvailability}
             disabled={saving}
-            className="bg-primary-500 text-white px-4 py-2 rounded-2xl hover:bg-primary-600 transition-colors duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 text-sm font-medium"
+            className="bg-accent-green text-black px-6 py-3 rounded-2xl hover:bg-accent-green/90 transition-all duration-200 flex items-center space-x-2 disabled:opacity-50 font-medium shadow-lg"
           >
-            <Save className="w-4 h-4" />
+            <Save className="w-5 h-5" />
             <span>{saving ? 'Saving...' : 'Save'}</span>
           </button>
         </div>
       </div>
 
-      {/* Quick Stats - Mobile Optimized */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-6">
-        <div className="bg-cream-50/10 backdrop-blur-sm rounded-2xl lg:rounded-3xl p-4 lg:p-6 border border-cream-200/20">
-          <div className="flex items-center space-x-2 lg:space-x-3 mb-2">
-            <Calendar className="w-4 h-4 lg:w-5 lg:h-5 text-primary-500" />
-            <span className="text-cream-200 text-xs lg:text-sm">Available Days</span>
-          </div>
-          <p className="text-xl lg:text-2xl font-bold text-white">
-            {weeklyAvailability.filter(day => day.isAvailable).length}/7
-          </p>
-        </div>
-        
-        <div className="bg-cream-50/10 backdrop-blur-sm rounded-2xl lg:rounded-3xl p-4 lg:p-6 border border-cream-200/20">
-          <div className="flex items-center space-x-2 lg:space-x-3 mb-2">
-            <Clock className="w-4 h-4 lg:w-5 lg:h-5 text-accent-green" />
-            <span className="text-cream-200 text-xs lg:text-sm">Weekly Hours</span>
-          </div>
-          <p className="text-xl lg:text-2xl font-bold text-white">
-            {getTotalWeeklyHours().toFixed(1)}h
-          </p>
-        </div>
-        
-        <div className="bg-cream-50/10 backdrop-blur-sm rounded-2xl lg:rounded-3xl p-4 lg:p-6 border border-cream-200/20 col-span-2 lg:col-span-1">
-          <div className="flex items-center space-x-2 lg:space-x-3 mb-2">
-            <Edit className="w-4 h-4 lg:w-5 lg:h-5 text-accent-yellow" />
-            <span className="text-cream-200 text-xs lg:text-sm">Special Dates</span>
-          </div>
-          <p className="text-xl lg:text-2xl font-bold text-white">{specialDates.length}</p>
-        </div>
-      </div>
-
-      {/* Quick Templates - Mobile Optimized */}
-      {viewMode === 'weekly' && (
-        <div className="bg-cream-50/10 backdrop-blur-sm rounded-2xl lg:rounded-3xl border border-cream-200/20 overflow-hidden">
-          <button
-            onClick={() => setShowQuickTemplates(!showQuickTemplates)}
-            className="w-full flex items-center justify-between p-4 lg:p-6 hover:bg-black/20 transition-colors duration-200"
-          >
-            <div className="flex items-center space-x-3">
-              <Settings className="w-5 h-5 text-primary-500" />
-              <h2 className="text-lg font-semibold text-white">Quick Templates</h2>
+      {/* Calendar View */}
+      {activeView === 'calendar' && (
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Calendar */}
+          <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-6 border border-cream-200/20">
+            <h2 className="text-xl font-semibold text-cream-50 mb-6">Calendar View</h2>
+            
+            <div className="calendar-container">
+              <ReactCalendar
+                onChange={(value) => setSelectedDate(value as Date)}
+                value={selectedDate}
+                tileContent={getTileContent}
+                tileClassName={getTileClassName}
+                className="w-full bg-transparent text-cream-50 border-none"
+                tileDisabled={({ date }) => date < startOfDay(new Date())}
+                minDate={new Date()}
+                maxDate={addDays(new Date(), 365)}
+              />
             </div>
-            {showQuickTemplates ? (
-              <ChevronUp className="w-5 h-5 text-cream-200" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-cream-200" />
-            )}
-          </button>
-          
-          {showQuickTemplates && (
-            <div className="p-4 lg:p-6 border-t border-cream-200/20">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
+
+            <div className="mt-6 space-y-3 p-4 bg-black/20 rounded-2xl border border-cream-200/10">
+              <div className="flex items-center space-x-3 text-sm">
+                <div className="w-3 h-3 bg-accent-green rounded-full"></div>
+                <span className="text-cream-200">Available with time slots</span>
+              </div>
+              <div className="flex items-center space-x-3 text-sm">
+                <div className="w-3 h-3 bg-cream-200 rounded-full"></div>
+                <span className="text-cream-200">Regular weekly schedule</span>
+              </div>
+              <div className="flex items-center space-x-3 text-sm">
+                <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                <span className="text-cream-200">Unavailable</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Selected Date Details */}
+          <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-6 border border-cream-200/20">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-cream-50">
+                {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+              </h2>
+              <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => generateQuickSchedule('business')}
-                  className="p-3 lg:p-4 bg-black/30 border border-cream-200/10 rounded-xl lg:rounded-2xl hover:bg-black/50 transition-colors duration-200 text-left"
+                  onClick={() => setShowTimeSlotModal(true)}
+                  className="bg-accent-green text-black p-2 rounded-xl hover:bg-accent-green/90 transition-all duration-200 shadow-lg"
+                  title="Add time slot"
                 >
-                  <h3 className="text-white font-medium mb-1 lg:mb-2 text-sm lg:text-base">Business Hours</h3>
-                  <p className="text-cream-200 text-xs lg:text-sm">Mon-Fri, 9 AM - 5 PM</p>
+                  <Plus className="w-4 h-4" />
                 </button>
-                
                 <button
-                  onClick={() => generateQuickSchedule('flexible')}
-                  className="p-3 lg:p-4 bg-black/30 border border-cream-200/10 rounded-xl lg:rounded-2xl hover:bg-black/50 transition-colors duration-200 text-left"
+                  onClick={() => {
+                    const yesterday = addDays(selectedDate, -1);
+                    // copyTimeSlots(yesterday, selectedDate);
+                  }}
+                  className="bg-cream-200/20 text-cream-50 p-2 rounded-xl hover:bg-cream-200/30 transition-all duration-200 border border-cream-200/20"
+                  title="Copy from previous day"
                 >
-                  <h3 className="text-white font-medium mb-1 lg:mb-2 text-sm lg:text-base">Flexible Hours</h3>
-                  <p className="text-cream-200 text-xs lg:text-sm">Daily, 8 AM-12 PM & 6-9 PM</p>
-                </button>
-                
-                <button
-                  onClick={() => generateQuickSchedule('weekend')}
-                  className="p-3 lg:p-4 bg-black/30 border border-cream-200/10 rounded-xl lg:rounded-2xl hover:bg-black/50 transition-colors duration-200 text-left"
-                >
-                  <h3 className="text-white font-medium mb-1 lg:mb-2 text-sm lg:text-base">Weekend Only</h3>
-                  <p className="text-cream-200 text-xs lg:text-sm">Sat-Sun, 10 AM - 4 PM</p>
+                  <Copy className="w-4 h-4" />
                 </button>
               </div>
             </div>
-          )}
+
+            {/* Availability Toggle */}
+            <div className="mb-6 p-4 bg-black/20 rounded-2xl border border-cream-200/10">
+              <label className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={selectedDateData.isAvailable}
+                  onChange={(e) => updateSelectedDateAvailability(e.target.checked)}
+                  className="w-5 h-5 rounded border-cream-200/30 text-accent-green focus:ring-accent-green focus:ring-offset-0 bg-black/20"
+                />
+                <span className="text-cream-50 font-medium">Available on this date</span>
+              </label>
+            </div>
+
+            {/* Time Slots */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-cream-50">Time Slots</h3>
+              
+              {selectedDateData.timeSlots.length === 0 ? (
+                <div className="text-center py-8 bg-black/20 rounded-2xl border border-cream-200/10">
+                  <Clock className="w-12 h-12 text-cream-200/50 mx-auto mb-4" />
+                  <p className="text-cream-200 mb-2">No time slots configured</p>
+                  <button
+                    onClick={() => setShowTimeSlotModal(true)}
+                    className="text-accent-green hover:text-accent-green/80 transition-colors duration-200 text-sm font-medium"
+                  >
+                    Add your first time slot
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {selectedDateData.timeSlots.map((timeSlot) => (
+                    <div
+                      key={timeSlot.id}
+                      className={`p-4 rounded-2xl border transition-all duration-200 ${
+                        timeSlot.isAvailable
+                          ? 'bg-accent-green/10 border-accent-green/30'
+                          : 'bg-black/20 border-cream-200/20'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <span className="text-cream-50 font-medium">
+                              {timeSlot.startTime} - {timeSlot.endTime}
+                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              timeSlot.sessionType === 'video' ? 'bg-accent-green/20 text-accent-green' :
+                              timeSlot.sessionType === 'audio' ? 'bg-cream-200/20 text-cream-200' :
+                              'bg-accent-green/20 text-accent-green'
+                            }`}>
+                              {timeSlot.sessionType}
+                            </span>
+                            {timeSlot.isRecurring && (
+                              <span className="px-2 py-1 rounded-full text-xs bg-black/30 text-cream-200 border border-cream-200/20">
+                                Recurring
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-4 text-sm text-cream-200">
+                            <span>LKR {timeSlot.price?.toLocaleString()}</span>
+                            <span className={timeSlot.isAvailable ? 'text-accent-green' : 'text-cream-200/60'}>
+                              {timeSlot.isAvailable ? 'Available' : 'Unavailable'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleEditTimeSlot(timeSlot)}
+                            className="p-2 text-cream-200 hover:text-cream-50 transition-colors duration-200"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => removeTimeSlotFromSelectedDate(timeSlot.id)}
+                            className="p-2 text-red-400 hover:text-red-300 transition-colors duration-200"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Weekly Schedule - Mobile Optimized */}
-      {viewMode === 'weekly' && (
-        <div className="bg-cream-50/10 backdrop-blur-sm rounded-2xl lg:rounded-3xl border border-cream-200/20 overflow-hidden">
-          <div className="p-4 lg:p-6 border-b border-cream-200/20">
-            <h2 className="text-lg lg:text-xl font-semibold text-white">Weekly Schedule</h2>
-            <p className="text-cream-200 text-sm mt-1">Set your regular weekly availability</p>
-          </div>
+      {/* Weekly View */}
+      {activeView === 'weekly' && (
+        <div className="space-y-6">
+          <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-6 border border-cream-200/20">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-cream-50">Weekly Schedule Template</h2>
+              <p className="text-cream-200 text-sm">Set your default weekly availability</p>
+            </div>
 
-          <div className="divide-y divide-cream-200/10">
-            {weeklyAvailability.map((day) => {
-              const isExpanded = expandedDays.has(day.dayOfWeek);
-              const hasTimeSlots = day.timeSlots.length > 0;
-              
-              return (
-                <div key={day.dayOfWeek} className="bg-black/20">
-                  {/* Day Header - Mobile Optimized */}
-                  <div className="p-4 lg:p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3 lg:space-x-4 flex-1">
-                        <button
-                          onClick={() => toggleDayAvailability(day.dayOfWeek)}
-                          className={`w-5 h-5 lg:w-6 lg:h-6 rounded-full border-2 flex items-center justify-center transition-colors duration-200 flex-shrink-0 ${
-                            day.isAvailable
-                              ? 'bg-accent-green border-accent-green'
-                              : 'border-cream-200/40'
-                          }`}
-                        >
-                          {day.isAvailable && <Check className="w-3 h-3 lg:w-4 lg:h-4 text-white" />}
-                        </button>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 lg:space-x-3">
-                            <h3 className="text-base lg:text-lg font-semibold text-white">{day.dayName}</h3>
-                            <span className={`px-2 py-1 rounded-full text-xs flex-shrink-0 ${
-                              day.isAvailable
-                                ? 'bg-accent-green/20 text-accent-green'
-                                : 'bg-cream-200/20 text-cream-200'
-                            }`}>
-                              {day.isAvailable ? 'Available' : 'Off'}
-                            </span>
-                          </div>
-                          
-                          {/* Time slots summary for mobile */}
-                          {day.isAvailable && hasTimeSlots && (
-                            <p className="text-cream-200 text-xs lg:text-sm mt-1">
-                              {day.timeSlots.length} slot{day.timeSlots.length !== 1 ? 's' : ''} • 
-                              {day.timeSlots.reduce((total, slot) => {
-                                const start = parseISO(`2000-01-01T${slot.startTime}`);
-                                const end = parseISO(`2000-01-01T${slot.endTime}`);
-                                return total + (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-                              }, 0).toFixed(1)}h total
-                            </p>
-                          )}
-                        </div>
-                        
-                        {day.isAvailable && (
-                          <button
-                            onClick={() => toggleDayExpansion(day.dayOfWeek)}
-                            className="p-2 text-cream-200 hover:text-white transition-colors duration-200 lg:hidden"
-                          >
-                            {isExpanded ? (
-                              <ChevronUp className="w-4 h-4" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4" />
-                            )}
-                          </button>
-                        )}
-                      </div>
-                      
-                      {/* Desktop controls */}
-                      {day.isAvailable && (
-                        <div className="hidden lg:flex items-center space-x-2">
-                          <button
-                            onClick={() => setEditingDay(editingDay === day.dayOfWeek ? null : day.dayOfWeek)}
-                            className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200 text-sm"
-                          >
-                            <Plus className="w-4 h-4" />
-                            <span>Add Slot</span>
-                          </button>
-                        </div>
-                      )}
+            <div className="grid gap-4">
+              {weeklySchedule.map((day) => (
+                <div key={day.dayOfWeek} className="bg-black/20 rounded-2xl p-4 border border-cream-200/10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={day.isAvailable}
+                          onChange={(e) => updateWeeklySchedule(day.dayOfWeek, { isAvailable: e.target.checked })}
+                          className="w-4 h-4 rounded border-cream-200/30 text-accent-green focus:ring-accent-green focus:ring-offset-0 bg-black/20"
+                        />
+                        <span className="text-cream-50 font-medium">{day.dayName}</span>
+                      </label>
                     </div>
-
-                    {/* Mobile Add Slot Button */}
-                    {day.isAvailable && isExpanded && (
-                      <div className="mt-3 lg:hidden">
-                        <button
-                          onClick={() => setEditingDay(editingDay === day.dayOfWeek ? null : day.dayOfWeek)}
-                          className="w-full flex items-center justify-center space-x-2 p-2 bg-primary-500/20 border border-primary-500/30 rounded-xl text-primary-500 hover:bg-primary-500/30 transition-colors duration-200 text-sm"
-                        >
-                          <Plus className="w-4 h-4" />
-                          <span>Add Time Slot</span>
-                        </button>
-                      </div>
+                    
+                    {day.isAvailable && (
+                      <button
+                        onClick={() => addTimeSlotToWeeklyDay(day.dayOfWeek)}
+                        className="bg-accent-green/20 text-accent-green p-2 rounded-xl hover:bg-accent-green/30 transition-all duration-200 border border-accent-green/30"
+                        title="Add time slot"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
 
-                  {/* Time Slots - Mobile Optimized */}
-                  {day.isAvailable && (isExpanded || window.innerWidth >= 1024) && (
-                    <div className="px-4 pb-4 lg:p-6 lg:pt-0 space-y-3">
-                      {/* Existing Time Slots */}
-                      {day.timeSlots.map((slot) => (
-                        <div key={slot.id} className="flex items-center justify-between p-3 bg-black/30 border border-cream-200/10 rounded-xl">
-                          <div className="flex items-center space-x-3 flex-1 min-w-0">
-                            <Clock className="w-4 h-4 text-primary-500 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <span className="text-white font-medium text-sm lg:text-base">
-                                {slot.startTime} - {slot.endTime}
+                  {day.isAvailable && (
+                    <div className="space-y-2">
+                      {day.timeSlots.length === 0 ? (
+                        <p className="text-cream-200/60 text-sm italic">No time slots configured</p>
+                      ) : (
+                        day.timeSlots.map((timeSlot) => (
+                          <div
+                            key={timeSlot.id}
+                            className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-cream-200/10"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <span className="text-cream-50 text-sm font-medium">
+                                {timeSlot.startTime} - {timeSlot.endTime}
                               </span>
-                              <div className="text-accent-green text-xs lg:text-sm">
-                                LKR {slot.price?.toLocaleString()}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            {/* Copy to other days */}
-                            <div className="relative group">
-                              <button className="text-cream-200 hover:text-white transition-colors duration-200 p-1">
-                                <Copy className="w-4 h-4" />
-                              </button>
-                              <div className="absolute right-0 top-full mt-2 w-32 bg-black/90 border border-cream-200/20 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none group-hover:pointer-events-auto">
-                                <div className="p-2">
-                                  <p className="text-cream-200 text-xs mb-2">Copy to:</p>
-                                  {weeklyAvailability
-                                    .filter(d => d.dayOfWeek !== day.dayOfWeek)
-                                    .map(d => (
-                                      <button
-                                        key={d.dayOfWeek}
-                                        onClick={() => copyDaySchedule(day.dayOfWeek, d.dayOfWeek)}
-                                        className="w-full text-left px-2 py-1 text-xs text-cream-200 hover:text-white hover:bg-cream-200/10 rounded"
-                                      >
-                                        {d.dayName}
-                                      </button>
-                                    ))
-                                  }
-                                </div>
-                              </div>
+                              <span className="px-2 py-1 rounded-full text-xs bg-accent-green/20 text-accent-green">
+                                {timeSlot.sessionType}
+                              </span>
+                              <span className="text-cream-200 text-sm">
+                                LKR {timeSlot.price?.toLocaleString()}
+                              </span>
                             </div>
                             
                             <button
-                              onClick={() => removeTimeSlot(day.dayOfWeek, slot.id)}
-                              className="text-red-400 hover:text-red-300 transition-colors duration-200 p-1"
+                              onClick={() => removeTimeSlotFromWeeklyDay(day.dayOfWeek, timeSlot.id)}
+                              className="p-1 text-red-400 hover:text-red-300 transition-colors duration-200"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
-                        </div>
-                      ))}
-
-                      {/* Add New Time Slot Form */}
-                      {editingDay === day.dayOfWeek && (
-                        <div className="p-3 lg:p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
-                            <div>
-                              <label className="block text-sm font-medium text-white mb-1">Start</label>
-                              <input
-                                type="time"
-                                value={newTimeSlot.startTime}
-                                onChange={(e) => setNewTimeSlot(prev => ({ ...prev, startTime: e.target.value }))}
-                                className="w-full p-2 border border-cream-200/20 rounded-xl bg-black/50 text-white text-sm"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-white mb-1">End</label>
-                              <input
-                                type="time"
-                                value={newTimeSlot.endTime}
-                                onChange={(e) => setNewTimeSlot(prev => ({ ...prev, endTime: e.target.value }))}
-                                className="w-full p-2 border border-cream-200/20 rounded-xl bg-black/50 text-white text-sm"
-                              />
-                            </div>
-                            <div className="sm:col-span-2 lg:col-span-1">
-                              <label className="block text-sm font-medium text-white mb-1">Price (LKR)</label>
-                              <input
-                                type="number"
-                                value={newTimeSlot.price}
-                                onChange={(e) => setNewTimeSlot(prev => ({ ...prev, price: parseInt(e.target.value) }))}
-                                className="w-full p-2 border border-cream-200/20 rounded-xl bg-black/50 text-white text-sm"
-                              />
-                            </div>
-                            <div className="sm:col-span-2 lg:col-span-1 flex items-end space-x-2">
-                              <button
-                                onClick={() => addTimeSlot(day.dayOfWeek)}
-                                className="flex-1 bg-accent-green text-white px-3 py-2 rounded-xl hover:bg-accent-green/90 transition-colors duration-200 flex items-center justify-center"
-                              >
-                                <Check className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => setEditingDay(null)}
-                                className="flex-1 bg-black/50 border border-cream-200/20 text-white px-3 py-2 rounded-xl hover:bg-black/70 transition-colors duration-200 flex items-center justify-center"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {day.timeSlots.length === 0 && editingDay !== day.dayOfWeek && (
-                        <div className="text-center py-6 lg:py-8">
-                          <Clock className="w-8 h-8 lg:w-12 lg:h-12 text-cream-200/40 mx-auto mb-2" />
-                          <p className="text-cream-200/60 text-sm">No time slots set</p>
-                        </div>
+                        ))
                       )}
                     </div>
                   )}
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Special Dates - Mobile Optimized */}
-      {viewMode === 'special' && (
-        <div className="bg-cream-50/10 backdrop-blur-sm rounded-2xl lg:rounded-3xl border border-cream-200/20 overflow-hidden">
-          <div className="p-4 lg:p-6 border-b border-cream-200/20">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg lg:text-xl font-semibold text-white">Special Dates</h2>
-                <p className="text-cream-200 text-sm mt-1">Manage holidays, vacations, and special availability</p>
-              </div>
-              <button
-                onClick={() => setShowAddSpecialDate(true)}
-                className="bg-primary-500 text-white px-4 py-2 rounded-xl hover:bg-primary-600 transition-colors duration-200 flex items-center justify-center space-x-2 text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Date</span>
-              </button>
-            </div>
-          </div>
+      {/* Settings View */}
+      {activeView === 'settings' && availabilitySettings && notificationSettings && (
+        <div className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Availability Settings */}
+            <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-6 border border-cream-200/20">
+              <h2 className="text-xl font-semibold text-cream-50 mb-6">Availability Settings</h2>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-cream-200 mb-2">Buffer Time (minutes)</label>
+                  <input
+                    type="number"
+                    value={availabilitySettings.bufferTime}
+                    onChange={(e) => setAvailabilitySettings({
+                      ...availabilitySettings,
+                      bufferTime: parseInt(e.target.value)
+                    })}
+                    className="w-full p-3 border border-cream-200/20 rounded-2xl focus:ring-2 focus:ring-accent-green focus:border-transparent bg-black/20 text-cream-50 placeholder-cream-200/50"
+                    min="0"
+                    max="60"
+                  />
+                  <p className="text-cream-200/60 text-xs mt-1">Time between sessions</p>
+                </div>
 
-          <div className="p-4 lg:p-6">
-            {/* Add Special Date Form */}
-            {showAddSpecialDate && (
-              <div className="mb-6 p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-1">Date</label>
-                    <input
-                      type="date"
-                      value={newSpecialDate.date}
-                      onChange={(e) => setNewSpecialDate(prev => ({ ...prev, date: e.target.value }))}
-                      className="w-full p-2 border border-cream-200/20 rounded-xl bg-black/50 text-white text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-white mb-1">Status</label>
-                    <select
-                      value={newSpecialDate.isAvailable ? 'available' : 'unavailable'}
-                      onChange={(e) => setNewSpecialDate(prev => ({ ...prev, isAvailable: e.target.value === 'available' }))}
-                      className="w-full p-2 border border-cream-200/20 rounded-xl bg-black/50 text-white text-sm"
-                    >
-                      <option value="unavailable">Unavailable</option>
-                      <option value="available">Available</option>
-                    </select>
-                  </div>
-                  <div className="sm:col-span-2 lg:col-span-1">
-                    <label className="block text-sm font-medium text-white mb-1">Reason</label>
-                    <input
-                      type="text"
-                      value={newSpecialDate.reason}
-                      onChange={(e) => setNewSpecialDate(prev => ({ ...prev, reason: e.target.value }))}
-                      placeholder="Holiday, Vacation, etc."
-                      className="w-full p-2 border border-cream-200/20 rounded-xl bg-black/50 text-white placeholder-cream-200/60 text-sm"
-                    />
-                  </div>
-                  <div className="sm:col-span-2 lg:col-span-1 flex items-end space-x-2">
-                    <button
-                      onClick={addSpecialDate}
-                      className="flex-1 bg-accent-green text-white px-3 py-2 rounded-xl hover:bg-accent-green/90 transition-colors duration-200 flex items-center justify-center"
-                    >
-                      <Check className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setShowAddSpecialDate(false)}
-                      className="flex-1 bg-black/50 border border-cream-200/20 text-white px-3 py-2 rounded-xl hover:bg-black/70 transition-colors duration-200 flex items-center justify-center"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                <div>
+                  <label className="block text-sm font-medium text-cream-200 mb-2">Max Sessions Per Day</label>
+                  <input
+                    type="number"
+                    value={availabilitySettings.maxSessionsPerDay}
+                    onChange={(e) => setAvailabilitySettings({
+                      ...availabilitySettings,
+                      maxSessionsPerDay: parseInt(e.target.value)
+                    })}
+                    className="w-full p-3 border border-cream-200/20 rounded-2xl focus:ring-2 focus:ring-accent-green focus:border-transparent bg-black/20 text-cream-50 placeholder-cream-200/50"
+                    min="1"
+                    max="20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-cream-200 mb-2">Advance Booking Days</label>
+                  <input
+                    type="number"
+                    value={availabilitySettings.advanceBookingDays}
+                    onChange={(e) => setAvailabilitySettings({
+                      ...availabilitySettings,
+                      advanceBookingDays: parseInt(e.target.value)
+                    })}
+                    className="w-full p-3 border border-cream-200/20 rounded-2xl focus:ring-2 focus:ring-accent-green focus:border-transparent bg-black/20 text-cream-50 placeholder-cream-200/50"
+                    min="1"
+                    max="365"
+                  />
+                  <p className="text-cream-200/60 text-xs mt-1">How far in advance clients can book</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Notification Settings */}
+            <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-6 border border-cream-200/20">
+              <h2 className="text-xl font-semibold text-cream-50 mb-6">Notification Settings</h2>
+              
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium text-cream-50 mb-4">Email Notifications</h3>
+                  <div className="space-y-3">
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={notificationSettings.emailNotifications.enabled}
+                        onChange={(e) => setNotificationSettings({
+                          ...notificationSettings,
+                          emailNotifications: {
+                            ...notificationSettings.emailNotifications,
+                            enabled: e.target.checked
+                          }
+                        })}
+                        className="w-4 h-4 rounded border-cream-200/30 text-accent-green focus:ring-accent-green focus:ring-offset-0 bg-black/20"
+                      />
+                      <span className="text-cream-200">Enable email notifications</span>
+                    </label>
+
+                    {notificationSettings.emailNotifications.enabled && (
+                      <div className="ml-7 space-y-2">
+                        <label className="flex items-center space-x-3">
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.emailNotifications.sessionReminders}
+                            onChange={(e) => setNotificationSettings({
+                              ...notificationSettings,
+                              emailNotifications: {
+                                ...notificationSettings.emailNotifications,
+                                sessionReminders: e.target.checked
+                              }
+                            })}
+                            className="w-4 h-4 rounded border-cream-200/30 text-accent-green focus:ring-accent-green focus:ring-offset-0 bg-black/20"
+                          />
+                          <span className="text-cream-200 text-sm">Session reminders</span>
+                        </label>
+
+                        <label className="flex items-center space-x-3">
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.emailNotifications.newBookings}
+                            onChange={(e) => setNotificationSettings({
+                              ...notificationSettings,
+                              emailNotifications: {
+                                ...notificationSettings.emailNotifications,
+                                newBookings: e.target.checked
+                              }
+                            })}
+                            className="w-4 h-4 rounded border-cream-200/30 text-accent-green focus:ring-accent-green focus:ring-offset-0 bg-black/20"
+                          />
+                          <span className="text-cream-200 text-sm">New bookings</span>
+                        </label>
+
+                        <div className="mt-4">
+                          <label className="block text-sm font-medium text-cream-200 mb-2">Reminder Hours Before Session</label>
+                          <input
+                            type="number"
+                            value={notificationSettings.emailNotifications.hoursBeforeSession}
+                            onChange={(e) => setNotificationSettings({
+                              ...notificationSettings,
+                              emailNotifications: {
+                                ...notificationSettings.emailNotifications,
+                                hoursBeforeSession: parseInt(e.target.value)
+                              }
+                            })}
+                            className="w-full p-3 border border-cream-200/20 rounded-2xl focus:ring-2 focus:ring-accent-green focus:border-transparent bg-black/20 text-cream-50 placeholder-cream-200/50"
+                            min="1"
+                            max="168"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* Special Dates List */}
-            {specialDates.length > 0 ? (
-              <div className="space-y-3">
-                {specialDates.map((specialDate) => (
-                  <div key={specialDate.id} className="flex items-center justify-between p-3 lg:p-4 bg-black/30 border border-cream-200/10 rounded-xl">
-                    <div className="flex items-center space-x-3 lg:space-x-4 flex-1 min-w-0">
-                      <Calendar className="w-4 h-4 lg:w-5 lg:h-5 text-primary-500 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white font-medium text-sm lg:text-base">
-                          {format(parseISO(specialDate.date), 'MMM d, yyyy')}
-                        </p>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mt-1">
-                          <span className={`inline-flex px-2 py-1 rounded-full text-xs ${
-                            specialDate.isAvailable
-                              ? 'bg-accent-green/20 text-accent-green'
-                              : 'bg-red-500/20 text-red-400'
-                          }`}>
-                            {specialDate.isAvailable ? 'Available' : 'Unavailable'}
-                          </span>
-                          {specialDate.reason && (
-                            <span className="text-cream-200 text-xs lg:text-sm">{specialDate.reason}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => removeSpecialDate(specialDate.id)}
-                      className="text-red-400 hover:text-red-300 transition-colors duration-200 p-1 flex-shrink-0"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+          {/* Session Types Pricing */}
+          <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-6 border border-cream-200/20">
+            <h2 className="text-xl font-semibold text-cream-50 mb-6">Session Types & Pricing</h2>
+            
+            <div className="grid md:grid-cols-3 gap-6">
+              {Object.entries(availabilitySettings.sessionTypes).map(([type, config]) => (
+                <div key={type} className="bg-black/20 rounded-2xl p-4 border border-cream-200/10">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium text-cream-50 capitalize">{type} Sessions</h3>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={config.enabled}
+                        onChange={(e) => setAvailabilitySettings({
+                          ...availabilitySettings,
+                          sessionTypes: {
+                            ...availabilitySettings.sessionTypes,
+                            [type]: { ...config, enabled: e.target.checked }
+                          }
+                        })}
+                        className="w-4 h-4 rounded border-cream-200/30 text-accent-green focus:ring-accent-green focus:ring-offset-0 bg-black/20"
+                      />
+                    </label>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 lg:py-16">
-                <Calendar className="w-12 h-12 lg:w-16 lg:h-16 text-cream-200/40 mx-auto mb-4" />
-                <p className="text-cream-200 mb-2">No special dates set</p>
-                <p className="text-cream-200/60 text-sm">Add holidays, vacations, or special availability dates</p>
-              </div>
-            )}
+                  
+                  {config.enabled && (
+                    <div>
+                      <label className="block text-sm font-medium text-cream-200 mb-2">Price (LKR)</label>
+                      <input
+                        type="number"
+                        value={config.price}
+                        onChange={(e) => setAvailabilitySettings({
+                          ...availabilitySettings,
+                          sessionTypes: {
+                            ...availabilitySettings.sessionTypes,
+                            [type]: { ...config, price: parseInt(e.target.value) }
+                          }
+                        })}
+                        className="w-full p-3 border border-cream-200/20 rounded-2xl focus:ring-2 focus:ring-accent-green focus:border-transparent bg-black/20 text-cream-50 placeholder-cream-200/50"
+                        min="0"
+                        step="100"
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
+
+      {/* Time Slot Modal */}
+      {showTimeSlotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowTimeSlotModal(false)}></div>
+          
+          <div className="relative bg-black/80 backdrop-blur-sm rounded-3xl p-6 w-full max-w-md border border-cream-200/20">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-cream-50">
+                {editingTimeSlot ? 'Edit Time Slot' : 'Add Time Slot'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowTimeSlotModal(false);
+                  setEditingTimeSlot(null);
+                  setNewTimeSlot({
+                    startTime: '09:00',
+                    endTime: '10:00',
+                    isAvailable: true,
+                    isRecurring: false,
+                    sessionType: 'video',
+                    price: 4500
+                  });
+                }}
+                className="text-cream-200 hover:text-cream-50 transition-colors duration-200"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Time Range */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-cream-200 mb-2">Start Time</label>
+                  <input
+                    type="time"
+                    value={newTimeSlot.startTime}
+                    onChange={(e) => setNewTimeSlot({ ...newTimeSlot, startTime: e.target.value })}
+                    className="w-full p-3 border border-cream-200/20 rounded-2xl focus:ring-2 focus:ring-accent-green focus:border-transparent bg-black/20 text-cream-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-cream-200 mb-2">End Time</label>
+                  <input
+                    type="time"
+                    value={newTimeSlot.endTime}
+                    onChange={(e) => setNewTimeSlot({ ...newTimeSlot, endTime: e.target.value })}
+                    className="w-full p-3 border border-cream-200/20 rounded-2xl focus:ring-2 focus:ring-accent-green focus:border-transparent bg-black/20 text-cream-50"
+                  />
+                </div>
+              </div>
+
+              {/* Session Type */}
+              <div>
+                <label className="block text-sm font-medium text-cream-200 mb-2">Session Type</label>
+                <select
+                  value={newTimeSlot.sessionType}
+                  onChange={(e) => setNewTimeSlot({ ...newTimeSlot, sessionType: e.target.value as any })}
+                  className="w-full p-3 border border-cream-200/20 rounded-2xl focus:ring-2 focus:ring-accent-green focus:border-transparent bg-black/20 text-cream-50"
+                >
+                  <option value="video">Video Session</option>
+                  <option value="audio">Audio Session</option>
+                  <option value="chat">Chat Session</option>
+                </select>
+              </div>
+
+              {/* Price */}
+              <div>
+                <label className="block text-sm font-medium text-cream-200 mb-2">Price (LKR)</label>
+                <input
+                  type="number"
+                  value={newTimeSlot.price}
+                  onChange={(e) => setNewTimeSlot({ ...newTimeSlot, price: parseInt(e.target.value) })}
+                  className="w-full p-3 border border-cream-200/20 rounded-2xl focus:ring-2 focus:ring-accent-green focus:border-transparent bg-black/20 text-cream-50"
+                  min="0"
+                  step="100"
+                />
+              </div>
+
+              {/* Options */}
+              <div className="space-y-3">
+                <label className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={newTimeSlot.isAvailable}
+                    onChange={(e) => setNewTimeSlot({ ...newTimeSlot, isAvailable: e.target.checked })}
+                    className="w-4 h-4 rounded border-cream-200/30 text-accent-green focus:ring-accent-green focus:ring-offset-0 bg-black/20"
+                  />
+                  <span className="text-cream-50">Available for booking</span>
+                </label>
+
+                <label className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={newTimeSlot.isRecurring}
+                    onChange={(e) => setNewTimeSlot({ ...newTimeSlot, isRecurring: e.target.checked })}
+                    className="w-4 h-4 rounded border-cream-200/30 text-accent-green focus:ring-accent-green focus:ring-offset-0 bg-black/20"
+                  />
+                  <span className="text-cream-50">Recurring weekly</span>
+                </label>
+              </div>
+
+              {/* Actions */}
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => {
+                    setShowTimeSlotModal(false);
+                    setEditingTimeSlot(null);
+                    setNewTimeSlot({
+                      startTime: '09:00',
+                      endTime: '10:00',
+                      isAvailable: true,
+                      isRecurring: false,
+                      sessionType: 'video',
+                      price: 4500
+                    });
+                  }}
+                  className="flex-1 bg-black/40 border border-cream-200/20 text-cream-50 py-3 rounded-2xl hover:bg-black/60 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddTimeSlot}
+                  className="flex-1 bg-accent-green text-black py-3 rounded-2xl hover:bg-accent-green/90 transition-all duration-200 font-medium shadow-lg"
+                >
+                  {editingTimeSlot ? 'Update' : 'Add'} Time Slot
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Calendar Styles */}
+      <style jsx global>{`
+        .react-calendar {
+          background: transparent !important;
+          border: none !important;
+          font-family: inherit !important;
+          color: #FEF9F1 !important;
+        }
+        
+        .react-calendar__navigation {
+          background: rgba(0, 0, 0, 0.2) !important;
+          border: 1px solid rgba(254, 249, 241, 0.1) !important;
+          border-radius: 1rem !important;
+          margin-bottom: 1rem !important;
+          padding: 0.5rem !important;
+        }
+        
+        .react-calendar__navigation button {
+          background: transparent !important;
+          color: #FEF9F1 !important;
+          border: none !important;
+          font-size: 1rem !important;
+          font-weight: 600 !important;
+          padding: 0.75rem 1rem !important;
+          border-radius: 0.75rem !important;
+          transition: all 0.2s !important;
+        }
+        
+        .react-calendar__navigation button:hover {
+          background: rgba(166, 227, 176, 0.1) !important;
+          color: #A6E3B0 !important;
+        }
+        
+        .react-calendar__navigation button:disabled {
+          background: transparent !important;
+          color: rgba(254, 249, 241, 0.3) !important;
+        }
+        
+        .react-calendar__month-view__weekdays {
+          background: rgba(0, 0, 0, 0.2) !important;
+          border: 1px solid rgba(254, 249, 241, 0.1) !important;
+          border-radius: 0.75rem !important;
+          margin-bottom: 0.5rem !important;
+        }
+        
+        .react-calendar__month-view__weekdays__weekday {
+          color: #E9E1D4 !important;
+          font-weight: 600 !important;
+          font-size: 0.875rem !important;
+          padding: 0.75rem 0.25rem !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.05em !important;
+        }
+        
+        .react-calendar__tile {
+          background: rgba(0, 0, 0, 0.2) !important;
+          color: #FEF9F1 !important;
+          border: 1px solid rgba(254, 249, 241, 0.1) !important;
+          border-radius: 0.75rem !important;
+          margin: 0.125rem !important;
+          padding: 0.75rem 0.25rem !important;
+          font-weight: 500 !important;
+          min-height: 3.5rem !important;
+          position: relative !important;
+          transition: all 0.2s !important;
+        }
+        
+        .react-calendar__tile:hover {
+          background: rgba(166, 227, 176, 0.1) !important;
+          border-color: rgba(166, 227, 176, 0.3) !important;
+          transform: translateY(-1px) !important;
+        }
+        
+        .react-calendar__tile--active {
+          background: #A6E3B0 !important;
+          color: #000000 !important;
+          border-color: #A6E3B0 !important;
+          font-weight: 600 !important;
+          box-shadow: 0 4px 12px rgba(166, 227, 176, 0.3) !important;
+        }
+        
+        .react-calendar__tile--now {
+          background: rgba(166, 227, 176, 0.15) !important;
+          border-color: #A6E3B0 !important;
+          color: #A6E3B0 !important;
+        }
+        
+        .react-calendar__tile:disabled {
+          background: rgba(0, 0, 0, 0.1) !important;
+          color: rgba(254, 249, 241, 0.3) !important;
+          border-color: rgba(254, 249, 241, 0.05) !important;
+        }
+        
+        .react-calendar__tile--hasActive {
+          background: rgba(166, 227, 176, 0.2) !important;
+        }
+        
+        @media (max-width: 768px) {
+          .react-calendar__tile {
+            min-height: 3rem !important;
+            padding: 0.5rem 0.125rem !important;
+            font-size: 0.875rem !important;
+            margin: 0.0625rem !important;
+          }
+          
+          .react-calendar__navigation button {
+            font-size: 0.875rem !important;
+            padding: 0.5rem 0.75rem !important;
+          }
+          
+          .react-calendar__month-view__weekdays__weekday {
+            font-size: 0.75rem !important;
+            padding: 0.5rem 0.125rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
