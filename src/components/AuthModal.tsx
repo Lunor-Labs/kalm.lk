@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
 import { Phone, X, Eye, EyeOff, Mail, Lock, User, UserCheck } from 'lucide-react';
-import { signIn, signUp, signUpAnonymous, signInWithGoogle } from '../lib/auth';
+import { 
+  signIn, 
+  signUp, 
+  signUpAnonymous, 
+  signInWithGoogle,
+} from '../lib/auth';
+import { sendPasswordResetEmail } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { auth } from '../lib/firebase';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  mode: 'login' | 'signup' | 'anonymous';
-  onSwitchMode: (mode: 'login' | 'signup' | 'anonymous') => void;
+  mode: 'login' | 'signup' | 'anonymous' | 'forgot';
+  onSwitchMode: (mode: 'login' | 'signup' | 'anonymous' | 'forgot') => void;
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMode }) => {
@@ -45,16 +52,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     };
     let isValid = true;
 
-    // Email/Username validation for login
-    if (mode === 'login') {
-      if (!formData.email) {
-        newErrors.email = 'Email or username is required';
-        isValid = false;
-      }
-    }
-
-    // Email validation for signup
-    if (mode === 'signup') {
+    if (mode === 'login' || mode === 'forgot') {
       if (!formData.email) {
         newErrors.email = 'Email is required';
         isValid = false;
@@ -64,7 +62,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       }
     }
 
-    // Username validation for anonymous mode
     if (mode === 'anonymous') {
       if (!formData.username) {
         newErrors.username = 'Username is required';
@@ -75,7 +72,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       }
     }
 
-    // Display name validation for signup
     if (mode === 'signup') {
       if (!formData.displayName) {
         newErrors.displayName = 'Full name is required';
@@ -83,8 +79,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       }
     }
 
-    // Password validation
-    if (mode === 'login' || mode === 'signup' || mode === 'anonymous') {
+    if (mode !== 'forgot') {
       if (!formData.password) {
         newErrors.password = 'Password is required';
         isValid = false;
@@ -94,7 +89,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       }
     }
 
-    // Confirm password validation
     if (mode === 'signup' || mode === 'anonymous') {
       if (!formData.confirmPassword) {
         newErrors.confirmPassword = 'Please confirm your password';
@@ -121,9 +115,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (mode === 'forgot') {
+      await handleForgotPassword();
       return;
     }
+    
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
 
@@ -132,7 +129,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       
       if (mode === 'login') {
         user = await signIn({
-          email: formData.email, // This can now be either email or username
+          email: formData.email,
           password: formData.password
         });
       } else if (mode === 'signup') {
@@ -151,9 +148,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
       if (user) {
         toast.success('Welcome to Kalm!');
-        onClose(); // Close modal first
-        
-        // Navigate to appropriate dashboard based on user role
+        onClose();
         const redirectPath = getRoleRedirectPath(user.role);
         navigate(redirectPath, { replace: true });
       }
@@ -164,14 +159,30 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await sendPasswordResetEmail(auth, formData.email);
+      toast.success('Password reset email sent. Please check your inbox.');
+      onSwitchMode('login');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send reset email');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setIsSubmitting(true);
     try {
       const user = await signInWithGoogle();
       toast.success('Welcome to Kalm!');
-      onClose(); // Close modal first
-      
-      // Navigate to appropriate dashboard based on user role
+      onClose();
       const redirectPath = getRoleRedirectPath(user.role);
       navigate(redirectPath, { replace: true });
     } catch (error: any) {
@@ -186,7 +197,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       ...formData,
       [e.target.name]: e.target.value
     });
-    // Clear error when user starts typing
     setErrors({
       ...errors,
       [e.target.name]: ''
@@ -212,7 +222,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     });
   };
 
-  const handleModeSwitch = (newMode: 'login' | 'signup' | 'anonymous') => {
+  const handleModeSwitch = (newMode: 'login' | 'signup' | 'anonymous' | 'forgot') => {
     resetForm();
     onSwitchMode(newMode);
   };
@@ -222,6 +232,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       case 'login': return 'Welcome Back';
       case 'signup': return 'Join Kalm';
       case 'anonymous': return 'Join Anonymously';
+      case 'forgot': return 'Reset Your Password';
       default: return 'Join Kalm';
     }
   };
@@ -231,6 +242,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       case 'login': return 'Sign in to continue your wellness journey';
       case 'signup': return 'Create your account and start your mental wellness journey';
       case 'anonymous': return 'Start privately without sharing personal details';
+      case 'forgot': return 'Enter your email to receive a password reset link';
       default: return 'Start your mental wellness journey today';
     }
   };
@@ -279,104 +291,29 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6" noValidate >
-          {mode === 'login' && (
+        <form onSubmit={handleSubmit} className="p-6 space-y-6" noValidate>
+          {(mode === 'login' || mode === 'signup' || mode === 'forgot') && (
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Email or Username
+                Email Address
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
                 <input
-                  type="text"
+                  type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
                   className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
                     errors.email ? 'border-red-500' : 'border-cream-200'
                   }`}
-                  placeholder="Enter your email or username"
+                  placeholder="Enter your email"
                 />
               </div>
               {errors.email && (
                 <p className="text-red-500 text-xs mt-1">{errors.email}</p>
               )}
-              <p className="text-xs text-neutral-500 mt-1">
-                You can sign in with either your email address or username
-              </p>
             </div>
-          )}
-
-          {mode === 'signup' && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                      errors.email ? 'border-red-500' : 'border-cream-200'
-                    }`}
-                    placeholder="Enter your email"
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                  <input
-                    type="text"
-                    name="displayName"
-                    value={formData.displayName}
-                    onChange={handleInputChange}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                      errors.displayName ? 'border-red-500' : 'border-cream-200'
-                    }`}
-                    placeholder="Enter your full name"
-                    required
-                  />
-                </div>
-                {errors.displayName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.displayName}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Phone Number (Optional)
-                </label>
-                <div className="relative flex items-center">
-                  <Phone className="absolute left-3 w-5 h-5 text-neutral-400 z-10" />
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                      errors.phone ? 'border-red-500' : 'border-cream-200'
-                    }`}
-                    placeholder="Enter your phone number"
-                    aria-describedby="phone-error"
-                  />
-                </div>
-                {errors.phone && (
-                  <p id="phone-error" className="text-red-500 text-xs mt-1">{errors.phone}</p>
-                )}
-              </div>
-            </>
           )}
 
           {mode === 'anonymous' && (
@@ -397,49 +334,95 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   placeholder="Choose a unique username"
                 />
               </div>
-              {errors.username ? (
+              {errors.username && (
                 <p className="text-red-500 text-xs mt-1">{errors.username}</p>
-              ) : (
-                <p className="text-xs text-neutral-500 mt-1">
-                  This will be your unique identifier. Choose something memorable!
-                </p>
               )}
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className={`w-full pl-10 pr-12 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                  errors.password ? 'border-red-500' : 'border-cream-200'
-                }`}
-                placeholder="Enter your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+          {mode === 'signup' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <input
+                    type="text"
+                    name="displayName"
+                    value={formData.displayName}
+                    onChange={handleInputChange}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                      errors.displayName ? 'border-red-500' : 'border-cream-200'
+                    }`}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                {errors.displayName && (
+                  <p className="text-red-500 text-xs mt-1">{errors.displayName}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Phone Number (Optional)
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                      errors.phone ? 'border-red-500' : 'border-cream-200'
+                    }`}
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+                {errors.phone && (
+                  <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                )}
+              </div>
+            </>
+          )}
+
+          {mode !== 'forgot' && (
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className={`w-full pl-10 pr-12 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                    errors.password ? 'border-red-500' : 'border-cream-200'
+                  }`}
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+              )}
+              {mode === 'anonymous' && (
+                <p className="text-xs text-amber-600 mt-1">
+                  ⚠️ Remember your password! Anonymous accounts cannot recover forgotten passwords.
+                </p>
+              )}
             </div>
-            {errors.password ? (
-              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-            ) : mode === 'anonymous' && (
-              <p className="text-xs text-amber-600 mt-1 flex items-start space-x-1">
-                <span>⚠️</span>
-                <span>Important: Remember your password! Anonymous accounts cannot recover forgotten passwords.</span>
-              </p>
-            )}
-          </div>
+          )}
 
           {(mode === 'signup' || mode === 'anonymous') && (
             <div>
@@ -471,13 +454,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                 <input type="checkbox" className="rounded border-cream-200 text-primary-500 focus:ring-primary-500" />
                 <span className="ml-2 text-sm text-neutral-600">Remember me</span>
               </label>
-              <button type="button" className="text-sm text-primary-500 hover:text-primary-600">
+              <button 
+                type="button" 
+                onClick={() => handleModeSwitch('forgot')}
+                className="text-sm text-primary-500 hover:text-primary-600"
+              >
                 Forgot password?
               </button>
             </div>
           )}
 
-          {mode === 'signup' && (
+          {(mode === 'signup' || mode === 'anonymous') && (
             <div className="flex items-start space-x-3">
               <input 
                 type="checkbox" 
@@ -493,36 +480,25 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
             </div>
           )}
 
-          {mode === 'anonymous' && (
-            <div className="flex items-start space-x-3">
-              <input 
-                type="checkbox" 
-                className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
-                required
-              />
-              <p className="text-sm text-neutral-600">
-                I agree to the{' '}
-                <a href="#" className="text-primary-500 hover:text-primary-600">Terms of Service</a>
-                {' '}and understand that anonymous accounts have limited recovery options
-              </p>
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={isSubmitting}
             className={`w-full py-3 rounded-2xl font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
               mode === 'anonymous' 
                 ? 'bg-accent-green text-white hover:bg-accent-green/90'
-                : 'bg-primary-500 text-white hover:bg-primary-600'
+                : mode === 'forgot'
+                  ? 'bg-blue-500 text-white hover:bg-blue-600'
+                  : 'bg-primary-500 text-white hover:bg-primary-600'
             }`}
           >
             {isSubmitting ? 'Please wait...' : 
              mode === 'login' ? 'Sign In' : 
-             mode === 'anonymous' ? 'Create Anonymous Account' : 'Create Account'}
+             mode === 'signup' ? 'Create Account' :
+             mode === 'forgot' ? 'Send Reset Link' :
+             'Create Anonymous Account'}
           </button>
 
-          {mode !== 'anonymous' && (
+          {(mode === 'login' || mode === 'signup') && (
             <>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -553,30 +529,59 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
         <div className="p-6 border-t border-cream-100 text-center">
           <div className="space-y-2">
-            <p className="text-neutral-600">
-              {mode === 'login' ? "Don't have an account?" : "Already have an account?"}
-              {' '}
-              <button
-                onClick={() => handleModeSwitch(mode === 'login' ? 'signup' : 'login')}
-                className="text-primary-500 hover:text-primary-600 font-medium"
-              >
-                {mode === 'login' ? 'Sign up' : 'Sign in'}
-              </button>
-            </p>
-            
-            {mode !== 'anonymous' && (
+            {mode === 'forgot' ? (
               <p className="text-neutral-600">
-                Want complete privacy?{' '}
+                Remember your password?{' '}
                 <button
-                  onClick={() => handleModeSwitch('anonymous')}
-                  className="text-accent-green hover:text-accent-green/80 font-medium"
+                  onClick={() => handleModeSwitch('login')}
+                  className="text-primary-500 hover:text-primary-600 font-medium"
                 >
-                  Join anonymously
+                  Sign in
                 </button>
               </p>
-            )}
-            
-            {mode === 'anonymous' && (
+            ) : mode === 'login' ? (
+              <>
+                <p className="text-neutral-600">
+                  Don't have an account?{' '}
+                  <button
+                    onClick={() => handleModeSwitch('signup')}
+                    className="text-primary-500 hover:text-primary-600 font-medium"
+                  >
+                    Sign up
+                  </button>
+                </p>
+                <p className="text-neutral-600">
+                  Want complete privacy?{' '}
+                  <button
+                    onClick={() => handleModeSwitch('anonymous')}
+                    className="text-accent-green hover:text-accent-green/80 font-medium"
+                  >
+                    Join anonymously
+                  </button>
+                </p>
+              </>
+            ) : mode === 'signup' ? (
+              <>
+                <p className="text-neutral-600">
+                  Already have an account?{' '}
+                  <button
+                    onClick={() => handleModeSwitch('login')}
+                    className="text-primary-500 hover:text-primary-600 font-medium"
+                  >
+                    Sign in
+                  </button>
+                </p>
+                <p className="text-neutral-600">
+                  Want complete privacy?{' '}
+                  <button
+                    onClick={() => handleModeSwitch('anonymous')}
+                    className="text-accent-green hover:text-accent-green/80 font-medium"
+                  >
+                    Join anonymously
+                  </button>
+                </p>
+              </>
+            ) : (
               <p className="text-neutral-600">
                 Want full features?{' '}
                 <button
