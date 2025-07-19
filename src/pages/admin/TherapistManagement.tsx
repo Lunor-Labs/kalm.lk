@@ -31,7 +31,8 @@ import {
   doc, 
   query, 
   orderBy,
-  serverTimestamp 
+  serverTimestamp,
+  setDoc
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { db, auth } from '../../lib/firebase';
@@ -273,8 +274,16 @@ const TherapistManagement: React.FC = () => {
           displayName: `${formData.firstName} ${formData.lastName}`
         });
         
-        // Update user role to therapist
-        await updateUserRole(user.uid, 'therapist');
+        // Create user document in Firestore first
+        await setDoc(doc(db, 'users', user.uid), {
+          uid: user.uid,
+          email: user.email,
+          displayName: `${formData.firstName} ${formData.lastName}`,
+          role: 'therapist',
+          isAnonymous: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
         
         // Create therapist document
         const therapistData = {

@@ -302,43 +302,49 @@ export const updateUserProfile = async (uid: string, updates: Partial<User>): Pr
 // Admin function to update user role
 export const updateUserRole = async (uid: string, newRole: UserRole): Promise<void> => {
   try {
-    await updateDoc(doc(db, 'users', uid), {
+    // Check if user document exists first
+    const userDocRef = doc(db, 'users', uid);
+    const userDoc = await getDoc(userDocRef);
+    
+    if (!userDoc.exists()) {
+      throw new Error('User document not found. Cannot update role.');
+    }
+    
+    // Update the user role
+    await updateDoc(userDocRef, {
       role: newRole,
       updatedAt: serverTimestamp(),
     });
 
     // If promoting to therapist, create therapist profile
     if (newRole === 'therapist') {
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
+      const userData = userDoc.data();
+      
+      // Create therapist document with placeholder values
+      const therapistData = {
+        id: uid,
+        userId: uid,
+        firstName: userData.displayName?.split(' ')[0] || 'First',
+        lastName: userData.displayName?.split(' ')[1] || 'Last',
+        email: userData.email,
+        credentials: ['Licensed Therapist'],
+        specializations: ['General Counseling'],
+        languages: ['English'],
+        services: ['Individual Therapy'],
+        isAvailable: false,
+        sessionFormats: ['video'],
+        bio: 'Professional therapist ready to help you on your wellness journey.',
+        experience: 1,
+        rating: 5.0,
+        reviewCount: 0,
+        hourlyRate: 4500,
+        profilePhoto: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
+        nextAvailableSlot: 'Please set availability',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
         
-        // Create therapist document with placeholder values
-        const therapistData = {
-          id: uid,
-          userId: uid,
-          firstName: userData.displayName?.split(' ')[0] || 'First',
-          lastName: userData.displayName?.split(' ')[1] || 'Last',
-          email: userData.email,
-          credentials: ['Licensed Therapist'],
-          specializations: ['General Counseling'],
-          languages: ['English'],
-          services: ['Individual Therapy'],
-          isAvailable: false,
-          sessionFormats: ['video'],
-          bio: 'Professional therapist ready to help you on your wellness journey.',
-          experience: 1,
-          rating: 5.0,
-          reviewCount: 0,
-          hourlyRate: 4500,
-          profilePhoto: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
-          nextAvailableSlot: 'Please set availability',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
-        
-        await setDoc(doc(db, 'therapists', uid), therapistData);
-      }
+      await setDoc(doc(db, 'therapists', uid), therapistData);
     }
   } catch (error: any) {
     throw new Error(error.message || 'Failed to update user role');
