@@ -26,11 +26,12 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
   const [filters, setFilters] = useState<SimpleFilters>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'specialty' | 'availability'>('name');
-  const [useFirebaseData, setUseFirebaseData] = useState(false);
+  // const [useFirebaseData, setUseFirebaseData] = useState(false);
 
   // Use the custom hook to fetch therapists
+  // Always use Firebase/live data
   const { therapists: allTherapists, loading, error, refetch } = useTherapists({
-    useFirebase: useFirebaseData
+    useFirebase: true
   });
 
   // Scroll to top when component mounts
@@ -145,11 +146,11 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
     }
   };
 
-  const handleDataSourceToggle = () => {
-    setUseFirebaseData(!useFirebaseData);
-    // Clear filters when switching data sources
-    clearFilters();
-  };
+  // const handleDataSourceToggle = () => {
+  //   setUseFirebaseData(!useFirebaseData);
+  //   // Clear filters when switching data sources
+  //   clearFilters();
+  // };
 
   return (
     <div className="min-h-screen bg-neutral-900 relative">
@@ -185,7 +186,8 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
 
             {/* Data Source Toggle & Sort Options */}
             <div className="hidden md:flex items-center space-x-4">
-              {/* Data Source Toggle */}
+              {/* Data Source Toggle (commented out) */}
+              {/**
               <div className="flex items-center space-x-2 bg-black/50 border border-neutral-700 rounded-2xl p-1">
                 <button
                   onClick={handleDataSourceToggle}
@@ -210,6 +212,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
                   <span>Live</span>
                 </button>
               </div>
+              */}
 
               {/* Refresh Button */}
               <button
@@ -237,7 +240,8 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
             </div>
           </div>
 
-          {/* Data Source Info */}
+          {/* Data Source Info (commented out) */}
+          {/**
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
@@ -257,16 +261,18 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
                 </div>
               )}
             </div>
-
+            
             <div className="text-sm text-neutral-300">
               <span className="font-medium text-white">{filteredTherapists.length}</span> therapist{filteredTherapists.length !== 1 ? 's' : ''} found
             </div>
           </div>
+          */}
         </div>
 
         {/* Mobile Controls */}
         <div className="md:hidden mb-6 space-y-4">
-          {/* Mobile Data Source Toggle */}
+          {/* Mobile Data Source Toggle (commented out) */}
+          {/**
           <div className="flex items-center justify-center">
             <div className="flex items-center space-x-2 bg-black/50 border border-neutral-700 rounded-2xl p-1">
               <button
@@ -293,6 +299,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
               </button>
             </div>
           </div>
+          */}
 
           {/* Mobile Sort */}
           <select
@@ -402,7 +409,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
               <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-white">Loading therapists...</p>
               <p className="text-neutral-400 text-sm mt-2">
-                {useFirebaseData ? 'Fetching from Firebase...' : 'Loading demo data...'}
+                {'Fetching from Firebase...'}
               </p>
             </div>
           </div>
@@ -426,10 +433,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
             </div>
             <h3 className="text-xl font-semibold text-white mb-2">No therapists found</h3>
             <p className="text-neutral-300 mb-6">
-              {useFirebaseData 
-                ? 'No therapists have been added to Firebase yet. Try switching to demo data or add therapists through the admin panel.'
-                : 'Try adjusting your search criteria or filters to find more therapists.'
-              }
+              {'No therapists have been added to Firebase yet. Add therapists through the admin panel.'}
             </p>
             <div className="flex items-center justify-center space-x-4">
               <button
@@ -438,6 +442,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
               >
                 Clear All Filters
               </button>
+              {/**
               {useFirebaseData && (
                 <button
                   onClick={() => setUseFirebaseData(false)}
@@ -446,6 +451,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
                   Switch to Demo Data
                 </button>
               )}
+              */}
             </div>
           </div>
         ) : null}

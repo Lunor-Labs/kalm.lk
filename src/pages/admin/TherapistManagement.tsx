@@ -6,13 +6,20 @@ import {
   Eye, EyeOff, ArrowLeft, Calendar, DollarSign, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { 
-  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, 
-  query, orderBy, serverTimestamp, 
+  collection, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  query, 
+  orderBy,
+  serverTimestamp,
+  setDoc
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { db, auth } from '../../lib/firebase';
 import { uploadTherapistPhoto, deleteTherapistPhoto, getStoragePathFromUrl, validateImageFile } from '../../lib/storage';
-import { updateUserRole } from '../../lib/auth';
 import toast from 'react-hot-toast';
 
 interface Therapist {
@@ -273,8 +280,16 @@ const TherapistManagement: React.FC = () => {
           displayName: `${formData.firstName} ${formData.lastName}`
         });
         
-        // Update user role to therapist
-        await updateUserRole(user.uid, 'therapist');
+        // Create user document in Firestore first
+        await setDoc(doc(db, 'users', user.uid), {
+          uid: user.uid,
+          email: user.email,
+          displayName: `${formData.firstName} ${formData.lastName}`,
+          role: 'therapist',
+          isAnonymous: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
         
         // Create therapist document
         const therapistData = {

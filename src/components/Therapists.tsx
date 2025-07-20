@@ -13,11 +13,12 @@ interface TherapistsProps {
 const Therapists: React.FC<TherapistsProps> = ({ onViewAllTherapists, onOpenAuth }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [useFirebaseData, setUseFirebaseData] = useState(false);
+  // const [useFirebaseData, setUseFirebaseData] = useState(false);
 
   // Use the custom hook to fetch therapists
+  // Always use Firebase/live data
   const { therapists: allTherapists, loading, error } = useTherapists({
-    useFirebase: useFirebaseData
+    useFirebase: true
   });
 
   // Show first 4 therapists for the landing page
@@ -58,6 +59,8 @@ const Therapists: React.FC<TherapistsProps> = ({ onViewAllTherapists, onOpenAuth
             </h2>
             
             {/* Data Source Toggle */}
+            {/* Data Source Toggle (commented out) */}
+            {/**
             <div className="flex items-center space-x-2 bg-black/50 border border-neutral-700 rounded-2xl p-1">
               <button
                 onClick={() => setUseFirebaseData(false)}
@@ -82,6 +85,7 @@ const Therapists: React.FC<TherapistsProps> = ({ onViewAllTherapists, onOpenAuth
                 <span>Live</span>
               </button>
             </div>
+            */}
           </div>
           
           <p className="text-base lg:text-lg text-neutral-300 max-w-3xl mx-auto leading-relaxed">
@@ -89,6 +93,8 @@ const Therapists: React.FC<TherapistsProps> = ({ onViewAllTherapists, onOpenAuth
           </p>
           
           {/* Data Source Info */}
+          {/* Data Source Info (commented out) */}
+          {/**
           <div className="flex items-center justify-center space-x-3 mt-4">
             <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
               useFirebaseData 
@@ -107,6 +113,7 @@ const Therapists: React.FC<TherapistsProps> = ({ onViewAllTherapists, onOpenAuth
               </div>
             )}
           </div>
+          */}
         </div>
 
         {loading ? (
@@ -147,11 +154,9 @@ const Therapists: React.FC<TherapistsProps> = ({ onViewAllTherapists, onOpenAuth
             </div>
             <h3 className="text-xl font-semibold text-white mb-2">No therapists available</h3>
             <p className="text-neutral-300 mb-6">
-              {useFirebaseData 
-                ? 'No therapists have been added to Firebase yet. Try switching to demo data.'
-                : 'Demo data is not available.'
-              }
+              {'No therapists have been added to Firebase yet.'}
             </p>
+            {/**
             {useFirebaseData && (
               <button
                 onClick={() => setUseFirebaseData(false)}
@@ -160,6 +165,7 @@ const Therapists: React.FC<TherapistsProps> = ({ onViewAllTherapists, onOpenAuth
                 Switch to Demo Data
               </button>
             )}
+            */}
           </div>
         )}
       </div>
