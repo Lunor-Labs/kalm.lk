@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, } from 'react';
 import { Phone, X, Eye, EyeOff, Mail, Lock, User, UserCheck } from 'lucide-react';
 import { signIn, signUp, signUpAnonymous, signInWithGoogle } from '../lib/auth';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +21,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     phone: '',
     password: '',
     confirmPassword: '',
-    displayName: ''
+    displayName: '',
+    agreedToTerms: false
   });
   const [errors, setErrors] = useState({
     email: '',
@@ -29,8 +30,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     phone: '',
     password: '',
     confirmPassword: '',
-    displayName: ''
+    displayName: '',
+    agreedToTerms: ''
   });
+
 
   if (!isOpen) return null;
 
@@ -41,7 +44,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       phone: '',
       password: '',
       confirmPassword: '',
-      displayName: ''
+      displayName: '',
+      agreedToTerms: ''
     };
     let isValid = true;
 
@@ -103,6 +107,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
         newErrors.confirmPassword = 'Passwords do not match';
         isValid = false;
       }
+    }
+
+    // Terms agreement validation for signup and anonymous
+    if ((mode === 'signup' || mode === 'anonymous') && !formData.agreedToTerms) {
+      newErrors.agreedToTerms = 'You must agree to the terms';
+      isValid = false;
     }
 
     setErrors(newErrors);
@@ -182,14 +192,29 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, type, checked, value } = e.target;
+
+    if (name === 'phone') {
+      const numericValue = value.replace(/\D/g, '');
+      setFormData({
+        ...formData,
+        [name]: numericValue
+      });
+      setErrors({
+        ...errors,
+        [name]: ''
+      });
+      return;
+    }
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: type === 'checkbox' ? checked : value
     });
-    // Clear error when user starts typing
+    // Clear error when user starts typing or toggling checkbox
     setErrors({
       ...errors,
-      [e.target.name]: ''
+      [name]: ''
     });
   };
 
@@ -200,7 +225,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       phone: '',
       password: '',
       confirmPassword: '',
-      displayName: ''
+      displayName: '',
+      agreedToTerms: false
     });
     setErrors({
       email: '',
@@ -208,7 +234,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       phone: '',
       password: '',
       confirmPassword: '',
-      displayName: ''
+      displayName: '',
+      agreedToTerms: ''
     });
   };
 
@@ -481,6 +508,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
             <div className="flex items-start space-x-3">
               <input 
                 type="checkbox" 
+                name="agreedToTerms"
+                checked={formData.agreedToTerms}
+                onChange={handleInputChange}
                 className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
                 required
               />
@@ -490,6 +520,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                 {' '}and{' '}
                 <a href="#" className="text-primary-500 hover:text-primary-600">Privacy Policy</a>
               </p>
+              {errors.agreedToTerms && (
+                <p className="text-red-500 text-xs mt-1">{errors.agreedToTerms}</p>
+              )}
             </div>
           )}
 
@@ -497,6 +530,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
             <div className="flex items-start space-x-3">
               <input 
                 type="checkbox" 
+                name="agreedToTerms"
+                checked={formData.agreedToTerms}
+                onChange={handleInputChange}
                 className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
                 required
               />
@@ -505,6 +541,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                 <a href="#" className="text-primary-500 hover:text-primary-600">Terms of Service</a>
                 {' '}and understand that anonymous accounts have limited recovery options
               </p>
+              {errors.agreedToTerms && (
+                <p className="text-red-500 text-xs mt-1">{errors.agreedToTerms}</p>
+              )}
             </div>
           )}
 
