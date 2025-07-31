@@ -7,7 +7,7 @@ interface ServicesProps {
 const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
   const services = [
     {
-      image: "/kalm.lk/Teen.jpg?auto=compress&cs=tinysrgb&w=800",
+      image: "Teen.jpg?auto=compress&cs=tinysrgb&w=800",
       imageAlt: "Teenager in a thoughtful pose",
       title: "TEENS",
       subtitle: "(13-17)",
@@ -17,7 +17,7 @@ const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
       category: "TEENS"
     },
     {
-      image: "/kalm.lk/Individual.jpg?auto=compress&cs=tinysrgb&w=800",
+      image: "Individual.jpg?auto=compress&cs=tinysrgb&w=800",
       imageAlt: "Adult in a calm, reflective setting",
       title: "INDIVIDUALS",
       subtitle: "(18+)",
@@ -27,7 +27,7 @@ const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
       category: "INDIVIDUALS"
     },
     {
-      image: "/kalm.lk/Family.jpg?auto=compress&cs=tinysrgb&w=800",
+      image: "Family.jpg?auto=compress&cs=tinysrgb&w=800",
       imageAlt: "Family or couple sharing a warm moment",
       title: "FAMILY & COUPLES",
       subtitle: "(FOR US)",
@@ -37,7 +37,7 @@ const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
       category: "FAMILY & COUPLES"
     },
     {
-      image: "/kalm.lk/LGBTQ.jpg?auto=compress&cs=tinysrgb&w=800",
+      image: "LGBTQ.jpg?auto=compress&cs=tinysrgb&w=800",
       imageAlt: "Inclusive scene with rainbow elements",
       title: "LGBTQIA+",
       subtitle: "",

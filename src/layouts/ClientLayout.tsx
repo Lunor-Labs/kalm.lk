@@ -65,7 +65,7 @@ const ClientLayout: React.FC = () => {
           <div className="flex items-center justify-between p-6 border-b border-neutral-800">
             <div className="flex items-center space-x-2">
               <img 
-                src="/kalm.lk/logo.jpg" 
+                src="logo.jpg" 
                 alt="Kalm Logo" 
                 className="w-8 h-8 rounded-lg"
               />

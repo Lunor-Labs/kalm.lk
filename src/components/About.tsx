@@ -69,7 +69,7 @@ const About: React.FC = () => {
 
           <div className="relative">
             <img
-              src="/kalm.lk/About Calm.jpg?auto=compress&cs=tinysrgb&w=800"
+              src="About Calm.jpg?auto=compress&cs=tinysrgb&w=800"
               alt="Supportive therapy session"
               className="w-full h-80 lg:h-96 object-cover rounded-3xl shadow-2xl"
             />
