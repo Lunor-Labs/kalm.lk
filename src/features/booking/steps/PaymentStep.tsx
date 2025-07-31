@@ -3,6 +3,7 @@ import { ArrowLeft, CreditCard, Shield, CheckCircle, Video, MessageCircle, Phone
 import { BookingData } from '../../../types/booking';
 import { createSession } from '../../../lib/sessions';
 import { useAuth } from '../../../contexts/AuthContext';
+import { initiatePayHerePayment } from '../../../lib/payhere';
 import toast from 'react-hot-toast';
 
 interface PaymentStepProps {
@@ -30,29 +31,55 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     setProcessing(true);
 
     try {
-      // In a real app, this would integrate with PayHere
-      // For demo purposes, we'll simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Calculate final amount with session type discount
+      const sessionTypeDiscount = sessionType === 'audio' ? 500 : sessionType === 'chat' ? 1000 : 0;
+      const finalAmount = totalAmount - sessionTypeDiscount;
       
-      // Create the session in Firebase after successful payment
-      const sessionId = await createSession({
-        bookingId: `booking-${Date.now()}`, // In real app, this would come from the booking
-        therapistId: bookingData.therapistId,
-        clientId: user.uid,
-        sessionType: sessionType,
-        status: 'scheduled',
-        scheduledTime: bookingData.sessionTime,
-        duration: bookingData.duration || 60,
-      });
+      // Prepare payment data for PayHere
+      const paymentData = {
+        amount: finalAmount,
+        currency: 'LKR' as const,
+        orderId: `kalm-${Date.now()}-${user.uid.slice(-6)}`,
+        items: `${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Therapy Session`,
+        firstName: user.displayName?.split(' ')[0] || 'User',
+        lastName: user.displayName?.split(' ')[1] || '',
+        email: user.email || 'user@kalm.lk',
+        phone: '0771234567', // You might want to get this from user profile
+        address: 'Colombo',
+        city: 'Colombo',
+        country: 'Sri Lanka' as const,
+        deliveryAddress: 'Colombo',
+        deliveryCity: 'Colombo',
+        deliveryCountry: 'Sri Lanka' as const,
+        custom1: bookingData.therapistId,
+        custom2: sessionType
+      };
 
-      toast.success('Payment successful! Session booked.');
-      console.log('Session created with ID:', sessionId);
+      // Initiate PayHere payment
+      const paymentResult = await initiatePayHerePayment(paymentData);
       
-      // Simulate successful payment
-      onPaymentComplete();
+      if (paymentResult.success) {
+        // Create the session in Firebase after successful payment
+        const sessionId = await createSession({
+          bookingId: paymentResult.orderId || `booking-${Date.now()}`,
+          therapistId: bookingData.therapistId,
+          clientId: user.uid,
+          sessionType: sessionType,
+          status: 'scheduled',
+          scheduledTime: bookingData.sessionTime,
+          duration: bookingData.duration || 60,
+        });
+
+        toast.success('Payment successful! Session booked.');
+        console.log('Session created with ID:', sessionId);
+        
+        onPaymentComplete();
+      } else {
+        throw new Error(paymentResult.error || 'Payment failed');
+      }
     } catch (error: any) {
       console.error('Payment failed:', error);
-      toast.error('Payment failed. Please try again.');
+      toast.error(error.message || 'Payment failed. Please try again.');
       setProcessing(false);
     }
   };
