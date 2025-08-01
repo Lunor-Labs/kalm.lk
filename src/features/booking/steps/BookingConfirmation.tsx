@@ -331,7 +331,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           </div>
 
           {/* Session Type Info */}
-          <div className="bg-primary-500/10 border border-primary-500/20 rounded-2xl p-4">
+          {/* <div className="bg-primary-500/10 border border-primary-500/20 rounded-2xl p-4">
             <div className="flex items-start space-x-3">
               {getSessionTypeIcon(sessionType)}
               <div>
@@ -343,7 +343,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Confirm Button */}
           <button
