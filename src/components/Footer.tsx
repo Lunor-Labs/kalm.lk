@@ -1,7 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Instagram, Mail, Phone, MapPin, Facebook, Youtube } from 'lucide-react';
 
 const Footer: React.FC = () => {
+   const navigate = useNavigate();
+
+     const navigateToPage = (path: string) => {
+    navigate(path);
+    window.scrollTo(0, 0);
+  };
   return (
     <footer className="bg-black text-white relative">
       {/* Grain texture overlay */}
@@ -108,24 +115,36 @@ const Footer: React.FC = () => {
             <h4 className="text-base font-semibold mb-4">Legal</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
+                <button 
+                  onClick={() => navigateToPage('/privacy-policy')}
+                  className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
+                >
                   Privacy Policy
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
+                <button 
+                  onClick={() => navigateToPage('/terms-of-service')}
+                  className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
+                >
                   Terms of Service
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
-                  Cookie Policy
-                </a>
+                <button 
+                  onClick={() => navigateToPage('/refund-policy')}
+                  className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
+                >
+                  Refund Policy
+                </button>
               </li>
               <li>
-                <a href="#" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
+                <button 
+                  onClick={() => navigateToPage('/terms-of-service')}
+                  className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
+                >
                   Disclaimer
-                </a>
+                </button>
               </li>
             </ul>
           </div>

@@ -44,6 +44,11 @@ import SessionRoom from './components/session/SessionRoom';
 // Booking Flow
 import BookingFlow from './features/booking/BookingFlow';
 
+// Legal Pages
+import TermsOfService from './pages/legal/TermsOfService';
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import RefundPolicy from './pages/legal/RefundPolicy';
+
 // Landing Page Component (unchanged)
 const LandingPage: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = React.useState(false);
@@ -115,6 +120,11 @@ function App() {
             
             {/* Auth Routes */}
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+            {/* Legal Pages */}
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
             
             {/* Admin Routes */}
             <Route path="/admin/*" element={
