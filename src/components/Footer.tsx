@@ -71,7 +71,7 @@ const Footer: React.FC = () => {
                 </svg>
               </a>
               <a
-                href="mailto:hello@kalm.lk"
+                href="mailto:team@kalm.lk"
                 className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-primary-500 transition-colors duration-200"
                 aria-label="Email us"
               >
@@ -83,29 +83,61 @@ const Footer: React.FC = () => {
           {/* Spacer column for larger gap - hidden on mobile */}
           <div className="lg:col-span-1 hidden lg:block"></div>
 
-          {/* Quick Links - Mobile: centered, Desktop: original */}
+           {/* Quick Links - Mobile: centered, Desktop: original */}
           <div className="lg:col-span-1 text-center md:text-left">
             <h4 className="text-base font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <a href="#about" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
+                <button 
+                  onClick={() => {
+                    const aboutSection = document.getElementById('about');
+                    if (aboutSection) {
+                      aboutSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
+                >
                   About Us
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#services" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
+                <button 
+                  onClick={() => {
+                    const servicesSection = document.getElementById('services');
+                    if (servicesSection) {
+                      servicesSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
+                >
                   Services
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#therapists" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
+                <button 
+                  onClick={() => {
+                    const therapistsSection = document.getElementById('therapists');
+                    if (therapistsSection) {
+                      therapistsSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
+                >
                   Our Therapists
-                </a>
+                </button>
               </li>
               <li>
-                <a href="#faq" className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm">
+                <button 
+                  onClick={() => {
+                    const faqSection = document.getElementById('faq');
+                    if (faqSection) {
+                      faqSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
+                >
                   FAQ
-                </a>
+                </button>
               </li>
             </ul>
           </div>
@@ -156,7 +188,7 @@ const Footer: React.FC = () => {
               <div className="flex items-start space-x-2 justify-center md:justify-start">
                 <Mail className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-neutral-400 text-sm">hello@kalm.lk</p>
+                  <p className="text-neutral-400 text-sm">team@kalm.lk</p>
                 </div>
               </div>
               <div className="flex items-start space-x-2 justify-center md:justify-start">
