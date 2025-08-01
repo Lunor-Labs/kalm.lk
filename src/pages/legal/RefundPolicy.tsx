@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, CreditCard, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Database, ArrowLeft, CreditCard, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const RefundPolicy: React.FC = () => {
