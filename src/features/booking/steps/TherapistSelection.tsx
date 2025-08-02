@@ -16,7 +16,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
   onTherapistSelect,
   onBack
 }) => {
-  const [useFirebaseData, setUseFirebaseData] = useState(false);
+  const [useFirebaseData, setUseFirebaseData] = useState(true);
   
   // Use the custom hook to fetch therapists
   const { therapists, loading, error } = useTherapists({
@@ -59,6 +59,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
         
         <div className="flex items-center space-x-4">
           {/* Data Source Toggle */}
+          {/*)
           <div className="flex items-center space-x-2 bg-black/50 border border-neutral-700 rounded-2xl p-1">
             <button
               onClick={() => setUseFirebaseData(false)}
@@ -83,6 +84,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
               <span>Live</span>
             </button>
           </div>
+          */}
           
           <button
             onClick={onBack}
@@ -96,16 +98,20 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
 
       {/* Data Source Info */}
       <div className="flex items-center justify-between mb-6">
+        {/* 
         <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
           useFirebaseData 
             ? 'bg-primary-500/20 text-primary-500 border border-primary-500/30'
             : 'bg-accent-yellow/20 text-accent-yellow border border-accent-yellow/30'
         }`}>
           {useFirebaseData ? <Database className="w-4 h-4" /> : <HardDrive className="w-4 h-4" />}
+         }
           <span>
             {useFirebaseData ? 'Live Data from Firebase' : 'Demo Data'}
           </span>
+          
         </div>
+        */}
         
         {error && (
           <div className="flex items-center space-x-2 px-3 py-1 rounded-full text-sm bg-red-500/20 text-red-400 border border-red-500/30">

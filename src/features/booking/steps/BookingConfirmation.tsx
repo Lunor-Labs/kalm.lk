@@ -196,51 +196,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             )}
           </div>
 
-          {/* Session Type Selection */}
-          <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
-            <h3 className="text-lg font-semibold text-white mb-4">Session Type</h3>
-            <div className="space-y-3">
-              {[
-                { type: 'video' as const, label: 'Video Session', price: 0 },
-                { type: 'audio' as const, label: 'Audio Session', price: -500 },
-                { type: 'chat' as const, label: 'Chat Session', price: -1000 }
-              ].map((option) => (
-                <label
-                  key={option.type}
-                  className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                    sessionType === option.type
-                      ? 'border-primary-500 bg-primary-500/10'
-                      : 'border-neutral-700 hover:border-neutral-600'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      name="sessionType"
-                      value={option.type}
-                      checked={sessionType === option.type}
-                      onChange={(e) => setSessionType(e.target.value as any)}
-                      className="sr-only"
-                    />
-                    {getSessionTypeIcon(option.type)}
-                    <div>
-                      <p className="text-white font-medium">{option.label}</p>
-                      <p className="text-neutral-400 text-sm">{getSessionTypeDescription(option.type)}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    {option.price === 0 ? (
-                      <span className="text-neutral-300">Included</span>
-                    ) : (
-                      <span className="text-accent-green">
-                        {option.price > 0 ? '+' : ''}LKR {option.price.toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
+          
         </div>
 
         {/* Payment Summary */}
@@ -285,8 +241,55 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             )}
           </div> */}
 
+          {/* Session Type Selection */}
+          <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
+            <h3 className="text-lg font-semibold text-white mb-4">Session Type</h3>
+            <div className="space-y-3">
+              {[
+                { type: 'video' as const, label: 'Video Session', price: 0 },
+                { type: 'audio' as const, label: 'Audio Session', price: -500 },
+                { type: 'chat' as const, label: 'Chat Session', price: -1000 }
+              ].map((option) => (
+                <label
+                  key={option.type}
+                  className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                    sessionType === option.type
+                      ? 'border-primary-500 bg-primary-500/10'
+                      : 'border-neutral-700 hover:border-neutral-600'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="radio"
+                      name="sessionType"
+                      value={option.type}
+                      checked={sessionType === option.type}
+                      onChange={(e) => setSessionType(e.target.value as any)}
+                      className="sr-only"
+                    />
+                    {getSessionTypeIcon(option.type)}
+                    <div>
+                      <p className="text-white font-medium">{option.label}</p>
+                      <p className="text-neutral-400 text-sm">{getSessionTypeDescription(option.type)}</p>
+                    </div>
+                  </div>
+                  {/*<div className="text-right">
+                    {option.price === 0 ? (
+                      <span className="text-neutral-300">Included</span>
+                    ) : (
+                      <span className="text-accent-green">
+                        {option.price > 0 ? '+' : ''}LKR {option.price.toLocaleString()}
+                      </span>
+                    )}
+                  </div>*/}
+                </label>
+              ))}
+            </div>
+          </div>
+
           {/* Payment Summary */}
           <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
+          
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
               <CreditCard className="w-5 h-5" />
               <span>Payment Summary</span>
@@ -346,6 +349,49 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           </div> */}
 
           {/* Confirm Button */}
+          {/* Cancellation Policy */}
+          {/*
+          <div className="bg-accent-orange/10 border border-accent-orange/20 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+              <Clock className="w-5 h-5" />
+              <span>Cancellation Policy</span>
+            </h3>
+            
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start space-x-3">
+                <div className="w-2 h-2 bg-accent-green rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <p className="text-white font-medium">100% Refund</p>
+                  <p className="text-neutral-300">Cancel more than 24 hours before session</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-2 h-2 bg-accent-yellow rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <p className="text-white font-medium">50% Refund</p>
+                  <p className="text-neutral-300">Cancel 12-24 hours before session</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <p className="text-white font-medium">No Refund</p>
+                  <p className="text-neutral-300">Cancel less than 12 hours before session or no-show</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 p-3 bg-black/30 rounded-xl border border-neutral-700">
+              <p className="text-neutral-300 text-xs">
+                <strong>Emergency Cancellations:</strong> Medical emergencies and unforeseen circumstances 
+                will be reviewed individually. Contact support for assistance.
+              </p>
+            </div>
+          </div>
+          */}
+
           <button
             onClick={onConfirm}
             className="w-full bg-primary-500 text-white py-4 rounded-2xl hover:bg-primary-600 transition-colors duration-200 font-semibold text-lg"

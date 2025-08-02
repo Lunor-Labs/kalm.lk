@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, CreditCard, Shield, CheckCircle, Video, MessageCircle, Phone } from 'lucide-react';
+import { Clock, ArrowLeft, CreditCard, Shield, CheckCircle, Video, MessageCircle, Phone } from 'lucide-react';
 import { BookingData } from '../../../types/booking';
 import { createSession } from '../../../lib/sessions';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -136,8 +136,47 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Payment Methods */}
         <div className="space-y-6">
+          <div className="bg-accent-orange/10 border border-accent-orange/20 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+              <Clock className="w-5 h-5" />
+              <span>Cancellation Policy</span>
+            </h3>
+            
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start space-x-3">
+                <div className="w-2 h-2 bg-accent-green rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <p className="text-white font-medium">100% Refund</p>
+                  <p className="text-neutral-300">Cancel more than 24 hours before session</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-2 h-2 bg-accent-yellow rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <p className="text-white font-medium">50% Refund</p>
+                  <p className="text-neutral-300">Cancel 12-24 hours before session</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+                <div>
+                  <p className="text-white font-medium">No Refund</p>
+                  <p className="text-neutral-300">Cancel less than 12 hours before session or no-show</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 p-3 bg-black/30 rounded-xl border border-neutral-700">
+              <p className="text-neutral-300 text-xs">
+                <strong>Emergency Cancellations:</strong> Medical emergencies and unforeseen circumstances 
+                will be reviewed individually. Contact support for assistance.
+              </p>
+            </div>
+          </div>
           {/* Session Type Selection */}
-          <div>
+          {/*<div>
             <h3 className="text-lg font-semibold text-white mb-4">Final Session Type</h3>
             <div className="space-y-3">
               {[
@@ -178,7 +217,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                 </label>
               ))}
             </div>
-          </div>
+          </div>*/}
 
           <div>
             {/* <h3 className="text-lg font-semibold text-white mb-4">Payment Method</h3> */}
