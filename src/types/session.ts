@@ -3,6 +3,7 @@ export interface Session {
   bookingId: string;
   therapistId: string;
   clientId: string;
+  clientName?: string;
   sessionType: 'video' | 'audio' | 'chat';
   status: 'scheduled' | 'active' | 'completed' | 'cancelled';
   scheduledTime: Date;
