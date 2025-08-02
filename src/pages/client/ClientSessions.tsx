@@ -4,7 +4,7 @@ import { Calendar, Clock, Video, MessageCircle, Phone, Play, Plus } from 'lucide
 import { useAuth } from '../../contexts/AuthContext';
 import { Session } from '../../types/session';
 import { getUserSessions } from '../../lib/sessions';
-import { format, isToday, isFuture, isPast } from 'date-fns';
+import { format, isToday, isFuture, isPast, isWithinInterval, subMinutes } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const ClientSessions: React.FC = () => {
@@ -190,6 +190,7 @@ const ClientSessions: React.FC = () => {
                         </span>
                       </div>
                       <div className="flex items-center space-x-4 text-sm text-neutral-300">
+                       <span>Therapist: {session.therapistName || 'Unknown Therapist'}</span>
                         <span>{format(session.scheduledTime, 'MMM d, yyyy')}</span>
                         <span>{format(session.scheduledTime, 'h:mm a')}</span>
                         <span>{session.duration} minutes</span>
@@ -202,7 +203,10 @@ const ClientSessions: React.FC = () => {
 
                   {/* Actions */}
                   <div className="flex items-center space-x-3">
-                    {canJoinSession(session) && (
+                    {canJoinSession(session) && isWithinInterval(new Date(), {
+                      start: subMinutes(session.scheduledTime, 15),
+                      end: session.scheduledTime
+                    }) && (
                       <button
                         onClick={() => handleJoinSession(session)}
                         className="bg-primary-500 text-white px-4 py-2 rounded-xl hover:bg-primary-600 transition-colors duration-200 flex items-center space-x-2"
@@ -212,10 +216,24 @@ const ClientSessions: React.FC = () => {
                       </button>
                     )}
                     
-                    {session.status === 'completed' && (
-                      <button className="bg-neutral-700 text-white px-4 py-2 rounded-xl hover:bg-neutral-600 transition-colors duration-200">
-                        View Notes
+                    {canJoinSession(session) && !isWithinInterval(new Date(), {
+                      start: subMinutes(session.scheduledTime, 15),
+                      end: session.scheduledTime
+                    }) && (
+                      <button
+                        disabled
+                        className="bg-neutral-600 text-neutral-400 px-4 py-2 rounded-xl cursor-not-allowed flex items-center space-x-2"
+                        title={`Available ${format(subMinutes(session.scheduledTime, 15), 'h:mm a')}`}
+                      >
+                        <Play className="w-4 h-4" />
+                        <span>Join</span>
                       </button>
+                    )}
+                    
+                    {session.status === 'active' && (
+                      <span className="bg-accent-green/20 text-accent-green px-3 py-1 rounded-full text-xs">
+                        Session Active
+                      </span>
                     )}
                   </div>
                 </div>
