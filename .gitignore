@@ -29,3 +29,4 @@ dist-ssr
 .vite
 
 package-lock.json
+.vercel
