@@ -181,11 +181,11 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Payment Method</h3>
+            {/* <h3 className="text-lg font-semibold text-white mb-4">Payment Method</h3> */}
             
             <div className="space-y-3">
               {/* Credit/Debit Card */}
-              <label className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
+              {/* <label className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
                 paymentMethod === 'card'
                   ? 'border-primary-500 bg-primary-500/10'
                   : 'border-neutral-800 hover:border-neutral-700 bg-black/30'
@@ -205,10 +205,10 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                     <p className="text-sm text-neutral-300">Visa, Mastercard, American Express</p>
                   </div>
                 </div>
-              </label>
+              </label> */}
 
               {/* Mobile Wallet */}
-              <label className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
+              {/* <label className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
                 paymentMethod === 'mobile'
                   ? 'border-primary-500 bg-primary-500/10'
                   : 'border-neutral-800 hover:border-neutral-700 bg-black/30'
@@ -230,10 +230,10 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                     <p className="text-sm text-neutral-300">eZ Cash, mCash, Dialog Pay</p>
                   </div>
                 </div>
-              </label>
+              </label> */}
 
               {/* Bank Transfer */}
-              <label className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
+              {/* <label className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
                 paymentMethod === 'bank'
                   ? 'border-primary-500 bg-primary-500/10'
                   : 'border-neutral-800 hover:border-neutral-700 bg-black/30'
@@ -255,12 +255,12 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                     <p className="text-sm text-neutral-300">All major Sri Lankan banks</p>
                   </div>
                 </div>
-              </label>
+              </label> */}
             </div>
           </div>
 
           {/* Security Notice */}
-          <div className="p-4 bg-accent-green/10 border border-accent-green/20 rounded-2xl">
+          {/* <div className="p-4 bg-accent-green/10 border border-accent-green/20 rounded-2xl">
             <div className="flex items-start space-x-3">
               <Shield className="w-5 h-5 text-accent-green flex-shrink-0 mt-0.5" />
               <div>
@@ -270,7 +270,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Order Summary */}

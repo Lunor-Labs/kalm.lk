@@ -18,9 +18,9 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   onBack,
   onEdit
 }) => {
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
-  const [discount, setDiscount] = useState(0);
+  /* const [couponCode, setCouponCode] = useState(''); */
+  /* const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [discount, setDiscount] = useState(0); */
   const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>('video');
 
   // Get therapists from both sources to find the selected one
@@ -57,7 +57,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   const therapist = getTherapistDetails();
   const therapistName = therapist?.name || 'Unknown Therapist';
 
-  const applyCoupon = () => {
+  /* const applyCoupon = () => {
     // Mock coupon validation
     const validCoupons = {
       'FIRST10': 10, // 10% discount
@@ -74,14 +74,14 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
     } else {
       alert('Invalid coupon code');
     }
-  };
+  }; */
 
-  const removeCoupon = () => {
+ /*  const removeCoupon = () => {
     setAppliedCoupon(null);
     setDiscount(0);
-  };
+  }; */
 
-  const finalAmount = (bookingData.amount || 0) - discount;
+  const finalAmount = (bookingData.amount || 0)/*  - discount */;
 
   const getSessionTypeIcon = (type: string) => {
     switch (type) {
@@ -246,7 +246,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
         {/* Payment Summary */}
         <div className="space-y-6">
           {/* Coupon Code */}
-          <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
+          {/* <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
               <Tag className="w-5 h-5" />
               <span>Coupon Code</span>
@@ -283,7 +283,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 </button>
               </div>
             )}
-          </div>
+          </div> */}
 
           {/* Payment Summary */}
           <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
@@ -312,12 +312,12 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 </div>
               )}
               
-              {discount > 0 && (
+              {/* {discount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-accent-green">Discount ({appliedCoupon})</span>
                   <span className="text-accent-green">-LKR {discount.toLocaleString()}</span>
                 </div>
-              )}
+              )} */}
               
               <div className="border-t border-neutral-700 pt-3">
                 <div className="flex justify-between">
@@ -331,7 +331,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           </div>
 
           {/* Session Type Info */}
-          <div className="bg-primary-500/10 border border-primary-500/20 rounded-2xl p-4">
+          {/* <div className="bg-primary-500/10 border border-primary-500/20 rounded-2xl p-4">
             <div className="flex items-start space-x-3">
               {getSessionTypeIcon(sessionType)}
               <div>
@@ -343,7 +343,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Confirm Button */}
           <button
