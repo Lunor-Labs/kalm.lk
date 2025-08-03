@@ -24,12 +24,32 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash) {
+        const el = document.getElementById(hash);
+        if (el) {
+          const headerHeight = document.querySelector('header')?.offsetHeight || 0;
+          const elementPosition = el.getBoundingClientRect().top + window.pageYOffset;
+          window.scrollTo({
+            top: elementPosition - headerHeight,
+            behavior: 'smooth',
+          });
+        }
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   const handleSignOut = async () => {
     try {
       await signOut();
       toast.success('Signed out successfully');
       setShowProfileMenu(false);
-      // Stay on landing page after logout
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign out');
     }
@@ -58,18 +78,28 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
   ];
 
   const phoneNumber = '+94 (76) 633 0360';
-  const phoneNumberForCall = '+94766330360'; // Without spaces for tel: link
+  const phoneNumberForCall = '+94766330360';
 
-  // Smooth scroll handler for nav items
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href.startsWith('#')) {
       e.preventDefault();
       const id = href.replace('#', '');
       const el = document.getElementById(id);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-        setIsMenuOpen(false); // close mobile menu if open
+        const headerHeight = document.querySelector('header')?.offsetHeight || 0;
+        const elementPosition = el.getBoundingClientRect().top + window.pageYOffset;
+        window.scrollTo({
+          top: elementPosition - headerHeight,
+          behavior: 'smooth',
+        });
+        window.history.pushState(null, '', href);
+        setIsMenuOpen(false);
+      } else {
+        console.warn(`Element with ID "${id}" not found`);
       }
+    } else {
+      navigate(href);
+      setIsMenuOpen(false);
     }
   };
 
@@ -115,7 +145,6 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
           <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
             {!user ? (
               <>
-                {/* Desktop - Show phone number */}
                 <div className={`flex items-center space-x-2 font-medium text-sm px-4 py-2 rounded-lg ${
                   isScrolled 
                     ? 'text-primary-500' 
@@ -156,7 +185,6 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                   </div>
                 </button>
 
-                {/* Profile Dropdown */}
                 {showProfileMenu && (
                   <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 backdrop-blur-sm border border-neutral-700 rounded-2xl shadow-xl">
                     <div className="p-4 border-b border-neutral-700">
@@ -207,7 +235,6 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
         {isMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 bg-neutral-900/95 backdrop-blur-md shadow-xl rounded-b-2xl border-t border-neutral-700">
             <div className="px-4 py-4 space-y-3">
-              {/* Centered navigation items */}
               <div className="text-center space-y-3">
                 {navItems.map((item) => (
                   <a
@@ -221,11 +248,9 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                 ))}
               </div>
               
-              {/* Centered action buttons */}
               <div className="pt-3 border-t border-neutral-700 space-y-2 text-center">
                 {!user ? (
                   <>
-                    {/* Mobile - Clickable call button */}
                     <a
                       href={`tel:${phoneNumberForCall}`}
                       className="inline-flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200 font-medium py-2 text-sm"
@@ -247,7 +272,6 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                   </>
                 ) : (
                   <>
-                    {/* Mobile Profile Info */}
                     <div className="bg-black/30 rounded-2xl p-4 text-center">
                       <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-2">
                         <span className="text-white font-semibold">
@@ -290,7 +314,6 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
         )}
       </div>
 
-      {/* Click outside to close profile menu */}
       {showProfileMenu && (
         <div 
           className="fixed inset-0 z-40" 

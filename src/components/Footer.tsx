@@ -1,23 +1,53 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Instagram, Mail, Phone, MapPin, Facebook, Youtube } from 'lucide-react';
 
-const Footer: React.FC = () => {
-   const navigate = useNavigate();
+// Shared utility function for scrolling to a section with header offset
+const scrollToSection = (id: string) => {
+  const element = document.getElementById(id);
+  if (element) {
+    const headerHeight = document.querySelector('header')?.offsetHeight || 0;
+    const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+    window.scrollTo({
+      top: elementPosition - headerHeight,
+      behavior: 'smooth',
+    });
+    window.history.pushState(null, '', `#${id}`);
+  } else {
+    console.warn(`Element with ID "${id}" not found`);
+  }
+};
 
-     const navigateToPage = (path: string) => {
+const Footer: React.FC = () => {
+  const navigate = useNavigate();
+
+  const navigateToPage = (path: string) => {
     navigate(path);
     window.scrollTo(0, 0);
   };
+
+  // Handle initial hash navigation on page load or hash change
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash) {
+        scrollToSection(hash);
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   return (
     <footer className="bg-black text-white relative">
       {/* Grain texture overlay */}
       <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2247%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        {/* Mobile: Center everything, Desktop: Keep original layout */}
         <div className="grid md:grid-cols-2 lg:grid-cols-[4fr_1fr_2fr_2fr_2fr] gap-8">
-          {/* Brand - Mobile: centered, Desktop: original */}
+          {/* Brand */}
           <div className="lg:col-span-1 text-center md:text-left">
             <div className="flex items-center space-x-2 mb-4 justify-center md:justify-start">
               <img 
@@ -80,69 +110,32 @@ const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Spacer column for larger gap - hidden on mobile */}
+          {/* Spacer column */}
           <div className="lg:col-span-1 hidden lg:block"></div>
 
-           {/* Quick Links - Mobile: centered, Desktop: original */}
+          {/* Quick Links */}
           <div className="lg:col-span-1 text-center md:text-left">
             <h4 className="text-base font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li>
-                <button 
-                  onClick={() => {
-                    const aboutSection = document.getElementById('about');
-                    if (aboutSection) {
-                      aboutSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
-                >
-                  About Us
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => {
-                    const servicesSection = document.getElementById('services');
-                    if (servicesSection) {
-                      servicesSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
-                >
-                  Services
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => {
-                    const therapistsSection = document.getElementById('therapists');
-                    if (therapistsSection) {
-                      therapistsSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
-                >
-                  Our Therapists
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={() => {
-                    const faqSection = document.getElementById('faq');
-                    if (faqSection) {
-                      faqSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
-                >
-                  FAQ
-                </button>
-              </li>
+              {[
+                { label: 'About Us', id: 'about' },
+                { label: 'Services', id: 'services' },
+                { label: 'Our Therapists', id: 'therapists' },
+                { label: 'FAQ', id: 'faq' },
+              ].map((item) => (
+                <li key={item.label}>
+                  <button
+                    onClick={() => scrollToSection(item.id)}
+                    className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Legal - Mobile: centered, Desktop: original */}
+          {/* Legal */}
           <div className="lg:col-span-1 text-center md:text-left">
             <h4 className="text-base font-semibold mb-4">Legal</h4>
             <ul className="space-y-2">
@@ -181,7 +174,7 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Contact - Mobile: centered, Desktop: original */}
+          {/* Contact */}
           <div className="lg:col-span-1 text-center md:text-left">
             <h4 className="text-base font-semibold mb-4">Contact</h4>
             <div className="space-y-3">
@@ -207,7 +200,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom section - Mobile: centered, Desktop: original */}
+        {/* Bottom section */}
         <div className="border-t border-neutral-800 mt-8 pt-6">
           <div className="flex flex-col md:flex-row items-center justify-between text-center md:text-left">
             <p className="text-neutral-500 text-xs">
