@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, Search, Plus, Edit, Trash2, Upload, X, Save,
   Star, Clock, Award, Video, Phone, MessageCircle,
-  Eye, EyeOff, ArrowLeft, Calendar, DollarSign, ChevronDown, ChevronUp
+  Eye, EyeOff, ArrowLeft, Calendar, DollarSign, ChevronLeft, ChevronRight, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { 
   collection, 
@@ -96,6 +96,8 @@ const TherapistManagement: React.FC = () => {
     services: false,
     sessionFormats: false
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const therapistsPerPage = 6;
 
   // Predefined options
   const credentialOptions = [
@@ -158,6 +160,11 @@ const TherapistManagement: React.FC = () => {
   useEffect(() => {
     loadTherapists();
   }, []);
+
+  useEffect(() => {
+    // Reset to page 1 when search query changes
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const loadTherapists = async () => {
     try {
@@ -401,6 +408,47 @@ const TherapistManagement: React.FC = () => {
     therapist.specializations.some(spec => spec.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  // Calculate paginated therapists
+  const totalPages = Math.ceil(filteredTherapists.length / therapistsPerPage);
+  const startIndex = (currentPage - 1) * therapistsPerPage;
+  const paginatedTherapists = filteredTherapists.slice(startIndex, startIndex + therapistsPerPage);
+
+  // Generate visible page numbers (current page ±2, with ellipses)
+  const getVisiblePages = () => {
+    const maxPagesToShow = 5;
+    const pages: (number | string)[] = [];
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+    if (startPage > 1) {
+      pages.push(1);
+      if (startPage > 2) pages.push('...');
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) pages.push('...');
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    // Debug pagination
+    console.log('Filtered therapists:', filteredTherapists.length, 'Total pages:', totalPages, 'Current page:', currentPage);
+  }, [filteredTherapists, currentPage]);
+
   const handleArrayFieldChange = (field: keyof TherapistFormData, value: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
@@ -528,7 +576,7 @@ const TherapistManagement: React.FC = () => {
       {viewMode === 'grid' || isMobile ? (
         /* Grid View - Always used on mobile */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {filteredTherapists.map((therapist) => (
+          {paginatedTherapists.map((therapist) => (
             <div
               key={therapist.id}
               className="bg-black/50 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-neutral-800 overflow-hidden hover:border-neutral-700 transition-all duration-300"
@@ -630,6 +678,18 @@ const TherapistManagement: React.FC = () => {
               </div>
             </div>
           ))}
+          {paginatedTherapists.length === 0 && (
+            <div className="text-center py-8 sm:py-16 col-span-full">
+              <Users className="w-12 sm:w-16 h-12 sm:h-16 text-neutral-600 mx-auto mb-3 sm:mb-4" />
+              <p className="text-neutral-300 mb-1 sm:mb-2 text-sm sm:text-base">No therapists found</p>
+              <p className="text-neutral-400 text-xs sm:text-sm">
+                {searchQuery 
+                  ? 'Try adjusting your search query'
+                  : 'Add your first therapist to get started'
+                }
+              </p>
+            </div>
+          )}
         </div>
       ) : (
         /* Table View - Only shown on desktop when selected */
@@ -653,7 +713,7 @@ const TherapistManagement: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredTherapists.map((therapist) => (
+                {paginatedTherapists.map((therapist) => (
                   <tr key={therapist.id} className="border-t border-neutral-800 hover:bg-neutral-800/30">
                     <td className="p-4">
                       <div className="flex items-center space-x-3">
@@ -736,7 +796,7 @@ const TherapistManagement: React.FC = () => {
             </table>
           </div>
 
-          {filteredTherapists.length === 0 && (
+          {paginatedTherapists.length === 0 && (
             <div className="text-center py-8 sm:py-16">
               <Users className="w-12 sm:w-16 h-12 sm:h-16 text-neutral-600 mx-auto mb-3 sm:mb-4" />
               <p className="text-neutral-300 mb-1 sm:mb-2 text-sm sm:text-base">No therapists found</p>
@@ -750,6 +810,55 @@ const TherapistManagement: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between gap-2 mt-4 overflow-x-auto">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl text-sm min-h-[40px] ${
+            currentPage === 1
+              ? 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
+              : 'bg-primary-500 text-white hover:bg-primary-600'
+          } transition-colors duration-200`}
+          aria-label="Go to previous page"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>Previous</span>
+        </button>
+        <div className="flex items-center gap-0.5">
+          {getVisiblePages().map((page, index) => (
+            <button
+              key={`${page}-${index}`}
+              onClick={() => typeof page === 'number' && handlePageChange(page)}
+              className={`px-2 py-1 rounded-lg text-sm min-w-[36px] min-h-[36px] text-center ${
+                page === currentPage
+                  ? 'bg-primary-500 text-white'
+                  : typeof page === 'string'
+                  ? 'text-neutral-400 cursor-default'
+                  : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+              } transition-colors duration-200`}
+              aria-label={typeof page === 'number' ? `Go to page ${page}` : 'Page ellipsis'}
+              disabled={typeof page === 'string'}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl text-sm min-h-[40px] ${
+            currentPage === totalPages
+              ? 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
+              : 'bg-primary-500 text-white hover:bg-primary-600'
+          } transition-colors duration-200`}
+          aria-label="Go to next page"
+        >
+          <span>Next</span>
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
 
       {/* View Therapist Modal - Responsive */}
       {viewingTherapist && (
