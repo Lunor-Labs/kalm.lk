@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Clock, MessageCircle, Video, Phone, Award, Database, HardDrive } from 'lucide-react';
+import React from 'react';
+import { ArrowLeft, Star, Clock, MessageCircle, Video, Phone, Award } from 'lucide-react';
 import { useTherapists } from '../../../hooks/useTherapists';
-import { TherapistData } from '../../../data/therapists';
 
 interface TherapistSelectionProps {
   serviceType?: string;
@@ -16,11 +15,9 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
   onTherapistSelect,
   onBack
 }) => {
-  const [useFirebaseData, setUseFirebaseData] = useState(true);
-  
-  // Use the custom hook to fetch therapists
+  // Use the custom hook to fetch therapists, always using Firebase
   const { therapists, loading, error } = useTherapists({
-    useFirebase: useFirebaseData,
+    useFirebase: true,
     serviceCategory: serviceType
   });
 
@@ -40,9 +37,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-white">Loading therapists...</p>
-            <p className="text-neutral-400 text-sm mt-2">
-              {useFirebaseData ? 'Fetching from Firebase...' : 'Loading demo data...'}
-            </p>
+            <p className="text-neutral-400 text-sm mt-2">Fetching from Firebase...</p>
           </div>
         </div>
       </div>
@@ -58,34 +53,6 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
         </div>
         
         <div className="flex items-center space-x-4">
-          {/* Data Source Toggle */}
-          {/*)
-          <div className="flex items-center space-x-2 bg-black/50 border border-neutral-700 rounded-2xl p-1">
-            <button
-              onClick={() => setUseFirebaseData(false)}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${
-                !useFirebaseData 
-                  ? 'bg-accent-yellow text-black' 
-                  : 'text-neutral-300 hover:text-white'
-              }`}
-            >
-              <HardDrive className="w-4 h-4" />
-              <span>Demo</span>
-            </button>
-            <button
-              onClick={() => setUseFirebaseData(true)}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${
-                useFirebaseData 
-                  ? 'bg-primary-500 text-white' 
-                  : 'text-neutral-300 hover:text-white'
-              }`}
-            >
-              <Database className="w-4 h-4" />
-              <span>Live</span>
-            </button>
-          </div>
-          */}
-          
           <button
             onClick={onBack}
             className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200"
@@ -96,53 +63,25 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
         </div>
       </div>
 
-      {/* Data Source Info */}
-      <div className="flex items-center justify-between mb-6">
-        {/* 
-        <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
-          useFirebaseData 
-            ? 'bg-primary-500/20 text-primary-500 border border-primary-500/30'
-            : 'bg-accent-yellow/20 text-accent-yellow border border-accent-yellow/30'
-        }`}>
-          {useFirebaseData ? <Database className="w-4 h-4" /> : <HardDrive className="w-4 h-4" />}
-         }
-          <span>
-            {useFirebaseData ? 'Live Data from Firebase' : 'Demo Data'}
-          </span>
-          
+      {/* Error Message */}
+      {error && (
+        <div className="flex items-center space-x-2 px-3 py-1 rounded-full text-sm bg-red-500/20 text-red-400 border border-red-500/30 mb-6">
+          <span>⚠️ {error}</span>
         </div>
-        */}
-        
-        {error && (
-          <div className="flex items-center space-x-2 px-3 py-1 rounded-full text-sm bg-red-500/20 text-red-400 border border-red-500/30">
-            <span>⚠️ {error}</span>
-          </div>
-        )}
-      </div>
+      )}
 
       {therapists.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-neutral-300 mb-4">
-            {useFirebaseData 
-              ? 'No therapists available in Firebase for this service type.'
-              : 'No therapists available for this service type.'
-            }
+            No therapists available for this service type.
           </p>
-          <div className="flex items-center justify-center space-x-4">
+          <div className="flex items-center justify-center">
             <button
               onClick={onBack}
               className="bg-primary-500 text-white px-6 py-3 rounded-2xl hover:bg-primary-600 transition-colors duration-200"
             >
               Choose Different Service
             </button>
-            {useFirebaseData && (
-              <button
-                onClick={() => setUseFirebaseData(false)}
-                className="bg-accent-yellow text-black px-6 py-3 rounded-2xl hover:bg-accent-yellow/90 transition-colors duration-200"
-              >
-                Try Demo Data
-              </button>
-            )}
           </div>
         </div>
       ) : (
