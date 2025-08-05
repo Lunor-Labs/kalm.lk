@@ -186,8 +186,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                 </button>
 
                 {showProfileMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 backdrop-blur-sm border border-neutral-700 rounded-2xl shadow-xl">
-                    <div className="p-4 border-b border-neutral-700">
+                <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 backdrop-blur-sm border border-neutral-700 rounded-2xl shadow-xl z-50">                    <div className="p-4 border-b border-neutral-700">
                       <p className="text-white font-medium">{user.displayName || 'User'}</p>
                       <p className="text-neutral-300 text-sm">
                         {user.isAnonymous ? 'Anonymous Account' : user.email}
