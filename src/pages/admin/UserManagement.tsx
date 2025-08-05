@@ -5,7 +5,7 @@ import { db } from '../../lib/firebase';
 import { updateUserRole } from '../../lib/auth';
 import { UserManagement, UserRole } from '../../types/auth';
 import toast from 'react-hot-toast';
-import { format, isWithinInterval, parseISO } from 'date-fns';
+import { isWithinInterval, parseISO } from 'date-fns';
 
 const UserManagementPage: React.FC = () => {
   const [users, setUsers] = useState<UserManagement[]>([]);
