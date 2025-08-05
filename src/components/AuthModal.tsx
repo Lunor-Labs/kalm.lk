@@ -158,12 +158,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       }
 
       if (user) {
+        console.log('User signed up:', user); 
         toast.success('Welcome to Kalm!');
         onClose();
-        const redirectPath = getRoleRedirectPath(user.role);
+        const redirectPath = getRoleRedirectPath(user.role || 'client');
+        console.log('Redirecting to:', redirectPath); 
         navigate(redirectPath, { replace: true });
+      } else {
+        console.error('No user returned from signUp'); // Debug log
+        toast.error('Failed to create account. Please try again.');
       }
     } catch (error: any) {
+      console.error('Signup error:', error.code, error.message); // Debug log
       toast.error(error.message || 'Authentication failed');
     } finally {
       setIsSubmitting(false);
