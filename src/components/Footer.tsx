@@ -66,7 +66,7 @@ const Footer: React.FC = () => {
                 href="https://www.instagram.com/kalm_lk?igsh=dHJ1YWExNDg1Mmpz"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-primary-500 transition-colors duration-200"
+                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 transition-colors duration-200"
                 aria-label="Follow us on Instagram"
               >
                 <Instagram className="w-4 h-4" />
@@ -84,7 +84,7 @@ const Footer: React.FC = () => {
                 href="https://youtube.com/@kalm_lkpodcast?si=QvVJa8eYRfSqNr2h"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-red-700 transition-colors duration-200"
                 aria-label="Subscribe to our YouTube channel"
               >
                 <Youtube className="w-4 h-4" />
@@ -93,7 +93,7 @@ const Footer: React.FC = () => {
                 href="https://vt.tiktok.com/ZSkySoCwe/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors duration-200"
+                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-gray-800 transition-colors duration-200"
                 aria-label="Follow us on TikTok"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -102,7 +102,7 @@ const Footer: React.FC = () => {
               </a>
               <a
                 href="mailto:team@kalm.lk"
-                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-primary-500 transition-colors duration-200"
+                className="w-9 h-9 bg-neutral-800 rounded-lg flex items-center justify-center hover:bg-[#D93025] transition-colors duration-200"
                 aria-label="Email us"
               >
                 <Mail className="w-4 h-4" />
