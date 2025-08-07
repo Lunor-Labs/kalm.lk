@@ -218,6 +218,62 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             )}
           </div>
 
+            <div className="pt-3 border-t border-neutral-700 mb-3 sm:hidden">
+              <div className="flex items-center justify-end gap-3 overflow-x-auto px-2 py-2">
+                {!user ? (
+                  <>
+                  <a
+                    href={`tel:${phoneNumberForCall}`}
+                    className="inline-flex items-center gap-1 text-primary-500 hover:text-primary-600 transition-colors duration-200 font-medium text-sm"
+                    >
+                    <Phone className="w-4 h-4" />
+                    <span>Call Us</span>
+                  </a>
+                <button
+                  onClick={() => {
+                  onOpenAuth('login');
+                  setIsMenuOpen(false);
+                  }}
+                  className="bg-primary-500 text-white px-4 py-1.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm whitespace-nowrap"
+                  >
+                  Login
+                </button>
+              </>
+            ) : (
+              <>
+          {/* Profile Initial */}
+            <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-sm font-semibold text-white shrink-0">
+              {user.displayName?.charAt(0) || 'U'}
+            </div>
+          
+          {/* Dashboard Button */}
+            <button
+              onClick={() => {
+                goToDashboard();
+                setIsMenuOpen(false);
+              }}
+              className="bg-primary-500 text-white px-3 py-1 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-xs whitespace-nowrap"
+            >
+              Dashboard
+            </button>
+
+          {/* Sign Out Button */}
+            <button
+              onClick={() => {
+                handleSignOut();
+                setIsMenuOpen(false);
+              }}
+              className="text-neutral-300 hover:text-white transition-colors duration-200 text-xs whitespace-nowrap"
+            >
+              Sign Out
+            </button>
+          </>
+        )}
+    
+        </div>
+      </div>
+
+
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
