@@ -17,20 +17,6 @@ const AdminDashboard: React.FC = () => {
       change: '+12% from last month',
       icon: Calendar,
       color: 'bg-accent-green'
-    },
-    {
-      title: 'Monthly Revenue',
-      value: 'LKR 2.4M',
-      change: '+18% from last month',
-      icon: CreditCard,
-      color: 'bg-accent-yellow'
-    },
-    {
-      title: 'Growth Rate',
-      value: '23%',
-      change: '+5% from last month',
-      icon: TrendingUp,
-      color: 'bg-accent-orange'
     }
   ];
 
@@ -92,10 +78,12 @@ const AdminDashboard: React.FC = () => {
           );
         })}
       </div>
-
+      
       {/* Recent Activity */}
+      {/*
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Recent Bookings */}
+ 
+        
         <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
           <h2 className="text-xl font-semibold text-white mb-6">Recent Bookings</h2>
           
@@ -126,8 +114,10 @@ const AdminDashboard: React.FC = () => {
             ))}
           </div>
         </div>
+        */}
 
         {/* Quick Actions */}
+        {/*
         <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
           <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
           
@@ -158,8 +148,10 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      */}
 
       {/* System Status */}
+      {/*
       <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
         <h2 className="text-xl font-semibold text-white mb-6">System Status</h2>
         
@@ -188,8 +180,8 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </div> */}
+    </div> 
   );
 };
 

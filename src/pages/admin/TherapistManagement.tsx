@@ -543,7 +543,7 @@ const TherapistManagement: React.FC = () => {
             {therapists.filter(t => t.isAvailable).length}
           </p>
         </div>
-        
+        {/*
         <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
           <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
             <Star className="w-4 sm:w-5 h-4 sm:h-5 text-accent-yellow" />
@@ -556,6 +556,7 @@ const TherapistManagement: React.FC = () => {
             }
           </p>
         </div>
+        */}
       </div>
 
       {/* Search */}
