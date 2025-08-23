@@ -83,19 +83,25 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
           </div>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-6">
+        // Improved mobile slider
+        <div className="flex overflow-x-auto gap-4 pb-2 hide-scrollbar snap-x snap-mandatory -mx-4 px-2 md:mx-0 md:px-0">
           {therapists.map((therapist) => {
             const isSelected = selectedTherapist === therapist.id;
-            
             return (
               <button
                 key={therapist.id}
                 onClick={() => onTherapistSelect(therapist.id)}
-                className={`group bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-2 text-left ${
-                  isSelected 
+                className={`
+                  snap-center
+                  min-w-[80vw] max-w-[90vw]
+                  md:min-w-[320px] md:max-w-xs
+                  group bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-2 text-left
+                  ${isSelected 
                     ? 'border-primary-500 bg-primary-500/10' 
                     : 'border-neutral-800 hover:border-neutral-700'
-                }`}
+                  }
+                `}
+                style={{ scrollSnapAlign: 'center' }}
               >
                 {/* Image Section */}
                 <div className="relative h-48 overflow-hidden">
@@ -105,21 +111,12 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-
-                  {/* Rating */}
-                  <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1 flex items-center space-x-1">
-                    <Star className="w-3 h-3 text-accent-yellow fill-current" />
-                    <span className="text-white text-xs font-medium">{therapist.rating}</span>
-                    <span className="text-white/80 text-xs">({therapist.reviewCount})</span>
-                  </div>
-
                   {/* Price */}
                   <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1">
                     <span className="text-white text-xs font-medium">
                       LKR {therapist.hourlyRate.toLocaleString()}
                     </span>
                   </div>
-
                   {/* Selection Indicator */}
                   {isSelected && (
                     <div className="absolute top-3 right-3 w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
@@ -127,7 +124,6 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
                     </div>
                   )}
                 </div>
-
                 {/* Content Section */}
                 <div className="p-6">
                   <div className="mb-4">
@@ -142,7 +138,6 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
                       {therapist.specialty}
                     </p>
                   </div>
-
                   <div className="space-y-3 mb-4">
                     <div>
                       <p className="text-xs text-neutral-400 mb-1">Languages:</p>
@@ -157,7 +152,6 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
                         ))}
                       </div>
                     </div>
-
                     <div>
                       <p className="text-xs text-neutral-400 mb-1">Session Formats:</p>
                       <div className="flex items-center space-x-3">
@@ -169,7 +163,6 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
                         ))}
                       </div>
                     </div>
-
                     <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4 text-accent-green" />
                       <span className="text-xs text-accent-green font-medium">

@@ -82,11 +82,8 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Select Date & Time</h2>
-          <p className="text-neutral-300">Choose your preferred session time</p>
-        </div>
+      {/* Back button above the title, left-aligned */}
+      <div className="mb-4">
         <button
           onClick={onBack}
           className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200"
@@ -94,6 +91,10 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
           <ArrowLeft className="w-5 h-5" />
           <span>Back</span>
         </button>
+      </div>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white whitespace-nowrap">Select Date & Time</h2>
+        <p className="text-neutral-300">Choose your preferred session time</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
@@ -193,7 +194,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
           )}
         </div>
       </div>
-
+      {/*     
       {selectedTime && (
         <div className="mt-8 p-6 bg-primary-500/10 border border-primary-500/20 rounded-2xl">
           <h4 className="text-white font-semibold mb-2">Selected Session</h4>
@@ -205,6 +206,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
           </p>
         </div>
       )}
+        */}
     </div>
   );
 };
