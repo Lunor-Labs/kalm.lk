@@ -218,7 +218,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             )}
           </div>
 
-            <div className="ml-6 pt-3 items-center justify-end border-t border-neutral-700 mb-3 sm:hidden">
+            <div className="ml-6 pt-3 flex items-center justify-end border-t border-neutral-700 mb-3 sm:hidden">
               <div className="ml-16 flex items-center justify-end gap-3 overflow-x-auto px-2 py-2">
                 {!user ? (
                   <>
