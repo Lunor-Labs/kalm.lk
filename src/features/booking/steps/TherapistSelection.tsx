@@ -46,21 +46,19 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Choose Your Therapist</h2>
-          <p className="text-neutral-300">Select a therapist that feels right for you</p>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onBack}
-            className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back</span>
-          </button>
-        </div>
+      {/* Back button above the title, left-aligned */}
+      <div className="mb-4">
+        <button
+          onClick={onBack}
+          className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Back</span>
+        </button>
+      </div>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white whitespace-nowrap">Choose Your Therapist</h2>
+        <p className="text-neutral-300">Select a therapist that feels right for you</p>
       </div>
 
       {/* Error Message */}

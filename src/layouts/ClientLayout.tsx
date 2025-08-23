@@ -147,7 +147,7 @@ const ClientLayout: React.FC = () => {
             <div className="flex items-center space-x-4">
               <div className="text-white">
                 <h1 className="text-xl font-semibold">
-                  Welcome back, {user?.displayName || 'User'}
+                 {/* Welcome back, {user?.displayName || 'User'} */}
                 </h1>
                 {user?.isAnonymous && (
                   <p className="text-sm text-accent-green">Anonymous Account</p>
