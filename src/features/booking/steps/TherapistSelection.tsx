@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Star, Clock, MessageCircle, Video, Phone, Award } from 'lucide-react';
 import { useTherapists } from '../../../hooks/useTherapists';
 
@@ -15,6 +15,11 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
   onTherapistSelect,
   onBack
 }) => {
+
+    useEffect(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
+
   // Use the custom hook to fetch therapists, always using Firebase
   const { therapists, loading, error } = useTherapists({
     useFirebase: true,

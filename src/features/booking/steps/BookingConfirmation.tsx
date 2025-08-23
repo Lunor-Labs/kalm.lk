@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Calendar, Clock, User, CreditCard, Edit, Tag, Video, MessageCircle, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { BookingData } from '../../../types/booking';
@@ -18,6 +18,10 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   onBack,
   onEdit
 }) => {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   /* const [couponCode, setCouponCode] = useState(''); */
   /* const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discount, setDiscount] = useState(0); */

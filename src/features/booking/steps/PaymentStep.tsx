@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, ArrowLeft, CreditCard, Shield, CheckCircle, Video, MessageCircle, Phone } from 'lucide-react';
 import { BookingData } from '../../../types/booking';
 import { createSession } from '../../../lib/sessions';
@@ -17,6 +17,10 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   onPaymentComplete,
   onBack
 }) => {
+    useEffect(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
+    
   const { user } = useAuth();
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');

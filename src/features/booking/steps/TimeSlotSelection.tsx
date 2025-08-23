@@ -29,6 +29,11 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
   onTimeSelect,
   onBack
 }) => {
+
+    useEffect(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, []);
+    
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
