@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import { format, addDays, startOfDay, isSameDay } from 'date-fns';
+import { getTherapistAvailability, getAvailableTimeSlots } from '../../../lib/availability';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../../../lib/firebase';
+import toast from 'react-hot-toast';
 
 interface TimeSlotSelectionProps {
   therapistId: string;
@@ -15,6 +19,8 @@ interface TimeSlot {
   endTime: Date;
   isAvailable: boolean;
   price: number;
+  sessionType: 'video' | 'audio' | 'chat';
+  isBooked?: boolean;
 }
 
 const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
@@ -26,55 +32,145 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
+  const [therapistAvailability, setTherapistAvailability] = useState<any>(null);
 
   // Generate next 7 days for date selection
   const availableDates = Array.from({ length: 7 }, (_, i) => addDays(new Date(), i));
 
-  // Mock time slots - in real app, this would come from Firestore
-  const generateTimeSlots = (date: Date): TimeSlot[] => {
-    const slots: TimeSlot[] = [];
-    const baseDate = startOfDay(date);
+  // Load therapist availability data
+  useEffect(() => {
+    const loadTherapistAvailability = async () => {
+      try {
+        const availability = await getTherapistAvailability(therapistId);
+        setTherapistAvailability(availability);
+      } catch (error: any) {
+        console.error('Failed to load therapist availability:', error);
+        toast.error('Failed to load therapist availability');
+      }
+    };
+
+    if (therapistId) {
+      loadTherapistAvailability();
+    }
+  }, [therapistId]);
+
+  // Generate time slots from Firebase availability data
+  const generateTimeSlotsFromAvailability = async (date: Date): Promise<TimeSlot[]> => {
+    if (!therapistAvailability) return [];
+
+    const dateString = format(date, 'yyyy-MM-dd');
+    const dayOfWeek = date.getDay();
     
-    // Generate slots from 9 AM to 6 PM
-    for (let hour = 9; hour < 18; hour++) {
-      const startTime = new Date(baseDate);
-      startTime.setHours(hour, 0, 0, 0);
+    // Check for special dates first
+    const specialDate = therapistAvailability.specialDates?.find((sd: any) => sd.date === dateString);
+    let availableTimeSlots: any[] = [];
+
+    if (specialDate) {
+      if (!specialDate.isAvailable) {
+        return []; // No slots available on this special date
+      }
+      availableTimeSlots = specialDate.timeSlots || [];
+    } else {
+      // Use weekly schedule
+      const daySchedule = therapistAvailability.weeklySchedule?.find((day: any) => day.dayOfWeek === dayOfWeek);
+      if (!daySchedule || !daySchedule.isAvailable) {
+        return []; // No slots available on this day
+      }
+      availableTimeSlots = daySchedule.timeSlots || [];
+    }
+
+    // Check for existing bookings to mark slots as booked
+    const bookedSlots = await getBookedSlotsForDate(therapistId, dateString);
+    
+    // Convert availability time slots to TimeSlot format
+    const slots: TimeSlot[] = [];
+    
+    for (const availSlot of availableTimeSlots) {
+      if (!availSlot.isAvailable) continue;
       
-      const endTime = new Date(startTime);
-      endTime.setHours(hour + 1, 0, 0, 0);
+      // Parse start and end times
+      const [startHour, startMinute] = availSlot.startTime.split(':').map(Number);
+      const [endHour, endMinute] = availSlot.endTime.split(':').map(Number);
       
-      // Randomly make some slots unavailable for demo
-      const isAvailable = Math.random() > 0.3;
-      
-      slots.push({
-        id: `${therapistId}-${hour}`,
-        startTime,
-        endTime,
-        isAvailable,
-        price: 4500
-      });
+      // Generate hourly slots within the available time range
+      for (let hour = startHour; hour < endHour; hour++) {
+        const startTime = new Date(date);
+        startTime.setHours(hour, 0, 0, 0);
+        
+        const endTime = new Date(date);
+        endTime.setHours(hour + 1, 0, 0, 0);
+        
+        // Check if this slot is already booked
+        const slotKey = `${hour}:00`;
+        const isBooked = bookedSlots.includes(slotKey);
+        
+        slots.push({
+          id: `${therapistId}-${dateString}-${hour}`,
+          startTime,
+          endTime,
+          isAvailable: !isBooked,
+          isBooked,
+          price: availSlot.price || 4500,
+          sessionType: availSlot.sessionType || 'video'
+        });
+      }
     }
     
-    return slots;
+    return slots.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   };
 
+  // Get booked slots for a specific date
+  const getBookedSlotsForDate = async (therapistId: string, dateString: string): Promise<string[]> => {
+    try {
+      // Query existing bookings for this therapist on this date
+      const bookingsRef = collection(db, 'bookings');
+      const q = query(
+        bookingsRef,
+        where('therapistId', '==', therapistId),
+        where('status', 'in', ['scheduled', 'confirmed', 'active'])
+      );
+      
+      const snapshot = await getDocs(q);
+      const bookedSlots: string[] = [];
+      
+      snapshot.docs.forEach(doc => {
+        const booking = doc.data();
+        const bookingDate = booking.sessionTime?.toDate();
+        
+        if (bookingDate && format(bookingDate, 'yyyy-MM-dd') === dateString) {
+          const timeSlot = format(bookingDate, 'H:mm');
+          bookedSlots.push(timeSlot);
+        }
+      });
+      
+      return bookedSlots;
+    } catch (error) {
+      console.error('Error fetching booked slots:', error);
+      return [];
+    }
+  };
   useEffect(() => {
     const loadTimeSlots = async () => {
+      if (!therapistAvailability) return;
+      
       setLoading(true);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const slots = generateTimeSlots(selectedDate);
-      setTimeSlots(slots);
-      setLoading(false);
+      try {
+        const slots = await generateTimeSlotsFromAvailability(selectedDate);
+        setTimeSlots(slots);
+      } catch (error: any) {
+        console.error('Failed to load time slots:', error);
+        toast.error('Failed to load available time slots');
+        setTimeSlots([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadTimeSlots();
-  }, [selectedDate, therapistId]);
+  }, [selectedDate, therapistId, therapistAvailability]);
 
   const handleTimeSlotSelect = (slot: TimeSlot) => {
-    if (!slot.isAvailable) return;
+    if (!slot.isAvailable || slot.isBooked) return;
     
     const duration = 60; // 1 hour session
     onTimeSelect(slot.startTime, duration, slot.price);
@@ -165,9 +261,9 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
                   <button
                     key={slot.id}
                     onClick={() => handleTimeSlotSelect(slot)}
-                    disabled={!slot.isAvailable}
+                    disabled={!slot.isAvailable || slot.isBooked}
                     className={`p-3 rounded-2xl border-2 transition-all duration-200 text-center ${
-                      !slot.isAvailable
+                      !slot.isAvailable || slot.isBooked
                         ? 'border-neutral-800 bg-neutral-800/30 text-neutral-500 cursor-not-allowed'
                         : isSelected
                         ? 'border-primary-500 bg-primary-500/10 text-primary-500'
@@ -178,8 +274,13 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
                       {format(slot.startTime, 'h:mm a')}
                     </p>
                     <p className="text-xs opacity-80">
-                      LKR {slot.price.toLocaleString()}
+                      {slot.isBooked ? 'Booked' : `LKR ${slot.price.toLocaleString()}`}
                     </p>
+                    {slot.sessionType && (
+                      <p className="text-xs opacity-60 capitalize">
+                        {slot.sessionType}
+                      </p>
+                    )}
                   </button>
                 );
               })}
@@ -188,25 +289,17 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
 
           {!loading && timeSlots.length === 0 && (
             <div className="text-center py-16">
-              <p className="text-neutral-300 mb-4">No available slots for this date.</p>
-              <p className="text-neutral-400 text-sm">Please select a different date.</p>
+              <Clock className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
+              <p className="text-neutral-300 mb-2">No available slots for this date</p>
+              <p className="text-neutral-400 text-sm">
+                {!therapistAvailability 
+                  ? 'Therapist availability not configured yet.'
+                  : 'Please select a different date or contact the therapist.'}
+              </p>
             </div>
           )}
         </div>
       </div>
-      {/*     
-      {selectedTime && (
-        <div className="mt-8 p-6 bg-primary-500/10 border border-primary-500/20 rounded-2xl">
-          <h4 className="text-white font-semibold mb-2">Selected Session</h4>
-          <p className="text-neutral-300">
-            {format(selectedTime, 'EEEE, MMMM d, yyyy')} at {format(selectedTime, 'h:mm a')}
-          </p>
-          <p className="text-primary-500 font-semibold mt-2">
-            Duration: 60 minutes • LKR 4,500
-          </p>
-        </div>
-      )}
-        */}
     </div>
   );
 };
