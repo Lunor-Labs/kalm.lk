@@ -218,23 +218,25 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             )}
           </div>
 
-            <div className="pt-3 border-t border-neutral-700 mb-3 sm:hidden">
-              <div className="flex items-center justify-end gap-3 overflow-x-auto px-2 py-2">
+            <div className="ml-6 pt-3 flex items-center justify-end border-t border-neutral-700 mb-3 sm:hidden">
+              <div className="ml-16 flex items-center justify-end gap-3 overflow-x-auto px-2 py-2">
                 {!user ? (
                   <>
                   <a
                     href={`tel:${phoneNumberForCall}`}
                     className="inline-flex items-center gap-1 text-primary-500 hover:text-primary-600 transition-colors duration-200 font-medium text-sm"
-                    >
-                    <Phone className="w-4 h-4" />
-                    <span>Call Us</span>
+                  >
+                    <div className="w-7 h-7 rounded-full border border-white flex items-center justify-center">
+                      <Phone className="w-4 h-4 text-white" />
+                    </div>
+                    {/* <span>Call Us</span> */}
                   </a>
                 <button
                   onClick={() => {
                   onOpenAuth('login');
                   setIsMenuOpen(false);
                   }}
-                  className="bg-primary-500 text-white px-4 py-1.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm whitespace-nowrap"
+                  className="bg-transparent text-white px-4 py-1.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm whitespace-nowrap border border-white"
                   >
                   Login
                 </button>
@@ -247,7 +249,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             </div>
           
           {/* Dashboard Button */}
-            <button
+            {/* <button
               onClick={() => {
                 goToDashboard();
                 setIsMenuOpen(false);
@@ -255,7 +257,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
               className="bg-primary-500 text-white px-3 py-1 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-xs whitespace-nowrap"
             >
               Dashboard
-            </button>
+            </button> */}
 
           {/* Sign Out Button */}
             <button
@@ -307,7 +309,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
               <div className="pt-3 border-t border-neutral-700 space-y-2 text-center">
                 {!user ? (
                   <>
-                    <a
+                    {/* <a
                       href={`tel:${phoneNumberForCall}`}
                       className="inline-flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200 font-medium py-2 text-sm"
                     >
@@ -324,7 +326,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                       >
                         Login
                       </button>
-                    </div>
+                    </div> */}
                   </>
                 ) : (
                   <>
@@ -365,7 +367,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                   </>
                 )}
               </div>
-          <div className="pt-3 border-t border-neutral-700 space-y-2 text-center"></div>
+          {/* <div className="pt-3 border-t border-neutral-700 space-y-2 text-center"></div> */}
                 <div className="flex items-center space-x-3 justify-center md:justify-start block md:hidden">
               <a
                 href="https://www.instagram.com/kalm_lk?igsh=dHJ1YWExNDg1Mmpz"
