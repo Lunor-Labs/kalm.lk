@@ -103,11 +103,8 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Confirm Your Booking</h2>
-          <p className="text-neutral-300">Review your session details before proceeding to payment</p>
-        </div>
+      {/* Back button above the title, left-aligned */}
+      <div className="mb-4">
         <button
           onClick={onBack}
           className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200"
@@ -115,6 +112,10 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           <ArrowLeft className="w-5 h-5" />
           <span>Back</span>
         </button>
+      </div>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white whitespace-nowrap">Booking Confirmation</h2>
+        <p className="text-neutral-300">Review your session details and confirm your booking</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
@@ -288,6 +289,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           </div>
 
           {/* Payment Summary */}
+          {/*
           <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
           
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
@@ -320,7 +322,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   <span className="text-accent-green">Discount ({appliedCoupon})</span>
                   <span className="text-accent-green">-LKR {discount.toLocaleString()}</span>
                 </div>
-              )} */}
+              )} 
               
               <div className="border-t border-neutral-700 pt-3">
                 <div className="flex justify-between">
@@ -331,7 +333,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Session Type Info */}
           {/* <div className="bg-primary-500/10 border border-primary-500/20 rounded-2xl p-4">
@@ -399,15 +401,6 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             Proceed to Payment
           </button>
 
-          {/* Terms */}
-          <div className="text-center">
-            <p className="text-neutral-400 text-sm">
-              By proceeding, you agree to our{' '}
-              <a href="#" className="text-primary-500 hover:text-primary-600">Terms of Service</a>
-              {' '}and{' '}
-              <a href="#" className="text-primary-500 hover:text-primary-600">Privacy Policy</a>
-            </p>
-          </div>
         </div>
       </div>
     </div>

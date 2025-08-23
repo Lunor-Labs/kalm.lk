@@ -119,11 +119,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Complete Payment</h2>
-          <p className="text-neutral-300">Secure payment powered by PayHere</p>
-        </div>
+      {/* Back button above the title, left-aligned */}
+      <div className="mb-4">
         <button
           onClick={onBack}
           className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200"
@@ -131,6 +128,10 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           <ArrowLeft className="w-5 h-5" />
           <span>Back</span>
         </button>
+      </div>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white whitespace-nowrap">Complete Payment</h2>
+        <p className="text-neutral-300">Secure payment powered by PayHere</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
@@ -350,16 +351,6 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             </div>
           </div>
 
-          {/* Session Details */}
-          <div className="bg-primary-500/10 border border-primary-500/20 rounded-2xl p-4">
-            <h4 className="font-medium text-primary-500 text-sm mb-2">Session Details</h4>
-            <div className="space-y-1 text-xs text-neutral-300">
-              <p>• {sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} session with your therapist</p>
-              <p>• {bookingData.duration || 60} minutes duration</p>
-              <p>• Secure and private communication</p>
-              <p>• Session recording available upon request</p>
-            </div>
-          </div>
 
           {/* Payment Button */}
           <button
