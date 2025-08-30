@@ -174,58 +174,6 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const loadBookingsStats = async () => {
-    try {
-      const bookingsRef = collection(db, 'bookings');
-      const bookingsSnapshot = await getDocs(bookingsRef);
-      
-      const currentMonth = new Date();
-      const monthStart = startOfMonth(currentMonth);
-      const monthEnd = endOfMonth(currentMonth);
-
-      let totalBookings = 0;
-      let monthlyBookings = 0;
-      let pendingBookings = 0;
-      let confirmedBookings = 0;
-
-      bookingsSnapshot.docs.forEach(doc => {
-        const bookingData = doc.data();
-        const sessionTime = bookingData.sessionTime?.toDate();
-        
-        totalBookings++;
-        
-        // Count monthly bookings
-        if (sessionTime && sessionTime >= monthStart && sessionTime <= monthEnd) {
-          monthlyBookings++;
-        }
-        
-        // Count by status
-        switch (bookingData.status) {
-          case 'scheduled':
-            confirmedBookings++;
-            break;
-          case 'pending':
-            pendingBookings++;
-            break;
-        }
-      });
-
-      return {
-        totalBookings,
-        monthlyBookings,
-        pendingBookings,
-        confirmedBookings
-      };
-    } catch (error) {
-      console.error('Error loading bookings stats:', error);
-      return {
-        totalBookings: 0,
-        monthlyBookings: 0,
-        pendingBookings: 0,
-        confirmedBookings: 0
-      };
-    }
-  };
 
   const loadRecentActivity = async (): Promise<RecentActivity[]> => {
     try {
@@ -466,63 +414,6 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Booking Stats */}
-      <div>
-        <h2 className="text-xl font-semibold text-white mb-4">Booking Statistics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-white mb-1">{stats.totalBookings}</h3>
-              <p className="text-neutral-400 text-sm mb-2">Total Bookings</p>
-              <p className="text-accent-green text-sm">All time bookings</p>
-            </div>
-          </div>
-
-          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-accent-green rounded-2xl flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-white mb-1">{stats.monthlyBookings}</h3>
-              <p className="text-neutral-400 text-sm mb-2">This Month</p>
-              <p className="text-accent-green text-sm">Monthly bookings</p>
-            </div>
-          </div>
-
-          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-accent-yellow rounded-2xl flex items-center justify-center">
-                <Clock className="w-6 h-6 text-black" />
-              </div>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-white mb-1">{stats.pendingBookings}</h3>
-              <p className="text-neutral-400 text-sm mb-2">Pending Bookings</p>
-              <p className="text-accent-yellow text-sm">Awaiting confirmation</p>
-            </div>
-          </div>
-
-          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-accent-green rounded-2xl flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-white mb-1">{stats.confirmedBookings}</h3>
-              <p className="text-neutral-400 text-sm mb-2">Confirmed Bookings</p>
-              <p className="text-accent-green text-sm">Ready to proceed</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Recent Activity */}
       {/*
