@@ -1487,20 +1487,6 @@ const TherapistManagement: React.FC = () => {
                 />
               </div>
 
-              {/* Next Available Slot */}
-              <div>
-                <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
-                  Next Available Slot
-                </label>
-                <input
-                  type="text"
-                  value={formData.nextAvailableSlot}
-                  onChange={(e) => setFormData(prev => ({ ...prev, nextAvailableSlot: e.target.value }))}
-                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
-                  placeholder="e.g., Available Today, Tomorrow 2 PM, etc."
-                />
-              </div>
-
               {/* Submit Button */}
               <div className="flex items-center justify-end space-x-2 sm:space-x-4 pt-4 sm:pt-6 border-t border-neutral-800">
                 <button
