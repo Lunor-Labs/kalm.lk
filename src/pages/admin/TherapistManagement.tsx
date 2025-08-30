@@ -108,7 +108,11 @@ const TherapistManagement: React.FC = () => {
     'Licensed Therapist',
     'Certified Counselor',
     'EMDR Certified',
-    'CBT Certified'
+    'CBT Certified',
+    'Bachelor\'s Degree in Psychology',
+    'Diploma in Counseling Psychology',
+    'Art Therapy Certified',
+    'Play Therapy Certified'
   ];
 
   const specializationOptions = [
@@ -129,19 +133,14 @@ const TherapistManagement: React.FC = () => {
   const languageOptions = [
     'English',
     'Sinhala',
-    'Tamil',
-    'Hindi'
+    'Tamil'
   ];
 
   const serviceOptions = [
     'Individual Therapy',
-    'Couples Therapy',
-    'Family Therapy',
-    'Group Therapy',
+    'Family and Couples Therapy',
     'Teen Counseling',
     'LGBTQIA+ Support',
-    'Crisis Intervention',
-    'Addiction Counseling'
   ];
 
   const sessionFormatOptions = [
