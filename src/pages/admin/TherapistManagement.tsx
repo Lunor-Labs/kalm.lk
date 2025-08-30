@@ -604,13 +604,6 @@ const TherapistManagement: React.FC = () => {
                 </h3>
                 <p className="text-neutral-400 text-xs sm:text-sm mb-2 line-clamp-1">{therapist.email}</p>
 
-                {/* Rating */}
-                <div className="flex items-center justify-center space-x-1 mb-2 sm:mb-3">
-                  <Star className="w-3 h-3 sm:w-4 sm:h-4 text-accent-yellow fill-current" />
-                  <span className="text-white font-medium text-sm sm:text-base">{therapist.rating}</span>
-                  <span className="text-neutral-400 text-xs sm:text-sm">({therapist.reviewCount})</span>
-                </div>
-
                 {/* Specializations */}
                 <div className="mb-3 sm:mb-4">
                   <div className="flex flex-wrap gap-1 justify-center">
