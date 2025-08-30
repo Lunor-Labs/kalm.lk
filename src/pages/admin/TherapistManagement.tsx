@@ -97,37 +97,24 @@ const TherapistManagement: React.FC = () => {
     sessionFormats: false
   });
   const [currentPage, setCurrentPage] = useState(1);
+  const [customCredential, setCustomCredential] = useState('');
+  const [customSpecialization, setCustomSpecialization] = useState('');
   const therapistsPerPage = 6;
 
-  // Predefined options
+  // Updated credential options including "Other"
   const credentialOptions = [
     'PhD Clinical Psychology',
-    'MSc Counseling Psychology',
     'MSc Clinical Psychology',
+    'MSc Counseling Psychology',
     'MSc Family Therapy',
-    'Licensed Therapist',
+    'Bachelor\'s Degree in Psychology',
+    'Diploma in Counseling Psychology',
     'Certified Counselor',
     'EMDR Certified',
     'CBT Certified',
-    'Bachelor\'s Degree in Psychology',
-    'Diploma in Counseling Psychology',
     'Art Therapy Certified',
-    'Play Therapy Certified'
-  ];
-
-  const specializationOptions = [
-    'Anxiety Disorders',
-    'Depression',
-    'Trauma & PTSD',
-    'Relationship Counseling',
-    'Family Therapy',
-    'Addiction Recovery',
-    'Teen Counseling',
-    'LGBTQIA+ Counseling',
-    'Stress Management',
-    'Grief Counseling',
-    'Eating Disorders',
-    'Sleep Disorders'
+    'Play Therapy Certified',
+    'Other'
   ];
 
   const languageOptions = [
@@ -161,7 +148,6 @@ const TherapistManagement: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Reset to page 1 when search query changes
     setCurrentPage(1);
   }, [searchQuery]);
 
@@ -215,6 +201,28 @@ const TherapistManagement: React.FC = () => {
     }
   };
 
+  const handleCredentialKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && customCredential.trim()) {
+      e.preventDefault();
+      setFormData(prev => ({
+        ...prev,
+        credentials: [...prev.credentials, customCredential.trim()]
+      }));
+      setCustomCredential('');
+    }
+  };
+
+  const handleSpecializationKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && customSpecialization.trim()) {
+      e.preventDefault();
+      setFormData(prev => ({
+        ...prev,
+        specializations: [...prev.specializations, customSpecialization.trim()]
+      }));
+      setCustomSpecialization('');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -229,12 +237,12 @@ const TherapistManagement: React.FC = () => {
     }
 
     if (formData.credentials.length === 0) {
-      toast.error('Please select at least one credential');
+      toast.error('Please select or add at least one credential');
       return;
     }
 
     if (formData.specializations.length === 0) {
-      toast.error('Please select at least one specialization');
+      toast.error('Please add at least one specialization');
       return;
     }
 
@@ -256,13 +264,12 @@ const TherapistManagement: React.FC = () => {
     setLoading(true);
     try {
       if (editingTherapist) {
-        // Update existing therapist
         const therapistRef = doc(db, 'therapists', editingTherapist.id);
         await updateDoc(therapistRef, {
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
-          credentials: formData.credentials,
+          credentials: formData.credentials.filter(c => c !== 'Other'),
           specializations: formData.specializations,
           languages: formData.languages,
           services: formData.services,
@@ -277,16 +284,13 @@ const TherapistManagement: React.FC = () => {
         
         toast.success('Therapist updated successfully');
       } else {
-        // Create new therapist account
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         const user = userCredential.user;
         
-        // Update display name
         await updateProfile(user, {
           displayName: `${formData.firstName} ${formData.lastName}`
         });
         
-        // Create user document in Firestore first
         await setDoc(doc(db, 'users', user.uid), {
           uid: user.uid,
           email: user.email,
@@ -297,13 +301,12 @@ const TherapistManagement: React.FC = () => {
           updatedAt: serverTimestamp()
         });
         
-        // Create therapist document
         const therapistData = {
           userId: user.uid,
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
-          credentials: formData.credentials,
+          credentials: formData.credentials.filter(c => c !== 'Other'),
           specializations: formData.specializations,
           languages: formData.languages,
           services: formData.services,
@@ -324,7 +327,6 @@ const TherapistManagement: React.FC = () => {
         toast.success('Therapist added successfully');
       }
       
-      // Reset form and close modal
       resetForm();
       setShowAddModal(false);
       setEditingTherapist(null);
@@ -343,7 +345,6 @@ const TherapistManagement: React.FC = () => {
     }
 
     try {
-      // Delete profile photo if it exists and is not a default image
       if (therapist.profilePhoto && !therapist.profilePhoto.includes('pexels.com')) {
         const photoPath = getStoragePathFromUrl(therapist.profilePhoto);
         if (photoPath) {
@@ -351,7 +352,6 @@ const TherapistManagement: React.FC = () => {
         }
       }
       
-      // Delete therapist document
       await deleteDoc(doc(db, 'therapists', therapist.id));
       toast.success('Therapist deleted successfully');
       loadTherapists();
@@ -378,6 +378,8 @@ const TherapistManagement: React.FC = () => {
       nextAvailableSlot: 'Please set availability',
       profilePhoto: ''
     });
+    setCustomCredential('');
+    setCustomSpecialization('');
   };
 
   const openEditModal = (therapist: Therapist) => {
@@ -385,7 +387,7 @@ const TherapistManagement: React.FC = () => {
       firstName: therapist.firstName,
       lastName: therapist.lastName,
       email: therapist.email,
-      password: '', // Don't populate password for security
+      password: '',
       credentials: therapist.credentials,
       specializations: therapist.specializations,
       languages: therapist.languages,
@@ -407,12 +409,10 @@ const TherapistManagement: React.FC = () => {
     therapist.specializations.some(spec => spec.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Calculate paginated therapists
   const totalPages = Math.ceil(filteredTherapists.length / therapistsPerPage);
   const startIndex = (currentPage - 1) * therapistsPerPage;
   const paginatedTherapists = filteredTherapists.slice(startIndex, startIndex + therapistsPerPage);
 
-  // Generate visible page numbers (current page ±2, with ellipses)
   const getVisiblePages = () => {
     const maxPagesToShow = 5;
     const pages: (number | string)[] = [];
@@ -443,17 +443,26 @@ const TherapistManagement: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    // Debug pagination
-    console.log('Filtered therapists:', filteredTherapists.length, 'Total pages:', totalPages, 'Current page:', currentPage);
-  }, [filteredTherapists, currentPage]);
-
   const handleArrayFieldChange = (field: keyof TherapistFormData, value: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: checked 
         ? [...(prev[field] as string[]), value]
         : (prev[field] as string[]).filter(item => item !== value)
+    }));
+  };
+
+  const removeCredential = (credential: string) => {
+    setFormData(prev => ({
+      ...prev,
+      credentials: prev.credentials.filter(c => c !== credential)
+    }));
+  };
+
+  const removeSpecialization = (specialization: string) => {
+    setFormData(prev => ({
+      ...prev,
+      specializations: prev.specializations.filter(s => s !== specialization)
     }));
   };
 
@@ -479,7 +488,6 @@ const TherapistManagement: React.FC = () => {
 
   return (
     <div className="space-y-6 px-4 sm:px-0">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">Therapist Management</h1>
@@ -487,7 +495,6 @@ const TherapistManagement: React.FC = () => {
         </div>
         
         <div className="flex flex-col xs:flex-row items-stretch sm:items-center gap-3">
-          {/* View Mode Toggle - Only show on larger screens */}
           {!isMobile && (
             <div className="flex bg-neutral-800 rounded-2xl p-1">
               <button
@@ -523,7 +530,6 @@ const TherapistManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats - Stack on mobile */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
         <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
           <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
@@ -542,23 +548,8 @@ const TherapistManagement: React.FC = () => {
             {therapists.filter(t => t.isAvailable).length}
           </p>
         </div>
-        {/*
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
-            <Star className="w-4 sm:w-5 h-4 sm:h-5 text-accent-yellow" />
-            <span className="text-neutral-300 text-xs sm:text-sm">Avg Rating</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-white">
-            {therapists.length > 0 
-              ? (therapists.reduce((sum, t) => sum + t.rating, 0) / therapists.length).toFixed(1)
-              : '0.0'
-            }
-          </p>
-        </div>
-        */}
       </div>
 
-      {/* Search */}
       <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-neutral-400" />
@@ -572,16 +563,13 @@ const TherapistManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Therapists Display */}
       {viewMode === 'grid' || isMobile ? (
-        /* Grid View - Always used on mobile */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {paginatedTherapists.map((therapist) => (
             <div
               key={therapist.id}
               className="bg-black/50 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-neutral-800 overflow-hidden hover:border-neutral-700 transition-all duration-300"
             >
-              {/* Profile Image */}
               <div className="relative p-4 sm:p-6 pb-0">
                 <div className="flex justify-center">
                   <div className="relative">
@@ -590,21 +578,20 @@ const TherapistManagement: React.FC = () => {
                       alt={`${therapist.firstName} ${therapist.lastName}`}
                       className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 sm:border-4 border-neutral-700"
                     />
-                    <div className={`absolute bottom-0 right-0 w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-neutral-800 ${
+                    <div className={`absolute bottom-0 right-0輪
+ w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-neutral-800 ${
                       therapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-500'
                     }`}></div>
                   </div>
                 </div>
               </div>
 
-              {/* Content */}
               <div className="p-4 sm:p-6 pt-2 sm:pt-4 text-center">
                 <h3 className="text-base sm:text-lg font-semibold text-white mb-1">
                   {therapist.firstName} {therapist.lastName}
                 </h3>
                 <p className="text-neutral-400 text-xs sm:text-sm mb-2 line-clamp-1">{therapist.email}</p>
 
-                {/* Specializations */}
                 <div className="mb-3 sm:mb-4">
                   <div className="flex flex-wrap gap-1 justify-center">
                     {therapist.specializations.slice(0, 2).map((spec, index) => (
@@ -623,7 +610,6 @@ const TherapistManagement: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Quick Info */}
                 <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4 text-xs sm:text-sm">
                   <div className="text-center">
                     <p className="text-neutral-400">Experience</p>
@@ -635,7 +621,6 @@ const TherapistManagement: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Session Formats */}
                 <div className="flex items-center justify-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
                   {therapist.sessionFormats.map((format, index) => (
                     <div key={index} className="flex items-center space-x-1 text-neutral-300">
@@ -644,7 +629,6 @@ const TherapistManagement: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center justify-center space-x-1 sm:space-x-2">
                   <button
                     onClick={() => setViewingTherapist(therapist)}
@@ -685,7 +669,6 @@ const TherapistManagement: React.FC = () => {
           )}
         </div>
       ) : (
-        /* Table View - Only shown on desktop when selected */
         <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-neutral-800 overflow-hidden">
           <div className="p-4 sm:p-6 border-b border-neutral-800">
             <h2 className="text-lg sm:text-xl font-semibold text-white">
@@ -804,7 +787,6 @@ const TherapistManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Pagination */}
       <div className="flex items-center justify-between gap-2 mt-4 overflow-x-auto">
         <button
           onClick={() => handlePageChange(currentPage - 1)}
@@ -853,7 +835,6 @@ const TherapistManagement: React.FC = () => {
         </button>
       </div>
 
-      {/* View Therapist Modal - Responsive */}
       {viewingTherapist && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div 
@@ -881,7 +862,6 @@ const TherapistManagement: React.FC = () => {
             </div>
 
             <div className="p-4 sm:p-6">
-              {/* Profile Header */}
               <div className="text-center mb-6 sm:mb-8">
                 <div className="relative inline-block">
                   <img
@@ -898,7 +878,6 @@ const TherapistManagement: React.FC = () => {
                 </h3>
                 <p className="text-neutral-400 text-sm sm:text-base">{viewingTherapist.email}</p>
                 
-                {/* Rating */}
                 <div className="flex items-center justify-center space-x-2 mt-2 sm:mt-3">
                   <Star className="w-4 h-4 sm:w-5 sm:h-5 text-accent-yellow fill-current" />
                   <span className="text-white font-medium text-base sm:text-lg">{viewingTherapist.rating}</span>
@@ -906,11 +885,8 @@ const TherapistManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Details Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {/* Left Column */}
                 <div className="space-y-4 sm:space-y-6">
-                  {/* Basic Info */}
                   <div className="bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
                     <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center space-x-2">
                       <Award className="w-4 h-4 sm:w-5 sm:h-5 text-primary-500" />
@@ -932,7 +908,6 @@ const TherapistManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Credentials */}
                   <div className="bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
                     <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Credentials</h4>
                     <div className="flex flex-wrap gap-1 sm:gap-2">
@@ -948,9 +923,7 @@ const TherapistManagement: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Right Column */}
                 <div className="space-y-4 sm:space-y-6">
-                  {/* Specializations */}
                   <div className="bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
                     <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Specializations</h4>
                     <div className="flex flex-wrap gap-1 sm:gap-2">
@@ -965,7 +938,6 @@ const TherapistManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Session Formats */}
                   <div className="bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
                     <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Session Formats</h4>
                     <div className="flex items-center space-x-2 sm:space-x-4">
@@ -980,7 +952,6 @@ const TherapistManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Bio */}
               {viewingTherapist.bio && (
                 <div className="mt-4 sm:mt-6 bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
                   <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">About</h4>
@@ -988,7 +959,6 @@ const TherapistManagement: React.FC = () => {
                 </div>
               )}
 
-              {/* Actions */}
               <div className="flex items-center justify-end space-x-2 sm:space-x-4 mt-6 pt-4 sm:pt-6 border-t border-neutral-800">
                 <button
                   onClick={() => {
@@ -1006,7 +976,6 @@ const TherapistManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Add/Edit Modal - Responsive */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div 
@@ -1046,7 +1015,6 @@ const TherapistManagement: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              {/* Profile Photo */}
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3 text-center">
                   Profile Photo
@@ -1091,7 +1059,6 @@ const TherapistManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Basic Information */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
@@ -1190,10 +1157,8 @@ const TherapistManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Collapsible Sections for Mobile */}
               {isMobile ? (
                 <>
-                  {/* Credentials - Collapsible */}
                   <div className="bg-neutral-800/50 rounded-xl overflow-hidden">
                     <button
                       type="button"
@@ -1201,7 +1166,7 @@ const TherapistManagement: React.FC = () => {
                       className="w-full flex items-center justify-between p-4"
                     >
                       <span className="text-sm font-medium text-neutral-300">
-                        Credentials * (Select at least one)
+                        Credentials * (Select or add at least one)
                       </span>
                       {expandedSections.credentials ? (
                         <ChevronUp className="w-4 h-4 text-neutral-400" />
@@ -1212,21 +1177,53 @@ const TherapistManagement: React.FC = () => {
                     {expandedSections.credentials && (
                       <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                         {credentialOptions.map((credential) => (
-                          <label key={credential} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={formData.credentials.includes(credential)}
-                              onChange={(e) => handleArrayFieldChange('credentials', credential, e.target.checked)}
-                              className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
-                            />
-                            <span className="text-neutral-300 text-xs">{credential}</span>
-                          </label>
+                          <div key={credential}>
+                            <label className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={formData.credentials.includes(credential)}
+                                onChange={(e) => handleArrayFieldChange('credentials', credential, e.target.checked)}
+                                className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
+                              />
+                              <span className="text-neutral-300 text-xs">{credential}</span>
+                            </label>
+                            {credential === 'Other' && formData.credentials.includes('Other') && (
+                              <div className="mt-2">
+                                <input
+                                  type="text"
+                                  value={customCredential}
+                                  onChange={(e) => setCustomCredential(e.target.value)}
+                                  onKeyPress={handleCredentialKeyPress}
+                                  className="w-full px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
+                                  placeholder="Enter custom credential and press Enter"
+                                />
+                              </div>
+                            )}
+                          </div>
                         ))}
+                        {formData.credentials.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {formData.credentials.filter(c => c !== 'Other').map((credential, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center px-2 py-1 bg-primary-500/20 text-primary-500 rounded-full text-xs"
+                              >
+                                {credential}
+                                <button
+                                  type="button"
+                                  onClick={() => removeCredential(credential)}
+                                  className="ml-2 text-primary-500 hover:text-primary-600"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {/* Specializations - Collapsible */}
                   <div className="bg-neutral-800/50 rounded-xl overflow-hidden">
                     <button
                       type="button"
@@ -1234,7 +1231,7 @@ const TherapistManagement: React.FC = () => {
                       className="w-full flex items-center justify-between p-4"
                     >
                       <span className="text-sm font-medium text-neutral-300">
-                        Specializations * (Select at least one)
+                        Specializations * (Add at least one)
                       </span>
                       {expandedSections.specializations ? (
                         <ChevronUp className="w-4 h-4 text-neutral-400" />
@@ -1243,23 +1240,38 @@ const TherapistManagement: React.FC = () => {
                       )}
                     </button>
                     {expandedSections.specializations && (
-                      <div className="p-4 pt-0 grid grid-cols-1 gap-2">
-                        {specializationOptions.map((specialization) => (
-                          <label key={specialization} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={formData.specializations.includes(specialization)}
-                              onChange={(e) => handleArrayFieldChange('specializations', specialization, e.target.checked)}
-                              className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
-                            />
-                            <span className="text-neutral-300 text-xs">{specialization}</span>
-                          </label>
-                        ))}
+                      <div className="p-4 pt-0">
+                        <input
+                          type="text"
+                          value={customSpecialization}
+                          onChange={(e) => setCustomSpecialization(e.target.value)}
+                          onKeyPress={handleSpecializationKeyPress}
+                          className="w-full px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
+                          placeholder="Enter specialization and press Enter"
+                        />
+                        {formData.specializations.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {formData.specializations.map((spec, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center px-2 py-1 bg-accent-yellow/20 text-accent-yellow rounded-full text-xs"
+                              >
+                                {spec}
+                                <button
+                                  type="button"
+                                  onClick={() => removeSpecialization(spec)}
+                                  className="ml-2 text-accent-yellow hover:text-accent-yellow/80"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {/* Languages - Collapsible */}
                   <div className="bg-neutral-800/50 rounded-xl overflow-hidden">
                     <button
                       type="button"
@@ -1292,7 +1304,6 @@ const TherapistManagement: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Services - Collapsible */}
                   <div className="bg-neutral-800/50 rounded-xl overflow-hidden">
                     <button
                       type="button"
@@ -1325,7 +1336,6 @@ const TherapistManagement: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Session Formats - Collapsible */}
                   <div className="bg-neutral-800/50 rounded-xl overflow-hidden">
                     <button
                       type="button"
@@ -1364,49 +1374,94 @@ const TherapistManagement: React.FC = () => {
                   </div>
                 </>
               ) : (
-                /* Desktop Layout for Sections */
                 <>
-                  {/* Credentials */}
                   <div>
                     <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
-                      Credentials * (Select at least one)
+                      Credentials * (Select or add at least one)
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                       {credentialOptions.map((credential) => (
-                        <label key={credential} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.credentials.includes(credential)}
-                            onChange={(e) => handleArrayFieldChange('credentials', credential, e.target.checked)}
-                            className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
-                          />
-                          <span className="text-neutral-300 text-sm">{credential}</span>
-                        </label>
+                        <div key={credential}>
+                          <label className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={formData.credentials.includes(credential)}
+                              onChange={(e) => handleArrayFieldChange('credentials', credential, e.target.checked)}
+                              className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
+                            />
+                            <span className="text-neutral-300 text-sm">{credential}</span>
+                          </label>
+                          {credential === 'Other' && formData.credentials.includes('Other') && (
+                            <div className="mt-2">
+                              <input
+                                type="text"
+                                value={customCredential}
+                                onChange={(e) => setCustomCredential(e.target.value)}
+                                onKeyPress={handleCredentialKeyPress}
+                                className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-sm"
+                                placeholder="Enter custom credential and press Enter"
+                              />
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
+                    {formData.credentials.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {formData.credentials.filter(c => c !== 'Other').map((credential, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center px-2 py-1 bg-primary-500/20 text-primary-500 rounded-full text-sm"
+                          >
+                            {credential}
+                            <button
+                              type="button"
+                              onClick={() => removeCredential(credential)}
+                              className="ml-2 text-primary-500 hover:text-primary-600"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Specializations */}
                   <div>
                     <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
-                      Specializations * (Select at least one)
+                      Specializations * (Add at least one)
                     </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-                      {specializationOptions.map((specialization) => (
-                        <label key={specialization} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.specializations.includes(specialization)}
-                            onChange={(e) => handleArrayFieldChange('specializations', specialization, e.target.checked)}
-                            className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
-                          />
-                          <span className="text-neutral-300 text-sm">{specialization}</span>
-                        </label>
-                      ))}
+                    <div>
+                      <input
+                        type="text"
+                        value={customSpecialization}
+                        onChange={(e) => setCustomSpecialization(e.target.value)}
+                        onKeyPress={handleSpecializationKeyPress}
+                        className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-sm"
+                        placeholder="Enter specialization and press Enter"
+                      />
+                      {formData.specializations.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {formData.specializations.map((spec, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center px-2 py-1 bg-accent-yellow/20 text-accent-yellow rounded-full text-sm"
+                            >
+                              {spec}
+                              <button
+                                type="button"
+                                onClick={() => removeSpecialization(spec)}
+                                className="ml-2 text-accent-yellow hover:text-accent-yellow/80"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Languages */}
                   <div>
                     <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
                       Languages * (Select at least one)
@@ -1426,7 +1481,6 @@ const TherapistManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Services */}
                   <div>
                     <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
                       Services * (Select at least one)
@@ -1446,7 +1500,6 @@ const TherapistManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Session Formats */}
                   <div>
                     <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
                       Session Formats * (Select at least one)
@@ -1473,7 +1526,6 @@ const TherapistManagement: React.FC = () => {
                 </>
               )}
 
-              {/* Bio */}
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
                   Bio
@@ -1487,7 +1539,6 @@ const TherapistManagement: React.FC = () => {
                 />
               </div>
 
-              {/* Submit Button */}
               <div className="flex items-center justify-end space-x-2 sm:space-x-4 pt-4 sm:pt-6 border-t border-neutral-800">
                 <button
                   type="button"
