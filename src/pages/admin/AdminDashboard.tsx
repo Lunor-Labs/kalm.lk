@@ -1,54 +1,346 @@
-import React from 'react';
-import { Users, Calendar, CreditCard, TrendingUp, Clock, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Calendar, CreditCard, TrendingUp, Clock, CheckCircle, UserCheck, Crown } from 'lucide-react';
+import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import { format, startOfMonth, endOfMonth, startOfDay, endOfDay } from 'date-fns';
+
+interface DashboardStats {
+  totalUsers: number;
+  totalClients: number;
+  totalTherapists: number;
+  totalAdmins: number;
+  totalSessions: number;
+  todaySessions: number;
+  activeSessions: number;
+  completedSessions: number;
+  scheduledSessions: number;
+  totalBookings: number;
+  monthlyBookings: number;
+  pendingBookings: number;
+  confirmedBookings: number;
+}
+
+interface RecentActivity {
+  id: string;
+  type: 'user_signup' | 'session_booked' | 'session_completed' | 'therapist_joined';
+  message: string;
+  timestamp: Date;
+  userRole?: string;
+}
 
 const AdminDashboard: React.FC = () => {
-  // Mock data - in real app, this would come from Firestore
-  const stats = [
-    {
-      title: 'Total Therapists',
-      value: '24',
-      change: '+2 this month',
-      icon: Users,
-      color: 'bg-primary-500'
-    },
-    {
-      title: 'Active Bookings',
-      value: '156',
-      change: '+12% from last month',
-      icon: Calendar,
-      color: 'bg-accent-green'
-    }
-  ];
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const recentBookings = [
-    {
-      id: '1',
-      client: 'Anonymous User',
-      therapist: 'Dr. Priya Perera',
-      date: '2024-01-15',
-      time: '2:00 PM',
-      status: 'confirmed',
-      amount: 4500
-    },
-    {
-      id: '2',
-      client: 'John Doe',
-      therapist: 'Dr. Rohan Silva',
-      date: '2024-01-15',
-      time: '3:30 PM',
-      status: 'pending',
-      amount: 5000
-    },
-    {
-      id: '3',
-      client: 'Anonymous User',
-      therapist: 'Dr. Sanduni Wickramasinghe',
-      date: '2024-01-16',
-      time: '10:00 AM',
-      status: 'confirmed',
-      amount: 3500
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Load all data in parallel
+      const [
+        usersData,
+        sessionsData,
+        bookingsData,
+        recentActivityData
+      ] = await Promise.all([
+        loadUsersStats(),
+        loadSessionsStats(),
+        loadBookingsStats(),
+        loadRecentActivity()
+      ]);
+
+      setStats({
+        ...usersData,
+        ...sessionsData,
+        ...bookingsData
+      });
+
+      setRecentActivity(recentActivityData);
+    } catch (err: any) {
+      console.error('Error loading dashboard data:', err);
+      setError(err.message || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const loadUsersStats = async () => {
+    try {
+      const usersRef = collection(db, 'users');
+      const usersSnapshot = await getDocs(usersRef);
+      
+      let totalUsers = 0;
+      let totalClients = 0;
+      let totalTherapists = 0;
+      let totalAdmins = 0;
+
+      usersSnapshot.docs.forEach(doc => {
+        const userData = doc.data();
+        totalUsers++;
+        
+        switch (userData.role) {
+          case 'client':
+            totalClients++;
+            break;
+          case 'therapist':
+            totalTherapists++;
+            break;
+          case 'admin':
+            totalAdmins++;
+            break;
+        }
+      });
+
+      return {
+        totalUsers,
+        totalClients,
+        totalTherapists,
+        totalAdmins
+      };
+    } catch (error) {
+      console.error('Error loading users stats:', error);
+      return {
+        totalUsers: 0,
+        totalClients: 0,
+        totalTherapists: 0,
+        totalAdmins: 0
+      };
+    }
+  };
+
+  const loadSessionsStats = async () => {
+    try {
+      const sessionsRef = collection(db, 'sessions');
+      const sessionsSnapshot = await getDocs(sessionsRef);
+      
+      const today = new Date();
+      const todayStart = startOfDay(today);
+      const todayEnd = endOfDay(today);
+
+      let totalSessions = 0;
+      let todaySessions = 0;
+      let activeSessions = 0;
+      let completedSessions = 0;
+      let scheduledSessions = 0;
+
+      sessionsSnapshot.docs.forEach(doc => {
+        const sessionData = doc.data();
+        const scheduledTime = sessionData.scheduledTime?.toDate();
+        
+        totalSessions++;
+        
+        // Count today's sessions
+        if (scheduledTime && scheduledTime >= todayStart && scheduledTime <= todayEnd) {
+          todaySessions++;
+        }
+        
+        // Count by status
+        switch (sessionData.status) {
+          case 'active':
+            activeSessions++;
+            break;
+          case 'completed':
+            completedSessions++;
+            break;
+          case 'scheduled':
+            scheduledSessions++;
+            break;
+        }
+      });
+
+      return {
+        totalSessions,
+        todaySessions,
+        activeSessions,
+        completedSessions,
+        scheduledSessions
+      };
+    } catch (error) {
+      console.error('Error loading sessions stats:', error);
+      return {
+        totalSessions: 0,
+        todaySessions: 0,
+        activeSessions: 0,
+        completedSessions: 0,
+        scheduledSessions: 0
+      };
+    }
+  };
+
+  const loadBookingsStats = async () => {
+    try {
+      const bookingsRef = collection(db, 'bookings');
+      const bookingsSnapshot = await getDocs(bookingsRef);
+      
+      const currentMonth = new Date();
+      const monthStart = startOfMonth(currentMonth);
+      const monthEnd = endOfMonth(currentMonth);
+
+      let totalBookings = 0;
+      let monthlyBookings = 0;
+      let pendingBookings = 0;
+      let confirmedBookings = 0;
+
+      bookingsSnapshot.docs.forEach(doc => {
+        const bookingData = doc.data();
+        const sessionTime = bookingData.sessionTime?.toDate();
+        
+        totalBookings++;
+        
+        // Count monthly bookings
+        if (sessionTime && sessionTime >= monthStart && sessionTime <= monthEnd) {
+          monthlyBookings++;
+        }
+        
+        // Count by status
+        switch (bookingData.status) {
+          case 'scheduled':
+            confirmedBookings++;
+            break;
+          case 'pending':
+            pendingBookings++;
+            break;
+        }
+      });
+
+      return {
+        totalBookings,
+        monthlyBookings,
+        pendingBookings,
+        confirmedBookings
+      };
+    } catch (error) {
+      console.error('Error loading bookings stats:', error);
+      return {
+        totalBookings: 0,
+        monthlyBookings: 0,
+        pendingBookings: 0,
+        confirmedBookings: 0
+      };
+    }
+  };
+
+  const loadRecentActivity = async (): Promise<RecentActivity[]> => {
+    try {
+      const activities: RecentActivity[] = [];
+
+      // Get recent user signups
+      const usersRef = collection(db, 'users');
+      const recentUsersQuery = query(usersRef, orderBy('createdAt', 'desc'), limit(5));
+      const recentUsersSnapshot = await getDocs(recentUsersQuery);
+      
+      recentUsersSnapshot.docs.forEach(doc => {
+        const userData = doc.data();
+        const createdAt = userData.createdAt?.toDate() || new Date();
+        
+        activities.push({
+          id: `user-${doc.id}`,
+          type: userData.role === 'therapist' ? 'therapist_joined' : 'user_signup',
+          message: userData.role === 'therapist' 
+            ? `New therapist ${userData.displayName || 'Unknown'} joined`
+            : `New ${userData.role} ${userData.displayName || 'user'} signed up`,
+          timestamp: createdAt,
+          userRole: userData.role
+        });
+      });
+
+      // Get recent sessions
+      const sessionsRef = collection(db, 'sessions');
+      const recentSessionsQuery = query(sessionsRef, orderBy('createdAt', 'desc'), limit(5));
+      const recentSessionsSnapshot = await getDocs(recentSessionsQuery);
+      
+      recentSessionsSnapshot.docs.forEach(doc => {
+        const sessionData = doc.data();
+        const createdAt = sessionData.createdAt?.toDate() || new Date();
+        
+        if (sessionData.status === 'completed') {
+          activities.push({
+            id: `session-completed-${doc.id}`,
+            type: 'session_completed',
+            message: `Session completed with ${sessionData.therapistName || 'therapist'}`,
+            timestamp: createdAt
+          });
+        } else if (sessionData.status === 'scheduled') {
+          activities.push({
+            id: `session-booked-${doc.id}`,
+            type: 'session_booked',
+            message: `New session booked with ${sessionData.therapistName || 'therapist'}`,
+            timestamp: createdAt
+          });
+        }
+      });
+
+      // Sort by timestamp and return latest 10
+      return activities
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+        .slice(0, 10);
+    } catch (error) {
+      console.error('Error loading recent activity:', error);
+      return [];
+    }
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'user_signup': return <Users className="w-4 h-4 text-primary-500" />;
+      case 'therapist_joined': return <UserCheck className="w-4 h-4 text-accent-green" />;
+      case 'session_booked': return <Calendar className="w-4 h-4 text-accent-yellow" />;
+      case 'session_completed': return <CheckCircle className="w-4 h-4 text-accent-green" />;
+      default: return <Clock className="w-4 h-4 text-neutral-400" />;
+    }
+  };
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-16">
+        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <TrendingUp className="w-8 h-8 text-red-500" />
+        </div>
+        <h3 className="text-xl font-semibold text-white mb-2">Error Loading Dashboard</h3>
+        <p className="text-neutral-300 mb-6">{error}</p>
+        <button
+          onClick={loadDashboardData}
+          className="bg-primary-500 text-white px-6 py-3 rounded-2xl hover:bg-primary-600 transition-colors duration-200"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!stats) return null;
 
   return (
     <div className="space-y-8">
@@ -58,130 +350,230 @@ const AdminDashboard: React.FC = () => {
         <p className="text-neutral-300">Monitor your platform's performance and activity</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div key={index} className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-12 h-12 ${stat.color} rounded-2xl flex items-center justify-center`}>
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-white mb-1">{stat.value}</h3>
-                <p className="text-neutral-400 text-sm mb-2">{stat.title}</p>
-                <p className="text-accent-green text-sm">{stat.change}</p>
+      {/* User Stats */}
+      <div>
+        <h2 className="text-xl font-semibold text-white mb-4">User Statistics</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center">
+                <Users className="w-6 h-6 text-white" />
               </div>
             </div>
-          );
-        })}
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-1">{stats.totalUsers}</h3>
+              <p className="text-neutral-400 text-sm mb-2">Total Users</p>
+              <p className="text-accent-green text-sm">All registered users</p>
+            </div>
+          </div>
+
+          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-1">{stats.totalClients}</h3>
+              <p className="text-neutral-400 text-sm mb-2">Total Clients</p>
+              <p className="text-accent-green text-sm">Active client accounts</p>
+            </div>
+          </div>
+
+          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-accent-green rounded-2xl flex items-center justify-center">
+                <UserCheck className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-1">{stats.totalTherapists}</h3>
+              <p className="text-neutral-400 text-sm mb-2">Total Therapists</p>
+              <p className="text-accent-green text-sm">Licensed professionals</p>
+            </div>
+          </div>
+
+          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-accent-yellow rounded-2xl flex items-center justify-center">
+                <Crown className="w-6 h-6 text-black" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-1">{stats.totalAdmins}</h3>
+              <p className="text-neutral-400 text-sm mb-2">Total Admins</p>
+              <p className="text-accent-green text-sm">Platform administrators</p>
+            </div>
+          </div>
+        </div>
       </div>
-      
+
+      {/* Session Stats */}
+      <div>
+        <h2 className="text-xl font-semibold text-white mb-4">Session Statistics</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-1">{stats.totalSessions}</h3>
+              <p className="text-neutral-400 text-sm mb-2">Total Sessions</p>
+              <p className="text-accent-green text-sm">All time sessions</p>
+            </div>
+          </div>
+
+          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-accent-yellow rounded-2xl flex items-center justify-center">
+                <Clock className="w-6 h-6 text-black" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-1">{stats.todaySessions}</h3>
+              <p className="text-neutral-400 text-sm mb-2">Today's Sessions</p>
+              <p className="text-accent-green text-sm">Scheduled for today</p>
+            </div>
+          </div>
+
+          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-accent-green rounded-2xl flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-1">{stats.activeSessions}</h3>
+              <p className="text-neutral-400 text-sm mb-2">Active Sessions</p>
+              <p className="text-accent-green text-sm">Currently ongoing</p>
+            </div>
+          </div>
+
+          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-accent-orange rounded-2xl flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-1">{stats.completedSessions}</h3>
+              <p className="text-neutral-400 text-sm mb-2">Completed Sessions</p>
+              <p className="text-accent-green text-sm">Successfully finished</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Booking Stats */}
+      <div>
+        <h2 className="text-xl font-semibold text-white mb-4">Booking Statistics</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-1">{stats.totalBookings}</h3>
+              <p className="text-neutral-400 text-sm mb-2">Total Bookings</p>
+              <p className="text-accent-green text-sm">All time bookings</p>
+            </div>
+          </div>
+
+          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-accent-green rounded-2xl flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-1">{stats.monthlyBookings}</h3>
+              <p className="text-neutral-400 text-sm mb-2">This Month</p>
+              <p className="text-accent-green text-sm">Monthly bookings</p>
+            </div>
+          </div>
+
+          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-accent-yellow rounded-2xl flex items-center justify-center">
+                <Clock className="w-6 h-6 text-black" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-1">{stats.pendingBookings}</h3>
+              <p className="text-neutral-400 text-sm mb-2">Pending Bookings</p>
+              <p className="text-accent-yellow text-sm">Awaiting confirmation</p>
+            </div>
+          </div>
+
+          <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-accent-green rounded-2xl flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-1">{stats.confirmedBookings}</h3>
+              <p className="text-neutral-400 text-sm mb-2">Confirmed Bookings</p>
+              <p className="text-accent-green text-sm">Ready to proceed</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Recent Activity */}
       {/*
       <div className="grid lg:grid-cols-2 gap-8">
- 
-        
         <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-          <h2 className="text-xl font-semibold text-white mb-6">Recent Bookings</h2>
-          
-          <div className="space-y-4">
-            {recentBookings.map((booking) => (
-              <div key={booking.id} className="flex items-center justify-between p-4 bg-neutral-800/50 rounded-2xl">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-3 h-3 rounded-full ${
-                    booking.status === 'confirmed' ? 'bg-accent-green' : 'bg-accent-yellow'
-                  }`}></div>
-                  <div>
-                    <p className="text-white font-medium">{booking.client}</p>
-                    <p className="text-neutral-300 text-sm">with {booking.therapist}</p>
-                    <p className="text-neutral-400 text-xs">{booking.date} at {booking.time}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-white font-semibold">LKR {booking.amount.toLocaleString()}</p>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    booking.status === 'confirmed' 
-                      ? 'bg-accent-green/20 text-accent-green' 
-                      : 'bg-accent-yellow/20 text-accent-yellow'
-                  }`}>
-                    {booking.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-white">Recent Activity</h2>
+            <button
+              onClick={loadDashboardData}
+              className="text-primary-500 hover:text-primary-600 transition-colors duration-200 text-sm"
+            >
+              Refresh
+            </button>
           </div>
-        </div>
-        */}
 
-        {/* Quick Actions */}
-        {/*
-        <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-          <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
-          
-          <div className="space-y-4">
-            <button className="w-full flex items-center space-x-3 p-4 bg-primary-500/10 border border-primary-500/20 rounded-2xl hover:bg-primary-500/20 transition-colors duration-200 text-left">
-              <Users className="w-5 h-5 text-primary-500" />
-              <div>
-                <p className="text-white font-medium">Add New Therapist</p>
-                <p className="text-neutral-300 text-sm">Onboard a new mental health professional</p>
-              </div>
-            </button>
-            
-            <button className="w-full flex items-center space-x-3 p-4 bg-accent-green/10 border border-accent-green/20 rounded-2xl hover:bg-accent-green/20 transition-colors duration-200 text-left">
-              <Calendar className="w-5 h-5 text-accent-green" />
-              <div>
-                <p className="text-white font-medium">View All Bookings</p>
-                <p className="text-neutral-300 text-sm">Manage and monitor all sessions</p>
-              </div>
-            </button>
-            
-            <button className="w-full flex items-center space-x-3 p-4 bg-accent-yellow/10 border border-accent-yellow/20 rounded-2xl hover:bg-accent-yellow/20 transition-colors duration-200 text-left">
-              <CreditCard className="w-5 h-5 text-accent-yellow" />
-              <div>
-                <p className="text-white font-medium">Payment Reports</p>
-                <p className="text-neutral-300 text-sm">View financial analytics and reports</p>
-              </div>
-            </button>
-          </div>
+          {recentActivity.length > 0 ? (
+            <div className="space-y-4">
+              {recentActivity.map((activity) => (
+                <div key={activity.id} className="flex items-start space-x-4 p-4 bg-neutral-800/50 rounded-2xl">
+                  <div className="flex-shrink-0 mt-1">
+                    {getActivityIcon(activity.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm">{activity.message}</p>
+                    <p className="text-neutral-400 text-xs">{formatTimeAgo(activity.timestamp)}</p>
+                  </div>
+                  {activity.userRole && (
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      activity.userRole === 'therapist' ? 'bg-accent-green/20 text-accent-green' :
+                      activity.userRole === 'admin' ? 'bg-accent-yellow/20 text-accent-yellow' :
+                      'bg-primary-500/20 text-primary-500'
+                    }`}>
+                      {activity.userRole}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Clock className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
+              <p className="text-neutral-300">No recent activity</p>
+            </div>
+          )}
         </div>
       </div>
+      
       */}
 
-      {/* System Status */}
-      {/*
-      <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-        <h2 className="text-xl font-semibold text-white mb-6">System Status</h2>
-        
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="flex items-center space-x-3">
-            <CheckCircle className="w-5 h-5 text-accent-green" />
-            <div>
-              <p className="text-white font-medium">Payment Gateway</p>
-              <p className="text-accent-green text-sm">Operational</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <CheckCircle className="w-5 h-5 text-accent-green" />
-            <div>
-              <p className="text-white font-medium">Video Conferencing</p>
-              <p className="text-accent-green text-sm">Operational</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <Clock className="w-5 h-5 text-accent-yellow" />
-            <div>
-              <p className="text-white font-medium">Email Notifications</p>
-              <p className="text-accent-yellow text-sm">Delayed</p>
-            </div>
-          </div>
-        </div>
-      </div> */}
-    </div> 
+
+    </div>
   );
 };
 
