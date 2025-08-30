@@ -136,9 +136,15 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 <Edit className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-neutral-300">
+            {/* <p className="text-neutral-300">
               {serviceNames[bookingData.serviceType as keyof typeof serviceNames] || 'Unknown Service'}
+            </p> */}
+             <p className="text-neutral-300">
+              {serviceNames[bookingData.serviceType as keyof typeof serviceNames] || 
+              (therapist?.serviceCategory ? (
+                 serviceNames[therapist.serviceCategory as keyof typeof serviceNames] || therapist.serviceCategory) : 'Unknown Service')}
             </p>
+
           </div>
 
           {/* Therapist */}
