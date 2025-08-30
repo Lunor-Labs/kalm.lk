@@ -14,10 +14,6 @@ interface DashboardStats {
   activeSessions: number;
   completedSessions: number;
   scheduledSessions: number;
-  totalBookings: number;
-  monthlyBookings: number;
-  pendingBookings: number;
-  confirmedBookings: number;
 }
 
 interface RecentActivity {
@@ -47,19 +43,16 @@ const AdminDashboard: React.FC = () => {
       const [
         usersData,
         sessionsData,
-        bookingsData,
         recentActivityData
       ] = await Promise.all([
         loadUsersStats(),
         loadSessionsStats(),
-        loadBookingsStats(),
         loadRecentActivity()
       ]);
 
       setStats({
         ...usersData,
-        ...sessionsData,
-        ...bookingsData
+        ...sessionsData
       });
 
       setRecentActivity(recentActivityData);
