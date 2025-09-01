@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
@@ -39,11 +41,11 @@ export const signIn = async (credentials: LoginCredentials): Promise<User> => {
       
       // For anonymous users, we need to handle authentication differently
       if (userData.isAnonymous) {
-        // For anonymous users, we'll sign them in anonymously and then use the existing user data
+        // For anonymous users, sign in anonymously and link to existing user data
         const userCredential = await signInAnonymously(auth);
         firebaseUser = userCredential.user;
         
-        // Create a new document for this anonymous session with the existing user data
+        // Update the existing user document with the new anonymous session UID
         await setDoc(doc(db, 'users', firebaseUser.uid), {
           ...userData,
           uid: firebaseUser.uid,
@@ -83,12 +85,11 @@ export const signIn = async (credentials: LoginCredentials): Promise<User> => {
     
     // Provide more specific error messages
     if (error.code === 'auth/user-not-found') {
-      throw new Error('No account found with this email. Please check your email or sign up.');
+      throw new Error('No account found with this email or username. Please check your input or sign up.');
     } else if (error.code === 'auth/wrong-password') {
       throw new Error('Incorrect password. Please try again.');
-    } else if (error.code === 'auth/invalid-email') {
-      throw new Error('Invalid email format. Please enter a valid email address.');
-    } else if (error.code === 'auth/user-disabled') {
+    }
+    else if (error.code === 'auth/user-disabled') {
       throw new Error('This account has been disabled. Please contact support.');
     } else if (error.code === 'auth/too-many-requests') {
       throw new Error('Too many failed attempts. Please wait a moment and try again.');
@@ -220,8 +221,6 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
       username: anonymousData.username,
       role: 'client' as UserRole,
       isAnonymous: true,
-      // Note: We don't store the password in Firestore for security
-      // Anonymous users will need to remember their username for identification
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };

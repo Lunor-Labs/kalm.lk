@@ -61,10 +61,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       if (!formData.email) {
         newErrors.email = 'Email is required';
         isValid = false;
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = 'Invalid email format';
-        isValid = false;
-      }
+      } 
     }
 
     if (mode === 'anonymous') {
