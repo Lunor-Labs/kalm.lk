@@ -1,11 +1,20 @@
 import React from 'react';
-import { Clock, MessageCircle } from 'lucide-react';
+import { Clock, MessageCircle, Video, Phone } from 'lucide-react';
 import { TherapistData } from '../data/therapists';
 
 interface TherapistCardProps {
   therapist: TherapistData;
   onBookNow: (therapist: TherapistData) => void;
 }
+
+const getSessionFormatIcon = (format: string) => {
+    switch (format) {
+      case 'video': return <Video className="w-3 h-3" />;
+      case 'audio': return <Phone className="w-3 h-3" />;
+      case 'chat': return <MessageCircle className="w-3 h-3" />;
+      default: return null;
+    }
+  };
 
 const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onBookNow }) => {
   return (
@@ -20,14 +29,14 @@ const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onBookNow }) =
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 
         {/* Availability Badge */}
-        <div className="absolute bottom-3 left-3 flex items-center space-x-1 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1">
+        {/* <div className="absolute bottom-3 left-3 flex items-center space-x-1 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1">
           <Clock className="w-3 h-3 text-accent-green" />
           <span className={`text-xs font-medium ${
             therapist.availability.toLowerCase().includes('today') ? 'text-accent-green' : 'text-neutral-300'
           }`}>
             {therapist.availability}
           </span>
-        </div>
+        </div> */}
       </div>
 
       {/* Content Section */}
@@ -43,8 +52,15 @@ const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onBookNow }) =
 
         <div className="space-y-3 mb-6">
           <div>
-            <p className="text-xs text-neutral-400 mb-2 font-bold">Languages:</p>
-            <div className="flex flex-wrap gap-1">
+            <p className="text-xs text-neutral-400 mb-2 font-bold">Languages:{therapist.languages.map((lang, langIndex) => (
+                <span
+                  key={langIndex}
+                  className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full ml-2"
+                >
+                  {lang}
+                </span>
+              ))}</p>
+            {/* <div className="flex flex-wrap gap-1">
               {therapist.languages.map((lang, langIndex) => (
                 <span
                   key={langIndex}
@@ -53,13 +69,24 @@ const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onBookNow }) =
                   {lang}
                 </span>
               ))}
-            </div>
+            </div> */}
           </div>
           <div>
-            <p className="text-xs text-neutral-400 mb-2 font-bold">Credentials:</p>
+            <p className="text-xs text-neutral-400 mb-2 font-bold">Accreditations:</p>
             <p className="text-xs text-neutral-300">{therapist.credentials}</p>
           </div>
-        </div>
+          <div>
+          <p className="text-xs text-neutral-400 mb-1 font-bold">Session Formats:</p>
+                      <div className="flex items-center space-x-3">
+                        {therapist.sessionFormats.map((format, index) => (
+                          <div key={index} className="flex items-center space-x-1 text-neutral-300">
+                            {getSessionFormatIcon(format)}
+                            <span className="text-xs capitalize">{format}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    </div>
 
         <button 
           onClick={() => onBookNow(therapist)}

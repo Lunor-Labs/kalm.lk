@@ -278,14 +278,14 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
                     <p className="font-semibold text-sm">
                       {format(slot.startTime, 'h:mm a')}
                     </p>
-                    <p className="text-xs opacity-80">
+                    {/* <p className="text-xs opacity-80">
                       {slot.isBooked ? 'Booked' : `LKR ${slot.price.toLocaleString()}`}
                     </p>
                     {slot.sessionType && (
                       <p className="text-xs opacity-60 capitalize">
                         {slot.sessionType}
                       </p>
-                    )}
+                    )} */}
                   </button>
                 );
               })}

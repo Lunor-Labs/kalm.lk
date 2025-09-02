@@ -47,7 +47,14 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
   }, [initialFilter]);
 
   // Get unique values for filters from current data
-  const specialties = [...new Set(allTherapists.map(t => t.specialty))];
+  const sessionFormats = [
+    ...new Set(
+      allTherapists
+        .flatMap(t => Array.isArray(t.sessionFormats) ? t.sessionFormats : [t.sessionFormats])
+        .filter(Boolean)
+        .map(format => format.toLowerCase())
+    )
+  ];
   const languages = [...new Set(allTherapists.flatMap(t => t.languages))];
   const serviceCategories = [...new Set(allTherapists.map(t => t.serviceCategory))];
 
@@ -215,18 +222,18 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
               */}
 
               {/* Refresh Button */}
-              <button
+              {/* <button
                 onClick={refetch}
                 disabled={loading}
                 className="p-2 bg-black/50 border border-neutral-700 rounded-xl text-neutral-300 hover:text-white transition-colors duration-200 disabled:opacity-50"
                 title="Refresh data"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              </button>
+              </button> */}
 
               {/* Sort Options */}
               <div className="flex items-center space-x-3">
-                <SlidersHorizontal className="w-4 h-4 text-neutral-400" />
+                {/* <SlidersHorizontal className="w-4 h-4 text-neutral-400" />
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
@@ -235,7 +242,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
                   <option value="name">Sort by Name</option>
                   <option value="specialty">Sort by Specialty</option>
                   <option value="availability">Sort by Availability</option>
-                </select>
+                </select> */}
               </div>
             </div>
           </div>
@@ -344,16 +351,20 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
               </select>
             </div>
 
-            {/* Specialty Filter */}
+            {/* Session Type Filter */}
             <div>
               <select
-                value={filters.specialty || ''}
-                onChange={(e) => setFilters({ ...filters, specialty: e.target.value || undefined })}
+                value={filters.sessionFormats || ''}
+                onChange={(e) => setFilters({ ...filters, sessionFormats: e.target.value || undefined })}
                 className="w-full p-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-neutral-800 text-white"
               >
-                <option value="">All Specialties</option>
-                {specialties.map((spec) => (
-                  <option key={spec} value={spec}>{spec}</option>
+                <option value="">Session type</option>
+                {sessionFormats.map((sess) => (
+                  <option key={sess} value={sess}>
+                    {sess === 'audio' && 'Audio'}
+                    {sess === 'video' && 'Video'}
+                    {sess === 'chat' && 'Chat'}
+                  </option>
                 ))}
               </select>
             </div>

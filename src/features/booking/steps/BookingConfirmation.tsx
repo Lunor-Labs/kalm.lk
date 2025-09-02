@@ -129,12 +129,12 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">Service</h3>
-              <button
+              {/* <button
                 onClick={() => onEdit(1)}
                 className="text-primary-500 hover:text-primary-600 transition-colors duration-200"
               >
                 <Edit className="w-4 h-4" />
-              </button>
+              </button> */}
             </div>
             {/* <p className="text-neutral-300">
               {serviceNames[bookingData.serviceType as keyof typeof serviceNames] || 'Unknown Service'}
@@ -154,12 +154,12 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 <User className="w-5 h-5" />
                 <span>Therapist</span>
               </h3>
-              <button
+              {/* <button
                 onClick={() => onEdit(2)}
                 className="text-primary-500 hover:text-primary-600 transition-colors duration-200"
               >
                 <Edit className="w-4 h-4" />
-              </button>
+              </button> */}
             </div>
             <div className="flex items-center space-x-3">
               {therapist && (
@@ -185,12 +185,12 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 <Calendar className="w-5 h-5" />
                 <span>Session Details</span>
               </h3>
-              <button
+              {/* <button
                 onClick={() => onEdit(3)}
                 className="text-primary-500 hover:text-primary-600 transition-colors duration-200"
               >
                 <Edit className="w-4 h-4" />
-              </button>
+              </button> */}
             </div>
             {bookingData.sessionTime && (
               <div className="space-y-2">

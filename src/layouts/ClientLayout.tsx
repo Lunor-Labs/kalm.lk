@@ -115,8 +115,8 @@ const ClientLayout: React.FC = () => {
                 </span>
               </div>
               <div>
-                <p className="text-white font-medium">{user?.displayName || 'User'}</p>
-                <p className="text-neutral-400 text-sm">
+                <p className="text-white text-xs">{user?.displayName || 'User'}</p>
+                <p className="text-neutral-400 text-xs">
                   {user?.isAnonymous ? 'Anonymous User' : user?.email}
                 </p>
               </div>
@@ -144,16 +144,16 @@ const ClientLayout: React.FC = () => {
               <Menu className="w-6 h-6" />
             </button>
             
-            <div className="flex items-center space-x-4">
+            {/* <div className="flex items-center space-x-4">
               <div className="text-white">
                 <h1 className="text-xl font-semibold">
-                 {/* Welcome back, {user?.displayName || 'User'} */}
+                 Welcome back, {user?.displayName || 'User'}
                 </h1>
                 {user?.isAnonymous && (
                   <p className="text-sm text-accent-green">Anonymous Account</p>
                 )}
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 

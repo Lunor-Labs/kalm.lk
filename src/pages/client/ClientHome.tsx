@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, MessageCircle, User, Clock, Plus, Video, Star, Search, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -89,6 +89,35 @@ const ClientHome: React.FC = () => {
     });
   };
 
+  const wellnessTip = {
+    title: "Practice Mindful Breathing",
+    text: "Take 5 minutes today to focus on your breath. Inhale slowly for 4 counts, hold for 4 counts, and exhale for 6 counts. This simple practice can help reduce stress and improve your overall well-being."
+  };
+
+  const [showWellnessTip, setShowWellnessTip] = useState(false);
+  const wellnessTipRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new window.IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setShowWellnessTip(true);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+    if (wellnessTipRef.current) {
+      observer.observe(wellnessTipRef.current);
+    }
+    return () => {
+      if (wellnessTipRef.current) {
+        observer.unobserve(wellnessTipRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
@@ -96,7 +125,8 @@ const ClientHome: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">
-              Welcome back, {user?.displayName || 'User'}!
+              {/* Welcome back, {user?.displayName || 'User'}! */}
+              Welcome to Kalm
             </h1>
             <p className="text-neutral-300 mb-4">
               {user?.isAnonymous 
@@ -104,18 +134,18 @@ const ClientHome: React.FC = () => {
                 : 'Continue your mental wellness journey with personalized support.'
               }
             </p>
-            {user?.isAnonymous && (
-              <div className="inline-flex items-center space-x-2 bg-accent-green/20 text-accent-green px-4 py-2 rounded-full text-sm">
-                <div className="w-2 h-2 bg-accent-green rounded-full"></div>
-                <span>Anonymous Account Active</span>
-              </div>
+            {user?.isAnonymous && (<></>
+              // <div className="inline-flex items-center space-x-2 bg-accent-green/20 text-accent-green px-4 py-2 rounded-full text-sm">
+              //   <div className="w-2 h-2 bg-accent-green rounded-full"></div>
+              //   <span>Anonymous Account Active</span>
+              // </div>
             )}
           </div>
-          <div className="hidden lg:block">
+          {/* <div className="hidden lg:block">
             <div className="w-32 h-32 bg-primary-500/20 rounded-full flex items-center justify-center">
               <User className="w-16 h-16 text-primary-500" />
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -172,12 +202,15 @@ const ClientHome: React.FC = () => {
                 <p className="text-white font-medium text-sm sm:text-base truncate">{session.therapist}</p>
                 {/* Optional: Add date/time if needed */}
                 <p className="text-neutral-300 text-xs sm:text-sm">{session.date} at {session.time}</p>
+                <span className="bg-accent-green/20 text-accent-green px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs">
+                {session.status}
+              </span>
               </div>
             </div>
             <div className="flex items-center justify-end sm:justify-normal space-x-2 sm:space-x-3 ml-0 sm:ml-4">
-              <span className="bg-accent-green/20 text-accent-green px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs">
+              {/* <span className="bg-accent-green/20 text-accent-green px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs">
                 {session.status}
-              </span>
+              </span> */}
               <button 
                 onClick={() => navigate('/client/sessions')}
                 className="bg-primary-500 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl hover:bg-primary-600 transition-colors duration-200 text-xs sm:text-sm"
@@ -343,18 +376,22 @@ const ClientHome: React.FC = () => {
         */}
 
       {/* Wellness Tips */}
-      <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+      <div
+        ref={wellnessTipRef}
+        className={`bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800 shadow-2xl
+          transition-all duration-1000 ease-out
+          ${showWellnessTip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24'}
+        `}
+      >
         <h2 className="text-xl font-semibold text-white mb-6">Daily Wellness Tip</h2>
         <div className="flex items-start space-x-4">
           <div className="w-12 h-12 bg-accent-yellow/20 rounded-2xl flex items-center justify-center flex-shrink-0">
             <Star className="w-6 h-6 text-accent-yellow" />
           </div>
           <div>
-            <h3 className="text-lg font-medium text-white mb-2">Practice Mindful Breathing</h3>
+            <h3 className="text-lg font-medium text-white mb-2">{wellnessTip.title}</h3>
             <p className="text-neutral-300 leading-relaxed">
-              Take 5 minutes today to focus on your breath. Inhale slowly for 4 counts, 
-              hold for 4 counts, and exhale for 6 counts. This simple practice can help 
-              reduce stress and improve your overall well-being.
+              {wellnessTip.text}
             </p>
           </div>
         </div>

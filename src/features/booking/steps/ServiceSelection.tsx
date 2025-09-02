@@ -91,7 +91,7 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ selectedService, on
                 </div>
 
                 {/* Price */}
-                <div className="flex items-center justify-between">
+                {/* <div className="flex items-center justify-between">
                   <span className="text-accent-green font-semibold">
                     {service.price}
                   </span>
@@ -100,7 +100,7 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ selectedService, on
                       <div className="w-2 h-2 bg-white rounded-full"></div>
                     </div>
                   )}
-                </div>
+                </div> */}
               </div>
             </button>
           );
