@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Clock, MessageCircle, Video, Phone, Award } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { ArrowLeft, Star, Clock, MessageCircle, Video, Phone} from 'lucide-react';
 import { useTherapists } from '../../../hooks/useTherapists';
 
 interface TherapistSelectionProps {
@@ -15,6 +15,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
   onTherapistSelect,
   onBack
 }) => {
+    const sliderRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -32,6 +33,16 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
       case 'audio': return <Phone className="w-3 h-3" />;
       case 'chat': return <MessageCircle className="w-3 h-3" />;
       default: return null;
+    }
+  };
+
+  const scrollSlider = (direction: 'left' | 'right') => {
+    if (sliderRef.current) {
+      const scrollAmount = sliderRef.current.offsetWidth * 0.8;
+      sliderRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -88,97 +99,131 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
           </div>
         </div>
       ) : (
-        // Improved mobile slider
-        <div className="flex overflow-x-auto gap-4 pb-2 hide-scrollbar snap-x snap-mandatory -mx-4 px-2 md:mx-0 md:px-0">
-          {therapists.map((therapist) => {
-            const isSelected = selectedTherapist === therapist.id;
-            return (
-              <button
-                key={therapist.id}
-                onClick={() => onTherapistSelect(therapist.id)}
-                className={`
-                  snap-center
-                  min-w-[80vw] max-w-[90vw]
-                  md:min-w-[320px] md:max-w-xs
-                  group bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-2 text-left
-                  ${isSelected 
-                    ? 'border-primary-500 bg-primary-500/10' 
-                    : 'border-neutral-800 hover:border-neutral-700'
-                  }
-                `}
-                style={{ scrollSnapAlign: 'center' }}
-              >
-                {/* Image Section */}
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={therapist.image}
-                    alt={therapist.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                  {/* Price */}
-                  <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1">
-                    <span className="text-white text-xs font-medium">
-                      LKR {therapist.hourlyRate.toLocaleString()}
-                    </span>
-                  </div>
-                  {/* Selection Indicator */}
-                  {isSelected && (
-                    <div className="absolute top-3 right-3 w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                  )}
-                </div>
-                {/* Content Section */}
-                <div className="p-6">
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-white mb-1">
-                      {therapist.name}
-                    </h3>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Award className="w-4 h-4 text-primary-500" />
-                      <span className="text-sm text-neutral-300">{therapist.credentials}</span>
-                    </div>
-                    <p className="text-primary-500 font-medium text-sm">
-                      {therapist.specialty}
-                    </p>
-                  </div>
-                  <div className="space-y-3 mb-4">
-                    <div>
-                      <p className="text-xs text-neutral-400 mb-1">Languages:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {therapist.languages.map((lang, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full"
-                          >
-                            {lang}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs text-neutral-400 mb-1">Session Formats:</p>
-                      <div className="flex items-center space-x-3">
-                        {therapist.sessionFormats.map((format, index) => (
-                          <div key={index} className="flex items-center space-x-1 text-neutral-300">
-                            {getSessionFormatIcon(format)}
-                            <span className="text-xs capitalize">{format}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Clock className="w-4 h-4 text-accent-green" />
-                      <span className="text-xs text-accent-green font-medium">
-                        {therapist.availability}
+        <div className="relative">
+          {/* Arrow Buttons */}
+          <button
+            type="button"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-neutral-400 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition disabled:opacity-40"
+            onClick={() => scrollSlider('left')}
+            aria-label="Scroll left"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-neutral-400 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition disabled:opacity-40"
+            onClick={() => scrollSlider('right')}
+            aria-label="Scroll right"
+          >
+            <ArrowLeft className="w-5 h-5 rotate-180" />
+          </button>
+          {/* Slider */}
+          <div
+            ref={sliderRef}
+            className="flex overflow-x-auto gap-4 pb-2 hide-scrollbar snap-x snap-mandatory -mx-4 px-2 md:mx-0 md:px-0"
+          >
+            {therapists.map((therapist) => {
+              const isSelected = selectedTherapist === therapist.id;
+              return (
+                <button
+                  key={therapist.id}
+                  onClick={() => onTherapistSelect(therapist.id)}
+                  className={`
+                    snap-center
+                    min-w-[80vw] max-w-[90vw]
+                    md:min-w-[320px] md:max-w-xs
+                    group bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-2 text-left
+                    ${isSelected 
+                      ? 'border-primary-500 bg-primary-500/10' 
+                      : 'border-neutral-800 hover:border-neutral-700'
+                    }
+                  `}
+                  style={{ scrollSnapAlign: 'center' }}
+                >
+                  {/* Image Section */}
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={therapist.image}
+                      alt={therapist.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    {/* Price */}
+                    <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1">
+                      <span className="text-white text-xs font-medium">
+                        LKR {therapist.hourlyRate.toLocaleString()}
                       </span>
                     </div>
+                    {/* Selection Indicator */}
+                    {isSelected && (
+                      <div className="absolute top-3 right-3 w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </button>
-            );
-          })}
+                  {/* Content Section */}
+                  <div className="p-6">
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold text-white mb-1">
+                        {therapist.name}
+                      </h3>
+                      <div className="flex items-center space-x-2 mb-2 space-y-3">
+                        {/* <Award className="w-4 h-4 text-primary-500" /> */}
+                        {/* <span className="text-sm text-neutral-300">{therapist.credentials}</span> */}
+                        <div className="">
+                          <p className="text-xs text-neutral-400 font-bold">Accreditations:</p>
+                          <p className="text-xs text-neutral-300">{therapist.credentials}</p>
+                        </div>
+                      </div>
+                      <p className="text-primary-500 font-medium text-sm">
+                        {therapist.specialty}
+                      </p>
+                    </div>
+                    <div className="space-y-3 mb-4">
+                      <div>
+                        <p className="text-xs text-neutral-400 mb-1 font-bold">Languages:{therapist.languages.map((lang, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full ml-2"
+                            >
+                              {lang}
+                            </span>
+                          ))}
+                          </p>
+                        {/* <div className="flex flex-wrap gap-1">
+                          {therapist.languages.map((lang, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full"
+                            >
+                              {lang}
+                            </span>
+                          ))}
+                        </div> */}
+                      </div>
+                      <div>
+                        <p className="text-xs text-neutral-400 mb-1 font-bold">Session Formats:</p>
+                        <div className="flex items-center space-x-3">
+                          {therapist.sessionFormats.map((format, index) => (
+                            <div key={index} className="flex items-center space-x-1 text-neutral-300">
+                              {getSessionFormatIcon(format)}
+                              <span className="text-xs capitalize">{format}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {/* <div className="flex items-center space-x-2">
+                        <Clock className="w-4 h-4 text-accent-green" />
+                        <span className="text-xs text-accent-green font-medium">
+                          {therapist.availability}
+                        </span>
+                      </div> */}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

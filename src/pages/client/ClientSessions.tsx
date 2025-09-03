@@ -136,45 +136,56 @@ const ClientSessions: React.FC = () => {
           <p className="text-neutral-300 text-sm">Manage your therapy appointments</p>
         </div>
         
-        <button
+        {/* <button
           onClick={handleBookNewSession}
           className="bg-primary-500 text-white px-4 py-2 rounded-xl hover:bg-primary-600 transition-colors duration-200 flex items-center justify-center gap-2 min-h-[44px] text-sm"
           aria-label="Book a new therapy session"
         >
           <Plus className="w-5 h-5" />
           <span>Book Session</span>
-        </button>
+        </button> */}
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20">
-          <div className="flex items-center gap-2 mb-1">
-            <Calendar className="w-5 h-5 text-primary-500" />
-            <span className="text-neutral-300 text-sm">Total</span>
+      <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20 flex flex-col sm:flex-row items-center sm:items-stretch gap-3">
+        {/* Stats Sections */}
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-0 sm:divide-x sm:divide-neutral-700">
+          <div className="flex flex-col items-center px-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Calendar className="w-5 h-5 text-primary-500" />
+              <span className="text-neutral-300 text-sm">Total</span>
+            </div>
+            <p className="text-lg font-bold text-white">{sessions.length}</p>
           </div>
-          <p className="text-lg font-bold text-white">{sessions.length}</p>
+          <div className="flex flex-col items-center px-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="w-5 h-5 text-accent-green" />
+              <span className="text-neutral-300 text-sm">Upcoming</span>
+            </div>
+            <p className="text-lg font-bold text-white">
+              {sessions.filter(s => s.status === 'scheduled' || s.status === 'active').length}
+            </p>
+          </div>
+          <div className="flex flex-col items-center px-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Video className="w-5 h-5 text-accent-yellow" />
+              <span className="text-neutral-300 text-sm">Completed</span>
+            </div>
+            <p className="text-lg font-bold text-white">
+              {sessions.filter(s => s.status === 'completed').length}
+            </p>
+          </div>
         </div>
         
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20">
-          <div className="flex items-center gap-2 mb-1">
-            <Clock className="w-5 h-5 text-accent-green" />
-            <span className="text-neutral-300 text-sm">Upcoming</span>
-          </div>
-          <p className="text-lg font-bold text-white">
-            {sessions.filter(s => s.status === 'scheduled' || s.status === 'active').length}
-          </p>
-        </div>
-        
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20">
-          <div className="flex items-center gap-2 mb-1">
-            <Video className="w-5 h-5 text-accent-yellow" />
-            <span className="text-neutral-300 text-sm">Completed</span>
-          </div>
-          <p className="text-lg font-bold text-white">
-            {sessions.filter(s => s.status === 'completed').length}
-          </p>
-        </div>
+        {/* Book Session Button */}
+        <button
+          onClick={handleBookNewSession}
+          className="bg-primary-500 text-white px-4 py-2 rounded-xl hover:bg-primary-600 transition-colors duration-200 flex items-center justify-center gap-2 min-h-[44px] mb-3 sm:mb-0 sm:mr-6"
+          aria-label="Book a new therapy session"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Book Session</span>
+        </button>
       </div>
 
       {/* Filters */}
@@ -302,13 +313,13 @@ const ClientSessions: React.FC = () => {
                filter === 'completed' ? 'Complete some sessions to see them here' : 
                'Start your mental wellness journey today'}
             </p>
-            <button
+            {/* <button
               onClick={handleBookNewSession}
               className="bg-primary-500 text-white px-4 py-2 rounded-xl hover:bg-primary-600 transition-colors duration-200 min-h-[44px] text-sm"
               aria-label="Book your first therapy session"
             >
               Book Your First Session
-            </button>
+            </button> */}
           </div>
         )}
       </div>

@@ -25,6 +25,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>('video');
+  const [showTerms, setShowTerms] = useState(false);
+  const [showCancellation, setShowCancellation] = useState(false);
 
   const handlePayment = async () => {
     if (!user || !bookingData.therapistId || !bookingData.sessionTime) {
@@ -135,7 +137,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       </div>
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-white whitespace-nowrap">Complete Payment</h2>
-        <p className="text-neutral-300">Secure payment powered by PayHere</p>
+        {/* <p className="text-neutral-300">Secure payment powered by PayHere</p> */}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
@@ -173,12 +175,12 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               </div>
             </div>
             
-            <div className="mt-4 p-3 bg-black/30 rounded-xl border border-neutral-700">
+            {/* <div className="mt-4 p-3 bg-black/30 rounded-xl border border-neutral-700">
               <p className="text-neutral-300 text-xs">
                 <strong>Emergency Cancellations:</strong> Medical emergencies and unforeseen circumstances 
                 will be reviewed individually. Contact support for assistance.
               </p>
-            </div>
+            </div> */}
           </div>
           {/* Session Type Selection */}
           {/*<div>
@@ -385,11 +387,99 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           <div className="text-center">
             <p className="text-neutral-400 text-xs">
               By completing this payment, you agree to our{' '}
-              <a href="#" className="text-primary-500 hover:text-primary-600">Terms of Service</a>
+              <button
+                type="button"
+                className="text-primary-500 hover:text-primary-600 underline"
+                onClick={() => setShowTerms(true)}
+              >
+                Terms of Service
+              </button>
               {' '}and{' '}
-              <a href="#" className="text-primary-500 hover:text-primary-600">Cancellation Policy</a>
+              <button
+                type="button"
+                className="text-primary-500 hover:text-primary-600 underline"
+                onClick={() => setShowCancellation(true)}
+              >
+                Cancellation Policy
+              </button>
+              .
             </p>
           </div>
+
+          {/* Terms of Service Modal */}
+          {showTerms && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+              <div className="bg-black/40 backdrop-blur-md rounded-2xl p-8 max-w-lg w-full border border-neutral-700 shadow-xl max-h-[80vh] overflow-y-auto">
+                <h3 className="text-lg font-bold text-white mb-4">Terms of Service</h3>
+                <div className="text-neutral-300 text-sm mb-6">
+                  {/* Replace with your actual terms */}
+                  <p>
+                    <strong>Welcome to Kalm.lk:</strong> By using our platform, you agree to our Terms.<br/><br/>
+      
+                    <strong>Services:</strong> We connect users with licensed mental health professionals for video, audio, and chat therapy sessions.<br/><br/>
+                    
+                    <strong>Eligibility:</strong> Must be 13+ (under 18 requires parental consent) and provide accurate information.<br/><br/>
+                    
+                    <strong>User Responsibilities:</strong> Use lawfully, respect privacy, provide honest information, attend/cancel sessions appropriately.<br/><br/>
+                    
+                    <strong>Therapists:</strong> Independently licensed professionals (we don't provide medical advice directly).<br/><br/>
+                    
+                    <strong>Payment:</strong> Fees displayed before booking, processed securely via PayHere.<br/><br/>
+                    
+                    <strong>Privacy:</strong> All communications encrypted and confidential.<br/><br/>
+                    
+                    <strong>Liability:</strong> We're not liable for therapy outcomes, therapist actions, or technical issues beyond our control.<br/><br/>
+                    
+                    <strong>Termination:</strong> Accounts can be deleted anytime or suspended for violations.<br/><br/>
+                    
+                    <strong>Contact:</strong> legal@kalm.lk | +94 (76) 633 0360
+                  </p>
+                </div>
+                <button
+                  className="bg-primary-500 text-white px-4 py-2 rounded-full hover:bg-primary-600 transition"
+                  onClick={() => setShowTerms(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Cancellation Policy Modal */}
+          {showCancellation && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+              <div className="bg-black/40 backdrop-blur-md rounded-2xl p-8 max-w-lg w-full border border-neutral-700 shadow-xl max-h-[80vh] overflow-y-auto">
+                <h3 className="text-lg font-bold text-white mb-4">Cancellation Policy</h3>
+                <div className="text-neutral-300 text-sm mb-6">
+                  {/* Replace with your actual policy */}
+                  <p>
+                       <strong>Our Refund Commitment:</strong> We want you to be completely satisfied with our services.<br/><br/>
+      
+                      <strong>Refund Eligibility:</strong><br/>
+                      • 100% Refund: Cancellation - 24h before session, therapist cancellation, technical issues<br/>
+                      • 50% Refund: Cancellation 12-24h before session, interrupted sessions<br/>
+                      • No Refund: Cancellation -12h before session, no-shows, completed sessions<br/><br/>
+                      
+                      <strong>Refund Process:</strong> Contact support within 7 days with booking reference and reason.<br/>
+                      Processing takes 3-5 business days after approval.<br/><br/>
+                      
+                      <strong>Emergency Cancellations:</strong> Medical/family emergencies reviewed case-by-case.<br/><br/>
+                      
+                      <strong>Payment Methods:</strong> Refunds processed to original payment method (7-10 business days).<br/><br/>
+                      
+                      <strong>Contact:</strong> refunds@kalm.lk | support@kalm.lk | +94 (76) 633 0360<br/>
+                      Support Hours: Mon-Fri, 9AM-6PM (Sri Lanka Time)
+                  </p>
+                </div>
+                <button
+                  className="bg-primary-500 text-white px-4 py-2 rounded-full hover:bg-primary-600 transition"
+                  onClick={() => setShowCancellation(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
