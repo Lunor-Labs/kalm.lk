@@ -57,7 +57,7 @@ const ClientLayout: React.FC = () => {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-black/50 backdrop-blur-sm border-r border-neutral-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-black backdrop-blur-sm border-r border-neutral-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex flex-col h-full">
@@ -71,12 +71,12 @@ const ClientLayout: React.FC = () => {
               />
               <span className="text-xl font-bold text-white">kalm.lk</span>
             </div>
-            <button
+            {/* <button
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden text-neutral-400 hover:text-white"
             >
               <X className="w-6 h-6" />
-            </button>
+            </button> */}
           </div>
 
           {/* Navigation */}

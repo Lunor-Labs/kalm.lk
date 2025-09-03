@@ -150,7 +150,7 @@ const ClientHome: React.FC = () => {
       </div>
 
       {/* Quick Actions */}
-      <div>
+      <div className="hidden md:block">
         <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickActions.map((action, index) => {
@@ -171,6 +171,30 @@ const ClientHome: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/*Mobile Quick Actions*/}
+      <div className="block md:hidden">
+              <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {quickActions.map((action, index) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={index}
+                      onClick={action.action}
+                      className="group bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800 hover:border-neutral-700 transition-all duration-300 hover:-translate-y-2 text-center"
+                    >
+                      <div className={`w-12 h-12 ${action.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 mx-auto`}>
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-white mb-2">{action.title}</h3>
+                      <p className="text-neutral-300 text-sm">{action.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+      
 
       {/* Dashboard Content */}
 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">

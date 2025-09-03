@@ -177,7 +177,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
           
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center hidden md:flex">
                 <Users className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -312,7 +312,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="w-full bg-black/50 border border-neutral-700 rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
+            className="w-full bg-black/50 border border-neutral-700 rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white overflow-hidden text-ellipsis"
           >
             <option value="name">Sort by Name</option>
             <option value="specialty">Sort by Specialty</option>
