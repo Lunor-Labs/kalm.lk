@@ -12,12 +12,18 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
+// Initialize primary Firebase app (for main admin auth)
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase services
+// Initialize secondary Firebase app (for creating therapist accounts)
+const secondaryApp = initializeApp(firebaseConfig, 'secondary');
+
+// Initialize Firebase services for primary app
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// Initialize Firebase services for secondary app (only auth needed)
+export const secondaryAuth = getAuth(secondaryApp);
 
 export default app;
