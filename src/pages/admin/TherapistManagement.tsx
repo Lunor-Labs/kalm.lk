@@ -18,7 +18,7 @@ import {
   setDoc
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { db, auth } from '../../lib/firebase';
+import { db, secondaryAuth } from '../../lib/firebase'; // Import secondaryAuth
 import { uploadTherapistPhoto, deleteTherapistPhoto, getStoragePathFromUrl, validateImageFile } from '../../lib/storage';
 import toast from 'react-hot-toast';
 
@@ -284,13 +284,16 @@ const TherapistManagement: React.FC = () => {
         
         toast.success('Therapist updated successfully');
       } else {
-        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        // Use secondaryAuth instead of auth to create the therapist account
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, formData.email, formData.password);
         const user = userCredential.user;
         
+        // Update profile on the secondary auth user
         await updateProfile(user, {
           displayName: `${formData.firstName} ${formData.lastName}`
         });
         
+        // Create user document in Firestore
         await setDoc(doc(db, 'users', user.uid), {
           uid: user.uid,
           email: user.email,
@@ -301,6 +304,7 @@ const TherapistManagement: React.FC = () => {
           updatedAt: serverTimestamp()
         });
         
+        // Create therapist document
         const therapistData = {
           userId: user.uid,
           firstName: formData.firstName,
@@ -324,6 +328,10 @@ const TherapistManagement: React.FC = () => {
         };
         
         await addDoc(collection(db, 'therapists'), therapistData);
+        
+        // Sign out the therapist from secondaryAuth to ensure admin stays logged in
+        await secondaryAuth.signOut();
+        
         toast.success('Therapist added successfully');
       }
       
@@ -333,7 +341,17 @@ const TherapistManagement: React.FC = () => {
       loadTherapists();
     } catch (error: any) {
       console.error('Error saving therapist:', error);
-      toast.error(error.message || 'Failed to save therapist');
+      
+      // Provide more specific error messages
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error('A user with this email already exists');
+      } else if (error.code === 'auth/weak-password') {
+        toast.error('Password should be at least 6 characters');
+      } else if (error.code === 'auth/invalid-email') {
+        toast.error('Invalid email address');
+      } else {
+        toast.error(error.message || 'Failed to save therapist');
+      }
     } finally {
       setLoading(false);
     }
