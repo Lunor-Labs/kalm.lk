@@ -1,6 +1,5 @@
 // PayHere payment gateway integration for Sri Lanka
-import { PayHerePayment, PayHereResponse } from '../types/payment';
-import MD5 from 'crypto-js/md5';
+import { PayHerePayment} from '../types/payment';
 
 declare global {
   interface Window {
@@ -71,20 +70,25 @@ const loadPayHereScript = (): Promise<void> => {
   });
 };
 
-const generateHash = (
-  merchantId: string,
-  orderId: string,
-  amount: string,
-  currency: string,
-  merchantSecret: string
-): string => {
-  const merchantSecretHash = MD5(merchantSecret).toString().toUpperCase();
-  const hashString = `${merchantId}${orderId}${amount}${currency}${merchantSecretHash}`;
-  const finalHash = MD5(hashString).toString().toUpperCase();
-  return finalHash;
+// New: Fetch hash from server
+const fetchPayHereHash = async (orderId: string, amount: number, currency: string) => {
+  const response = await fetch('https://us-central1-kalm-dev-907c9.cloudfunctions.net/generatePayHereHash', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      orderId,
+      amount: amount.toFixed(2),
+      currency
+    })
+  });
+
+  const data = await response.json();
+  if (!data.hash) throw new Error('Failed to get hash from server');
+  return data.hash;
 };
 
-console.log(generateHash)
+
+
 export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): Promise<PayHereResult> => {
   try {
     // Load PayHere script
@@ -101,14 +105,9 @@ export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): P
       throw new Error('PayHere configuration is missing. Please check environment variables.');
     }
 
-    // Generate hash
-    const hash = generateHash(
-      merchantId,
-      paymentData.orderId,
-      paymentData.amount.toFixed(2),
-      paymentData.currency,
-      merchantSecret
-    );
+    // Fetch secure hash from server
+    const hash = await fetchPayHereHash(paymentData.orderId, paymentData.amount, paymentData.currency);
+    console.log(hash)
 
     // Prepare PayHere payment object
     const payment: PayHerePayment = {
@@ -185,43 +184,4 @@ export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): P
       error: error.message || 'Failed to initialize payment'
     };
   }
-};
-
-// Verify payment on the server side (this would typically be a Cloud Function)
-export const verifyPayHerePayment = async (paymentData: PayHereResponse): Promise<boolean> => {
-  try {
-    // In a real implementation, this would be done on your server
-    // to verify the payment with PayHere's API
-    
-    const merchantSecret = import.meta.env.VITE_PAYHERE_MERCHANT_SECRET;
-    if (!merchantSecret) {
-      throw new Error('Merchant secret not configured');
-    }
-
-    // Verify the MD5 signature
-    const localMd5sig = generateHash(
-      paymentData.payment_id,
-      paymentData.payhere_amount,
-      paymentData.payhere_currency,
-      paymentData.status_code,
-      merchantSecret
-    );
-
-    return localMd5sig === paymentData.md5sig;
-  } catch (error) {
-    console.error('Payment verification error:', error);
-    return false;
-  }
-};
-
-// Helper function to format amount for PayHere
-export const formatAmountForPayHere = (amount: number): string => {
-  return amount.toFixed(2);
-};
-
-// Helper function to generate unique order ID
-export const generateOrderId = (prefix: string = 'kalm'): string => {
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).substr(2, 9);
-  return `${prefix}-${timestamp}-${random}`;
 };
