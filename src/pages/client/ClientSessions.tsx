@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Video, MessageCircle, Phone, Play, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, Video, MessageCircle, Phone, Play, Plus, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Session } from '../../types/session';
 import { getUserSessions } from '../../lib/sessions';
@@ -131,6 +131,14 @@ const ClientSessions: React.FC = () => {
     <div className="space-y-5 px-4 sm:px-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+        <button
+            onClick={() => navigate('/client/home')}
+            className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200 mb-6"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-medium">Back to Home</span>
+          </button>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">My Sessions</h1>
           <p className="text-neutral-300 text-sm">Manage your therapy appointments</p>
@@ -146,7 +154,8 @@ const ClientSessions: React.FC = () => {
         </button> */}
       </div>
 
-      {/* Stats */}
+      {/* Stats Desktop */}
+      <div className="hidden md:block">
       <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20 flex flex-col sm:flex-row items-center sm:items-stretch gap-3">
         {/* Stats Sections */}
         <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-0 sm:divide-x sm:divide-neutral-700">
@@ -187,11 +196,83 @@ const ClientSessions: React.FC = () => {
           <span>Book Session</span>
         </button>
       </div>
+    </div>
 
-      {/* Filters */}
+    {/* Stats Movile View*/}
+    <div className="md:hidden">
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    
+    <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20 text-center">
+      <div className="flex justify-center items-center gap-2 mb-1">
+        <Calendar className="w-5 h-5 text-primary-500" />
+        <span className="text-neutral-300 text-sm">Total</span>
+      </div>
+      <p className="text-lg font-bold text-white">{sessions.length}</p>
+    </div>
+    
+    <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20 text-center">
+      <div className="flex justify-center items-center gap-2 mb-1">
+        <Clock className="w-5 h-5 text-accent-green" />
+        <span className="text-neutral-300 text-sm">Upcoming</span>
+      </div>
+      <p className="text-lg font-bold text-white">
+        {sessions.filter(s => s.status === "scheduled" || s.status === "active").length}
+      </p>
+    </div>
+    
+    <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20 text-center">
+      <div className="flex justify-center items-center gap-2 mb-1">
+        <Video className="w-5 h-5 text-accent-yellow" />
+        <span className="text-neutral-300 text-sm">Completed</span>
+      </div>
+      <p className="text-lg font-bold text-white">
+        {sessions.filter(s => s.status === "completed").length}
+      </p>
+    </div>
+
+  </div>
+</div>
+{/* Book Session Button */}
+        <button
+          onClick={handleBookNewSession}
+          className="bg-primary-500 text-white px-4 py-2 rounded-xl hover:bg-primary-600 transition-colors duration-200 flex items-center justify-center gap-2 min-h-[44px] mb-3 sm:mb-0 sm:mr-6 mx-auto mt-3 block md:hidden"
+          aria-label="Book a new therapy session"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Book Session</span>
+        </button>
+      
+      {/* Filters Desktop*/}
+      <div className="hidden md:flex items-center"> 
       <div className="flex items-center gap-2">
         <span className="text-neutral-300 text-sm shrink-0">Filter:</span>
         <div className="flex bg-neutral-800 rounded-xl p-1 gap-1 overflow-x-auto">
+          {[
+            { key: 'all', label: 'All' },
+            { key: 'upcoming', label: 'Upcoming' },
+            { key: 'completed', label: 'Completed' }
+          ].map((option) => (
+            <button
+              key={option.key}
+              onClick={() => setFilter(option.key as any)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 min-w-[70px] min-h-[40px] ${
+                filter === option.key
+                  ? 'bg-primary-500 text-white'
+                  : 'text-neutral-300 hover:text-white'
+              }`}
+              aria-label={`Filter by ${option.label} sessions`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      </div>
+
+      {/* Filters Mobile*/}
+      <div className="flex items-center gap-2 block md:hidden">
+        <span className="text-neutral-300 text-sm shrink-0">Filter:</span>
+        <div className="flex bg-neutral-800 rounded-xl p-1 gap-1 overflow-x-auto w-full">
           {[
             { key: 'all', label: 'All' },
             { key: 'upcoming', label: 'Upcoming' },

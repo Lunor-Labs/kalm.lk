@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ArrowLeft, Star, Clock, MessageCircle, Video, Phone} from 'lucide-react';
+import { ArrowLeft, MessageCircle, Video, Phone } from 'lucide-react';
 import { useTherapists } from '../../../hooks/useTherapists';
 
 interface TherapistSelectionProps {
@@ -15,11 +15,11 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
   onTherapistSelect,
   onBack
 }) => {
-    const sliderRef = useRef<HTMLDivElement>(null);
+  const sliderRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, []);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   // Use the custom hook to fetch therapists, always using Firebase
   const { therapists, loading, error } = useTherapists({
@@ -62,7 +62,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
 
   return (
     <div className="p-8">
-      {/* Back button above the title, left-aligned */}
+      {/* Back button above the title */}
       <div className="mb-4">
         <button
           onClick={onBack}
@@ -72,6 +72,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
           <span>Back</span>
         </button>
       </div>
+
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-white whitespace-nowrap">Choose Your Therapist</h2>
         <p className="text-neutral-300">Select a therapist that feels right for you</p>
@@ -100,23 +101,6 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
         </div>
       ) : (
         <div className="relative">
-          {/* Arrow Buttons */}
-          <button
-            type="button"
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-neutral-400 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition disabled:opacity-40"
-            onClick={() => scrollSlider('left')}
-            aria-label="Scroll left"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <button
-            type="button"
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-neutral-400 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition disabled:opacity-40"
-            onClick={() => scrollSlider('right')}
-            aria-label="Scroll right"
-          >
-            <ArrowLeft className="w-5 h-5 rotate-180" />
-          </button>
           {/* Slider */}
           <div
             ref={sliderRef}
@@ -168,9 +152,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
                         {therapist.name}
                       </h3>
                       <div className="flex items-center space-x-2 mb-2 space-y-3">
-                        {/* <Award className="w-4 h-4 text-primary-500" /> */}
-                        {/* <span className="text-sm text-neutral-300">{therapist.credentials}</span> */}
-                        <div className="">
+                        <div>
                           <p className="text-xs text-neutral-400 font-bold">Accreditations:</p>
                           <p className="text-xs text-neutral-300">{therapist.credentials}</p>
                         </div>
@@ -181,7 +163,8 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
                     </div>
                     <div className="space-y-3 mb-4">
                       <div>
-                        <p className="text-xs text-neutral-400 mb-1 font-bold">Languages:{therapist.languages.map((lang, index) => (
+                        <p className="text-xs text-neutral-400 mb-1 font-bold">Languages:
+                          {therapist.languages.map((lang, index) => (
                             <span
                               key={index}
                               className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full ml-2"
@@ -189,17 +172,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
                               {lang}
                             </span>
                           ))}
-                          </p>
-                        {/* <div className="flex flex-wrap gap-1">
-                          {therapist.languages.map((lang, index) => (
-                            <span
-                              key={index}
-                              className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full"
-                            >
-                              {lang}
-                            </span>
-                          ))}
-                        </div> */}
+                        </p>
                       </div>
                       <div>
                         <p className="text-xs text-neutral-400 mb-1 font-bold">Session Formats:</p>
@@ -212,17 +185,51 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
                           ))}
                         </div>
                       </div>
-                      {/* <div className="flex items-center space-x-2">
-                        <Clock className="w-4 h-4 text-accent-green" />
-                        <span className="text-xs text-accent-green font-medium">
-                          {therapist.availability}
-                        </span>
-                      </div> */}
                     </div>
                   </div>
                 </button>
               );
             })}
+          </div>
+
+          {/* Desktop Arrows (sides) */}
+          <div className="hidden md:block">
+            <button
+              type="button"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-neutral-400 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition"
+              onClick={() => scrollSlider('left')}
+              aria-label="Scroll left"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-neutral-400 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition"
+              onClick={() => scrollSlider('right')}
+              aria-label="Scroll right"
+            >
+              <ArrowLeft className="w-5 h-5 rotate-180" />
+            </button>
+          </div>
+
+          {/* Mobile Arrows (bottom center) */}
+          <div className="flex justify-center gap-6 mt-4 md:hidden">
+            <button
+              type="button"
+              className="bg-neutral-400 hover:bg-primary-500 text-white rounded-full p-3 shadow-lg transition"
+              onClick={() => scrollSlider('left')}
+              aria-label="Scroll left"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <button
+              type="button"
+              className="bg-neutral-400 hover:bg-primary-500 text-white rounded-full p-3 shadow-lg transition"
+              onClick={() => scrollSlider('right')}
+              aria-label="Scroll right"
+            >
+              <ArrowLeft className="w-6 h-6 rotate-180" />
+            </button>
           </div>
         </div>
       )}
