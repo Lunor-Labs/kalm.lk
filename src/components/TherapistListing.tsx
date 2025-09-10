@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeft, Users, SlidersHorizontal, Search, Clock, Database, HardDrive, RefreshCw } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { ArrowLeft, Users, SlidersHorizontal, Search, Clock, Database, HardDrive, RefreshCw, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useTherapists } from '../hooks/useTherapists';
@@ -18,7 +18,69 @@ interface SimpleFilters {
   language?: string;
   availability?: 'available' | 'all';
   serviceCategory?: string;
+  sessionFormats?: string; // Added this field
 }
+
+// Custom Select Component
+interface CustomSelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  placeholder: string;
+  className?: string;
+}
+
+const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, options, placeholder, className = '' }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(opt => opt.value === value);
+  const displayText = selectedOption ? selectedOption.label : placeholder;
+
+  return (
+    <div className={`relative ${className}`} ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full p-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-neutral-800 text-white text-left flex items-center justify-between hover:border-neutral-600"
+      >
+        <span className={value ? 'text-white' : 'text-neutral-400'}>
+          {displayText}
+        </span>
+        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-800 border border-neutral-700 rounded-2xl shadow-lg z-50 overflow-hidden max-h-60 overflow-y-auto">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className={`w-full px-4 py-3 text-left text-sm hover:bg-neutral-700 transition-colors duration-150 ${
+                value === option.value ? 'bg-neutral-700 text-white' : 'text-neutral-300'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilter, onOpenAuth }) => {
   const { user } = useAuth();
@@ -26,10 +88,8 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
   const [filters, setFilters] = useState<SimpleFilters>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'specialty' | 'availability'>('name');
-  // const [useFirebaseData, setUseFirebaseData] = useState(false);
 
   // Use the custom hook to fetch therapists
-  // Always use Firebase/live data
   const { therapists: allTherapists, loading, error, refetch } = useTherapists({
     useFirebase: true
   });
@@ -90,6 +150,13 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
       filtered = filtered.filter(therapist => 
         therapist.serviceCategory === filters.serviceCategory
       );
+    }
+
+    if (filters.sessionFormats) {
+      filtered = filtered.filter(therapist => {
+        const formats = Array.isArray(therapist.sessionFormats) ? therapist.sessionFormats : [therapist.sessionFormats];
+        return formats.some(format => format.toLowerCase() === filters.sessionFormats);
+      });
     }
 
     if (filters.availability === 'available') {
@@ -153,16 +220,32 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
     }
   };
 
-  // const handleDataSourceToggle = () => {
-  //   setUseFirebaseData(!useFirebaseData);
-  //   // Clear filters when switching data sources
-  //   clearFilters();
-  // };
+  // Prepare options for custom selects
+  const sessionFormatOptions = [
+    { value: '', label: 'Session type' },
+    ...sessionFormats.map(format => ({
+      value: format,
+      label: format === 'audio' ? 'Audio' : format === 'video' ? 'Video' : format === 'chat' ? 'Chat' : format
+    }))
+  ];
+
+  const serviceCategoryOptions = [
+    { value: '', label: 'All Services' },
+    ...serviceCategories.map(category => ({
+      value: category,
+      label: getServiceCategoryDisplayName(category)
+    }))
+  ];
+
+  const languageOptions = [
+    { value: '', label: 'All Languages' },
+    ...languages.map(lang => ({ value: lang, label: lang }))
+  ];
 
   return (
     <div className="min-h-screen bg-neutral-900 relative">
       {/* Grain texture overlay */}
-      <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2247%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+      <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg width=%2760%27 height=%2760%27 viewBox=%270 0 60 60%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cg fill=%27none%27 fill-rule=%27evenodd%27%3E%3Cg fill=%27%23ffffff%27 fill-opacity=%270.1%27%3E%3Ccircle cx=%277%27 cy=%277%27 r=%271%27/%3E%3Ccircle cx=%2727%27 cy=%277%27 r=%271%27/%3E%3Ccircle cx=%2747%27 cy=%277%27 r=%271%27/%3E%3Ccircle cx=%277%27 cy=%2727%27 r=%271%27/%3E%3Ccircle cx=%2727%27 cy=%2727%27 r=%271%27/%3E%3Ccircle cx=%2747%27 cy=%2727%27 r=%271%27/%3E%3Ccircle cx=%277%27 cy=%2747%27 r=%271%27/%3E%3Ccircle cx=%2727%27 cy=%2747%27 r=%271%27/%3E%3Ccircle cx=%2747%27 cy=%2747%27 r=%271%27/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Header */}
@@ -193,121 +276,16 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
 
             {/* Data Source Toggle & Sort Options */}
             <div className="hidden md:flex items-center space-x-4">
-              {/* Data Source Toggle (commented out) */}
-              {/**
-              <div className="flex items-center space-x-2 bg-black/50 border border-neutral-700 rounded-2xl p-1">
-                <button
-                  onClick={handleDataSourceToggle}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${
-                    !useFirebaseData 
-                      ? 'bg-accent-yellow text-black' 
-                      : 'text-neutral-300 hover:text-white'
-                  }`}
-                >
-                  <HardDrive className="w-4 h-4" />
-                  <span>Demo</span>
-                </button>
-                <button
-                  onClick={handleDataSourceToggle}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${
-                    useFirebaseData 
-                      ? 'bg-primary-500 text-white' 
-                      : 'text-neutral-300 hover:text-white'
-                  }`}
-                >
-                  <Database className="w-4 h-4" />
-                  <span>Live</span>
-                </button>
-              </div>
-              */}
-
-              {/* Refresh Button */}
-              {/* <button
-                onClick={refetch}
-                disabled={loading}
-                className="p-2 bg-black/50 border border-neutral-700 rounded-xl text-neutral-300 hover:text-white transition-colors duration-200 disabled:opacity-50"
-                title="Refresh data"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              </button> */}
-
               {/* Sort Options */}
               <div className="flex items-center space-x-3">
-                {/* <SlidersHorizontal className="w-4 h-4 text-neutral-400" />
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-black/50 border border-neutral-700 rounded-2xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white"
-                >
-                  <option value="name">Sort by Name</option>
-                  <option value="specialty">Sort by Specialty</option>
-                  <option value="availability">Sort by Availability</option>
-                </select> */}
+                {/* Sort options commented out in original, keeping same */}
               </div>
             </div>
           </div>
-
-          {/* Data Source Info (commented out) */}
-          {/**
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
-                useFirebaseData 
-                  ? 'bg-primary-500/20 text-primary-500 border border-primary-500/30'
-                  : 'bg-accent-yellow/20 text-accent-yellow border border-accent-yellow/30'
-              }`}>
-                {useFirebaseData ? <Database className="w-4 h-4" /> : <HardDrive className="w-4 h-4" />}
-                <span>
-                  {useFirebaseData ? 'Live Data from Firebase' : 'Demo Data'}
-                </span>
-              </div>
-              
-              {error && (
-                <div className="flex items-center space-x-2 px-3 py-1 rounded-full text-sm bg-red-500/20 text-red-400 border border-red-500/30">
-                  <span>⚠️ {error}</span>
-                </div>
-              )}
-            </div>
-            
-            <div className="text-sm text-neutral-300">
-              <span className="font-medium text-white">{filteredTherapists.length}</span> therapist{filteredTherapists.length !== 1 ? 's' : ''} found
-            </div>
-          </div>
-          */}
         </div>
 
         {/* Mobile Controls */}
         <div className="md:hidden mb-6 space-y-4">
-          {/* Mobile Data Source Toggle (commented out) */}
-          {/**
-          <div className="flex items-center justify-center">
-            <div className="flex items-center space-x-2 bg-black/50 border border-neutral-700 rounded-2xl p-1">
-              <button
-                onClick={handleDataSourceToggle}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${
-                  !useFirebaseData 
-                    ? 'bg-accent-yellow text-black' 
-                    : 'text-neutral-300 hover:text-white'
-                }`}
-              >
-                <HardDrive className="w-4 h-4" />
-                <span>Demo</span>
-              </button>
-              <button
-                onClick={handleDataSourceToggle}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${
-                  useFirebaseData 
-                    ? 'bg-primary-500 text-white' 
-                    : 'text-neutral-300 hover:text-white'
-                }`}
-              >
-                <Database className="w-4 h-4" />
-                <span>Live</span>
-              </button>
-            </div>
-          </div>
-          */}
-
           {/* Mobile Sort */}
           <select
             value={sortBy}
@@ -321,7 +299,8 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
         </div>
 
         {/* Simplified Filters */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-3xl shadow-lg border border-neutral-800 p-6 mb-8">
+        <div className="bg-black/50 backdrop-blur-sm rounded-3xl shadow-lg border border-neutral-800 p-6 mb-8 relative"
+             style={{ zIndex: 10 }}>
           <div className="grid md:grid-cols-5 gap-4 mb-4">
             {/* Search */}
             <div className="md:col-span-2">
@@ -337,51 +316,29 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
               </div>
             </div>
 
-            {/* Service Category Filter */}
-            <div>
-              <select
-                value={filters.serviceCategory || ''}
-                onChange={(e) => setFilters({ ...filters, serviceCategory: e.target.value || undefined })}
-                className="w-full p-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-neutral-800 text-white"
-              >
-                <option value="">All Services</option>
-                {serviceCategories.map((category) => (
-                  <option key={category} value={category}>{getServiceCategoryDisplayName(category)}</option>
-                ))}
-              </select>
-            </div>
+            {/* Service Category Filter - Using Custom Select */}
+            <CustomSelect
+              value={filters.serviceCategory || ''}
+              onChange={(value) => setFilters({ ...filters, serviceCategory: value || undefined })}
+              options={serviceCategoryOptions}
+              placeholder="All Services"
+            />
 
-            {/* Session Type Filter */}
-            <div>
-              <select
-                value={filters.sessionFormats || ''}
-                onChange={(e) => setFilters({ ...filters, sessionFormats: e.target.value || undefined })}
-                className="w-full p-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-neutral-800 text-white"
-              >
-                <option value="">Session type</option>
-                {sessionFormats.map((sess) => (
-                  <option key={sess} value={sess}>
-                    {sess === 'audio' && 'Audio'}
-                    {sess === 'video' && 'Video'}
-                    {sess === 'chat' && 'Chat'}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Session Type Filter - Using Custom Select */}
+            <CustomSelect
+              value={filters.sessionFormats || ''}
+              onChange={(value) => setFilters({ ...filters, sessionFormats: value || undefined })}
+              options={sessionFormatOptions}
+              placeholder="Session type"
+            />
 
-            {/* Language Filter */}
-            <div>
-              <select
-                value={filters.language || ''}
-                onChange={(e) => setFilters({ ...filters, language: e.target.value || undefined })}
-                className="w-full p-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-neutral-800 text-white"
-              >
-                <option value="">All Languages</option>
-                {languages.map((lang) => (
-                  <option key={lang} value={lang}>{lang}</option>
-                ))}
-              </select>
-            </div>
+            {/* Language Filter - Using Custom Select */}
+            <CustomSelect
+              value={filters.language || ''}
+              onChange={(value) => setFilters({ ...filters, language: value || undefined })}
+              options={languageOptions}
+              placeholder="All Languages"
+            />
           </div>
 
           <div className="flex items-center justify-between">
@@ -453,16 +410,6 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
               >
                 Clear All Filters
               </button>
-              {/**
-              {useFirebaseData && (
-                <button
-                  onClick={() => setUseFirebaseData(false)}
-                  className="bg-accent-yellow text-black px-6 py-3 rounded-2xl hover:bg-accent-yellow/90 transition-colors duration-200 font-medium"
-                >
-                  Switch to Demo Data
-                </button>
-              )}
-              */}
             </div>
           </div>
         ) : null}
