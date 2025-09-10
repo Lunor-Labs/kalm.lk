@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MessageCircle, User, Clock, Plus, Video, Star, Search, Users } from 'lucide-react';
+import { Calendar, MessageCircle, Clock, Plus, Video, Star, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTherapists } from '../../hooks/useTherapists';
-import TherapistCard from '../../components/TherapistCard';
 
 const ClientHome: React.FC = () => {
   const { user } = useAuth();
@@ -89,14 +88,74 @@ const ClientHome: React.FC = () => {
     });
   };
 
-  const wellnessTip = {
-    title: "Practice Mindful Breathing",
-    text: "Take 5 minutes today to focus on your breath. Inhale slowly for 4 counts, hold for 4 counts, and exhale for 6 counts. This simple practice can help reduce stress and improve your overall well-being."
-  };
+  // Wellness tips array
+  const wellnessTips = [
+    {
+      title: "Practice Mindful Breathing",
+      text: "Take 5 minutes today to focus on your breath. Inhale slowly for 4 counts, hold for 4 counts, and exhale for 6 counts. This simple practice can help reduce stress and improve your overall well-being."
+    },
+    {
+      title: "Take a Walk",
+      text: "Step outside for a 10-minute walk. Movement and fresh air can boost your mood and reduce stress."
+    },
+    {
+      title: "Gratitude Check",
+      text: "Write down 3 things you're grateful for today. It trains your brain to focus on the good."
+    },
+    {
+      title: "Ground Yourself",
+      text: "Notice 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, and 1 you can taste. A powerful anxiety-reducing tool."
+    },
+    {
+      title: "Affirm Yourself",
+      text: "Say something kind to yourself. Acknowledge your effort, not just results."
+    },
+    {
+      title: "Check In With a Friend",
+      text: "Text or call someone just to say hi. Connection matters more than you think."
+    },
+    {
+      title: "Be Kind to Yourself",
+      text: "Replace self-criticism with encouragement. You're doing your best."
+    },
+    {
+      title: "Mood Tracker",
+      text: "Rate your mood out of 10. Tracking builds awareness and patterns."
+    },
+    {
+      title: "Sit With Sadness",
+      text: "It's okay to feel low. Don't push it away. Acknowledge it gently."
+    },
+    {
+      title: "Celebrate Rest",
+      text: "Rest is productive. It helps you reset and prevents burnout."
+    }
+  ];
 
   const [showWellnessTip, setShowWellnessTip] = useState(false);
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const wellnessTipRef = useRef<HTMLDivElement>(null);
+  const autoPlayIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Auto-play functionality
+  useEffect(() => {
+    if (isAutoPlaying && showWellnessTip) {
+      autoPlayIntervalRef.current = setInterval(() => {
+        setCurrentTipIndex((prevIndex) => 
+          (prevIndex + 1) % wellnessTips.length
+        );
+      }, 5000); // Change tip every 5 seconds
+    }
+
+    return () => {
+      if (autoPlayIntervalRef.current) {
+        clearInterval(autoPlayIntervalRef.current);
+      }
+    };
+  }, [isAutoPlaying, showWellnessTip, wellnessTips.length]);
+
+  // Intersection Observer for showing wellness tips
   useEffect(() => {
     const observer = new window.IntersectionObserver(
       (entries) => {
@@ -117,6 +176,31 @@ const ClientHome: React.FC = () => {
       }
     };
   }, []);
+
+  // Manual navigation functions
+  const goToPreviousTip = () => {
+    setCurrentTipIndex((prevIndex) => 
+      prevIndex === 0 ? wellnessTips.length - 1 : prevIndex - 1
+    );
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000); // Resume auto-play after 10 seconds
+  };
+
+  const goToNextTip = () => {
+    setCurrentTipIndex((prevIndex) => 
+      (prevIndex + 1) % wellnessTips.length
+    );
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000); // Resume auto-play after 10 seconds
+  };
+
+  const goToSpecificTip = (index: number) => {
+    setCurrentTipIndex(index);
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 10000); // Resume auto-play after 10 seconds
+  };
+
+  const currentTip = wellnessTips[currentTipIndex];
 
   return (
     <div className="space-y-8">
@@ -272,26 +356,87 @@ const ClientHome: React.FC = () => {
         </div>
       </div>
 
-      {/* Wellness Tip */}
+      {/* Enhanced Auto-Sliding Wellness Tip */}
       <div
         ref={wellnessTipRef}
-        className={`bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800 shadow-2xl
+        className={`bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800 shadow-2xl relative overflow-hidden
           transition-all duration-1000 ease-out
           ${showWellnessTip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24'}
         `}
       >
-        <h2 className="text-xl font-semibold text-white mb-6">Daily Wellness Tip</h2>
-        <div className="flex items-start space-x-4">
-          <div className="w-12 h-12 bg-accent-yellow/20 rounded-2xl flex items-center justify-center flex-shrink-0">
-            <Star className="w-6 h-6 text-accent-yellow" />
-          </div>
-          <div>
-            <h3 className="text-lg font-medium text-white mb-2">{wellnessTip.title}</h3>
-            <p className="text-neutral-300 leading-relaxed">
-              {wellnessTip.text}
-            </p>
+        {/* Header with controls */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-white">Daily Wellness Tip</h2>
+          <div className="flex items-center space-x-2">
+            {/* Auto-play indicator */}
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${isAutoPlaying ? 'bg-accent-green animate-pulse' : 'bg-neutral-600'}`}></div>
+              <span className="text-xs text-neutral-400">{isAutoPlaying ? 'Auto' : 'Paused'}</span>
+            </div>
+            
+            {/* Navigation arrows */}
+            <button
+              onClick={goToPreviousTip}
+              className="w-8 h-8 bg-neutral-800 hover:bg-neutral-700 rounded-full flex items-center justify-center transition-colors duration-200"
+              aria-label="Previous tip"
+            >
+              <ChevronLeft className="w-4 h-4 text-white" />
+            </button>
+            <button
+              onClick={goToNextTip}
+              className="w-8 h-8 bg-neutral-800 hover:bg-neutral-700 rounded-full flex items-center justify-center transition-colors duration-200"
+              aria-label="Next tip"
+            >
+              <ChevronRight className="w-4 h-4 text-white" />
+            </button>
           </div>
         </div>
+
+        {/* Tip content with slide animation */}
+        <div className="relative min-h-[120px]">
+          <div className="flex items-start space-x-4 transition-all duration-500 ease-in-out">
+            <div className="w-12 h-12 bg-accent-yellow/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Star className="w-6 h-6 text-accent-yellow" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-medium text-white mb-2 transition-all duration-300">
+                {currentTip.title}
+              </h3>
+              <p className="text-neutral-300 leading-relaxed transition-all duration-300">
+                {currentTip.text}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Dot indicators */}
+        <div className="flex items-center justify-center space-x-2 mt-6">
+          {wellnessTips.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSpecificTip(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentTipIndex 
+                  ? 'bg-accent-yellow w-6' 
+                  : 'bg-neutral-600 hover:bg-neutral-500'
+              }`}
+              aria-label={`Go to tip ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Progress bar */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-neutral-800">
+          <div 
+            className="h-full bg-gradient-to-r from-accent-yellow to-accent-green transition-all duration-100 ease-linear"
+            style={{
+              width: isAutoPlaying ? '100%' : '0%',
+              animation: isAutoPlaying ? 'progress 5s linear infinite' : 'none'
+            }}
+          />
+        </div>
+
+       
       </div>
     </div>
   );
