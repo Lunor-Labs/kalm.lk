@@ -10,37 +10,47 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+
+
+// Helper: return IST Date object (keeps comparisons in IST)
+function getISTDate(date: Date): Date {
+  return new Date(
+    date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+  );
+}
+
 export const sessionReminder = onSchedule("every 15 minutes", async (event) => {
   try {
-    // --- Hardcoded bookings for testing ---
+    // --- Hardcoded bookings for testing (IST times with +05:30 offset) ---
     const bookings = [
       {
         email: "imdineshsandaru@gmail.com",
-        datetime: "2025-09-09T04:54:00Z",
+        datetime: "2025-09-10T10:26:00",
         subject: "Reminder: Your booking soon",
         text: "Hi Dinesh, just reminding you of your booking at 10:20 AM.",
       },
       {
         email: "imalkadhananja28@gmail.com",
-        datetime: "2025-09-09T05:05:00Z",
+        datetime: "2025-09-10T10:30:00",
         subject: "Reminder: Later session",
         text: "Hi Imalka, this is for your booking at 10:05 AM.",
       },
     ];
 
-    const now = new Date();
+    const now = getISTDate(new Date());
     const cutoff = new Date(now.getTime() + 15 * 60000);
+    console.log(" now:", now);
+    console.log(" cutoff:", cutoff);
 
     const remindersToSend = bookings.filter((b) => {
-      console.log("now:", now);
-      console.log("cutoff:", cutoff);
       const bookingTime = new Date(b.datetime);
-      console.log("bookingTime:", bookingTime);
+      console.log("BookingTime (IST):", bookingTime);
+
       return bookingTime > now && bookingTime <= cutoff;
     });
 
     if (remindersToSend.length === 0) {
-      console.log("No reminders due in the next 15 mins");
+      console.log("No reminders due in the next 15 mins (IST check)");
       return;
     }
 
