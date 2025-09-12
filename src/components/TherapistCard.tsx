@@ -52,15 +52,8 @@ const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onBookNow }) =
 
         <div className="space-y-3 mb-6">
           <div>
-            <p className="text-xs text-neutral-400 mb-2 font-bold">Languages:{therapist.languages.map((lang, langIndex) => (
-                <span
-                  key={langIndex}
-                  className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full ml-2"
-                >
-                  {lang}
-                </span>
-              ))}</p>
-            {/* <div className="flex flex-wrap gap-1">
+            <p className="text-xs text-neutral-400 mb-2 font-bold">Languages:</p>
+            <div className="flex flex-wrap gap-1">
               {therapist.languages.map((lang, langIndex) => (
                 <span
                   key={langIndex}
@@ -69,7 +62,7 @@ const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onBookNow }) =
                   {lang}
                 </span>
               ))}
-            </div> */}
+            </div>
           </div>
           <div>
             <p className="text-xs text-neutral-400 mb-2 font-bold">Accreditations:</p>
