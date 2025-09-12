@@ -18,7 +18,7 @@ const getSessionFormatIcon = (format: string) => {
 
 const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onBookNow }) => {
   return (
-    <div className="group bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-cream-200/100">
+    <div className="group bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-cream-200/100  flex flex-col">
       {/* Large Image Section */}
       <div className="relative h-48 overflow-hidden">
         <img
@@ -40,7 +40,7 @@ const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onBookNow }) =
       </div>
 
       {/* Content Section */}
-      <div className="p-6">
+      <div className="p-6  flex flex-col flex-1">
         <div className="text-center mb-4">
           <h3 className="text-lg font-semibold text-white mb-1">
             {therapist.name}
@@ -90,7 +90,7 @@ const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onBookNow }) =
 
         <button 
           onClick={() => onBookNow(therapist)}
-          className="w-full bg-primary-500 text-white py-3 rounded-2xl hover:bg-primary-600 transition-colors duration-200 font-medium flex items-center justify-center space-x-2 text-sm"
+          className="mt-auto w-full bg-primary-500 text-white py-3 rounded-2xl hover:bg-primary-600 transition-colors duration-200 font-medium flex items-center justify-center space-x-2 text-sm"
         >
           <MessageCircle className="w-4 h-4" />
           <span>Book Session</span>
@@ -101,3 +101,4 @@ const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onBookNow }) =
 };
 
 export default TherapistCard;
+

@@ -20,7 +20,7 @@ const ClientHome: React.FC = () => {
       date: '2024-01-15',
       time: '2:00 PM',
       type: 'video',
-      status: 'confirmed'
+      status: 'Confirmed'
     },
     {
       id: '2',
@@ -28,7 +28,7 @@ const ClientHome: React.FC = () => {
       date: '2024-01-18',
       time: '10:00 AM',
       type: 'audio',
-      status: 'confirmed'
+      status: 'Confirmed'
     }
   ];
 
@@ -205,7 +205,7 @@ const ClientHome: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-primary-500/20 to-accent-green/20 rounded-3xl p-8 border border-primary-500/20">
+      {/* <div className="bg-gradient-to-r from-primary-500/20 to-accent-green/20 rounded-3xl p-8 border border-primary-500/20">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">
@@ -219,10 +219,47 @@ const ClientHome: React.FC = () => {
             </p>
           </div>
         </div>
+      </div> */}
+
+      <div className="hidden md:block lg:hidden">
+  <div className="bg-gradient-to-r from-primary-500/20 to-accent-green/20 rounded-3xl p-8 border border-primary-500/20 w-full">
+    <div className="mx-auto text-center max-w-2xl">
+      <h1 className="text-3xl font-bold text-white mb-2">
+        Welcome to Kalm
+      </h1>
+      <p className="text-neutral-300 mb-4">
+        {user?.isAnonymous 
+          ? 'Continue your anonymous wellness journey with complete privacy.'
+          : 'Continue your mental wellness journey with personalized support.'
+        }
+      </p>
+    </div>
+  </div>
+</div>
+
+
+
+<div className="block md:hidden lg:block">
+  <div className="bg-gradient-to-r from-primary-500/20 to-accent-green/20 rounded-3xl p-8 border border-primary-500/20">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-2">
+          Welcome to Kalm
+        </h1>
+        <p className="text-neutral-300 mb-4">
+          {user?.isAnonymous 
+            ? 'Continue your anonymous wellness journey with complete privacy.'
+            : 'Continue your mental wellness journey with personalized support.'
+          }
+        </p>
       </div>
+    </div>
+  </div>
+</div>
+
 
       {/* Quick Actions */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickActions.map((action, index) => {
@@ -244,8 +281,8 @@ const ClientHome: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Quick Actions */}
-      <div className="block md:hidden">
+      {/* Mobile and Tab Quick Actions */}
+      <div className="block lg:hidden">
         <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickActions.map((action, index) => {
@@ -300,8 +337,8 @@ const ClientHome: React.FC = () => {
                     <div className="min-w-0">
                       <p className="text-white font-medium text-sm sm:text-base truncate">{session.therapist}</p>
                       <p className="text-neutral-300 text-xs sm:text-sm">{session.date} at {session.time}</p>
-                      <span className="bg-accent-green/20 text-accent-green px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs">
-                        {session.status}
+                      <span className="bg-accent-green/20 text-accent-green px-2 py-0.5 sm:px-3 sm:py-2 rounded-full text-xs relative top-1">
+                        <span className="relative -top-0.5">{session.status}</span>
                       </span>
                     </div>
                   </div>

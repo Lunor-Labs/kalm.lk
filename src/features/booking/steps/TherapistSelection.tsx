@@ -38,7 +38,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
 
   const scrollSlider = (direction: 'left' | 'right') => {
     if (sliderRef.current) {
-      const scrollAmount = sliderRef.current.offsetWidth * 0.8;
+      const scrollAmount = sliderRef.current.offsetWidth * 0.3;
       sliderRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -196,7 +196,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
           <div className="hidden md:block">
             <button
               type="button"
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-neutral-400 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition"
+              className="absolute -left-8 top-1/2 -translate-y-1/2 z-10 bg-neutral-400 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition"
               onClick={() => scrollSlider('left')}
               aria-label="Scroll left"
             >
@@ -204,7 +204,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
             </button>
             <button
               type="button"
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-neutral-400 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition"
+              className="absolute -right-8 top-1/2 -translate-y-1/2 z-10 bg-neutral-400 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition"
               onClick={() => scrollSlider('right')}
               aria-label="Scroll right"
             >
