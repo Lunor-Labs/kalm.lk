@@ -409,7 +409,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           {/* Terms of Service Modal */}
           {showTerms && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-              <div className="bg-black/40 backdrop-blur-md rounded-2xl p-8 max-w-lg w-full border border-neutral-700 shadow-xl max-h-[80vh] overflow-y-auto">
+              <div className="bg-black backdrop-blur-md rounded-2xl p-8 max-w-lg w-full border border-neutral-700 shadow-xl max-h-[80vh] overflow-y-auto">
                 <h3 className="text-lg font-bold text-white mb-4">Terms of Service</h3>
                 <div className="text-neutral-300 text-sm mb-6">
                   {/* Replace with your actual terms */}
@@ -448,7 +448,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           {/* Cancellation Policy Modal */}
           {showCancellation && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-              <div className="bg-black/40 backdrop-blur-md rounded-2xl p-8 max-w-lg w-full border border-neutral-700 shadow-xl max-h-[80vh] overflow-y-auto">
+              <div className="bg-black backdrop-blur-md rounded-2xl p-8 max-w-lg w-full border border-neutral-700 shadow-xl max-h-[80vh] overflow-y-auto">
                 <h3 className="text-lg font-bold text-white mb-4">Cancellation Policy</h3>
                 <div className="text-neutral-300 text-sm mb-6">
                   {/* Replace with your actual policy */}
