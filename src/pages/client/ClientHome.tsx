@@ -21,7 +21,7 @@ const ClientHome: React.FC = () => {
       date: '2024-01-15',
       time: '2:00 PM',
       type: 'video',
-      status: 'confirmed'
+      status: 'Confirmed'
     },
     {
       id: '2',
@@ -29,7 +29,7 @@ const ClientHome: React.FC = () => {
       date: '2024-01-18',
       time: '10:00 AM',
       type: 'audio',
-      status: 'confirmed'
+      status: 'Confirmed'
     }
   ];
 
@@ -216,8 +216,8 @@ const ClientHome: React.FC = () => {
                     <div className="min-w-0">
                       <p className="text-white font-medium text-sm sm:text-base truncate">{session.therapist}</p>
                       <p className="text-neutral-300 text-xs sm:text-sm">{session.date} at {session.time}</p>
-                      <span className="bg-accent-green/20 text-accent-green px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs">
-                        {session.status}
+                      <span className="bg-accent-green/20 text-accent-green px-2 py-0.5 sm:px-3 sm:py-2 rounded-full text-xs relative top-1">
+                        <span className="relative -top-0.5">{session.status}</span>
                       </span>
                     </div>
                   </div>
