@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { ArrowLeft, Users, SlidersHorizontal, Search, Clock, Database, HardDrive, RefreshCw, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Users, SlidersHorizontal, Search, Clock, Database, HardDrive, RefreshCw, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useTherapists } from '../hooks/useTherapists';
@@ -242,6 +242,20 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
     ...languages.map(lang => ({ value: lang, label: lang }))
   ];
 
+  // Slider ref for horizontal scroll
+  const sliderRef = useRef<HTMLDivElement>(null);
+
+  // Scroll slider left/right
+  const scrollSlider = (direction: 'left' | 'right') => {
+    if (sliderRef.current) {
+      const scrollAmount = sliderRef.current.offsetWidth * 0.8;
+      sliderRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-neutral-900 relative">
       {/* Grain texture overlay */}
@@ -383,16 +397,44 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
           </div>
         )}
 
-        {/* Therapist Grid - Using TherapistCard component */}
+        {/* Therapist Slider with Arrows */}
         {!loading && filteredTherapists.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredTherapists.map((therapist) => (
-              <TherapistCard
-                key={therapist.id}
-                therapist={therapist}
-                onBookNow={handleBookNow}
-              />
-            ))}
+          <div className="relative">
+            {/* Slider Arrows */}
+            <button
+              type="button"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+              style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
+              onClick={() => scrollSlider('left')}
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <button
+              type="button"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+              style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
+              onClick={() => scrollSlider('right')}
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+            {/* Slider */}
+            <div
+              ref={sliderRef}
+              className="flex overflow-x-auto gap-6 pb-2 hide-scrollbar snap-x snap-mandatory"
+              style={{ scrollBehavior: 'smooth' }}
+            >
+              {filteredTherapists.map((therapist) => (
+                <div
+                  key={therapist.id}
+                  className="snap-center min-w-[80vw] max-w-[90vw] md:min-w-[320px] md:max-w-xs"
+                >
+                  <TherapistCard
+                    therapist={therapist}
+                    onBookNow={handleBookNow}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         ) : !loading ? (
           <div className="text-center py-16">
