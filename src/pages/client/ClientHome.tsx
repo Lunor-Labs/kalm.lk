@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MessageCircle, Clock, Plus, Video, Star, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, MessageCircle, Clock, Plus, Video, Star, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTherapists } from '../../hooks/useTherapists';
 
@@ -404,29 +404,6 @@ const ClientHome: React.FC = () => {
         {/* Header with controls */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-white">Daily Wellness Tip</h2>
-          <div className="flex items-center space-x-2">
-            {/* Auto-play indicator */}
-            <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full transition-colors duration-300 ${isAutoPlaying ? 'bg-accent-green animate-pulse' : 'bg-neutral-600'}`}></div>
-              <span className="text-xs text-neutral-400">{isAutoPlaying ? 'Auto' : 'Paused'}</span>
-            </div>
-            
-            {/* Navigation arrows */}
-            <button
-              onClick={goToPreviousTip}
-              className="w-8 h-8 bg-neutral-800 hover:bg-neutral-700 rounded-full flex items-center justify-center transition-colors duration-200"
-              aria-label="Previous tip"
-            >
-              <ChevronLeft className="w-4 h-4 text-white" />
-            </button>
-            <button
-              onClick={goToNextTip}
-              className="w-8 h-8 bg-neutral-800 hover:bg-neutral-700 rounded-full flex items-center justify-center transition-colors duration-200"
-              aria-label="Next tip"
-            >
-              <ChevronRight className="w-4 h-4 text-white" />
-            </button>
-          </div>
         </div>
 
         {/* Tip content with slide animation */}
