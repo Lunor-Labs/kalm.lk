@@ -248,7 +248,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
   // Scroll slider left/right
   const scrollSlider = (direction: 'left' | 'right') => {
     if (sliderRef.current) {
-      const scrollAmount = sliderRef.current.offsetWidth * 0.8;
+      const scrollAmount = sliderRef.current.offsetWidth * 0.3;
       sliderRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth',
@@ -400,23 +400,27 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
         {/* Therapist Slider with Arrows */}
         {!loading && filteredTherapists.length > 0 ? (
           <div className="relative">
-            {/* Slider Arrows */}
-            <button
-              type="button"
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition-all duration-200"
-              style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
-              onClick={() => scrollSlider('left')}
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <button
-              type="button"
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition-all duration-200"
-              style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
-              onClick={() => scrollSlider('right')}
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
+            {/* Slider Arrows - Desktop/Tablet Only */}
+        <div className="hidden sm:block">
+          <button
+            type="button"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+            style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
+            onClick={() => scrollSlider('left')}
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+
+          <button
+            type="button"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+            style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
+            onClick={() => scrollSlider('right')}
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+
             {/* Slider */}
             <div
               ref={sliderRef}
@@ -455,6 +459,27 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
             </div>
           </div>
         ) : null}
+        {/* Bottom Arrows - Mobile Only */}
+        <div className="flex justify-center gap-6 mt-4 sm:hidden">
+          <button
+            type="button"
+            className="bg-black/60 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+            style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
+            onClick={() => scrollSlider('left')}
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+
+          <button
+            type="button"
+            className="bg-black/60 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+            style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
+            onClick={() => scrollSlider('right')}
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+
       </div>
     </div>
   );

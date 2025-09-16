@@ -337,7 +337,7 @@ const ClientHome: React.FC = () => {
                     <div className="min-w-0">
                       <p className="text-white font-medium text-sm sm:text-base truncate">{session.therapist}</p>
                       <p className="text-neutral-300 text-xs sm:text-sm">{session.date} at {session.time}</p>
-                      <span className="flex items-center justify-center bg-accent-green/20 text-accent-green px-2 py-0.5 sm:px-3 sm:py-2 rounded-full text-xs h-5 sm:h-7">
+                      <span className="flex items-center justify-center bg-accent-green/20 text-accent-green px-2 py-0.5 sm:px-3 sm:py-2 rounded-full text-xs h-6 sm:h-8 mt-1 w-20">
                         {session.status}
                       </span>
                     </div>
