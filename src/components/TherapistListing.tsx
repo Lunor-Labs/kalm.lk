@@ -430,7 +430,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
               {filteredTherapists.map((therapist) => (
                 <div
                   key={therapist.id}
-                  className="snap-center min-w-[80vw] max-w-[90vw] md:min-w-[320px] md:max-w-xs"
+                  className="snap-center min-w-[70vw] max-w-[90vw] md:min-w-[320px] md:max-w-xs"
                 >
                   <TherapistCard
                     therapist={therapist}

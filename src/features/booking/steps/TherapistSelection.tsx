@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { ArrowLeft, MessageCircle, Video, Phone } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Video, Phone, ChevronLeft } from 'lucide-react';
 import { useTherapists } from '../../../hooks/useTherapists';
 
 interface TherapistSelectionProps {
@@ -114,7 +114,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
                   onClick={() => onTherapistSelect(therapist.id)}
                   className={`
                     snap-center
-                    min-w-[80vw] max-w-[90vw]
+                    min-w-[70vw] max-w-[90vw]
                     md:min-w-[320px] md:max-w-xs
                     group bg-black/50 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-2 text-left
                     ${isSelected 
@@ -200,7 +200,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
               onClick={() => scrollSlider('left')}
               aria-label="Scroll left"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               type="button"
@@ -208,7 +208,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
               onClick={() => scrollSlider('right')}
               aria-label="Scroll right"
             >
-              <ArrowLeft className="w-5 h-5 rotate-180" />
+              <ChevronLeft className="w-5 h-5 rotate-180" />
             </button>
           </div>
 
@@ -220,7 +220,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
               onClick={() => scrollSlider('left')}
               aria-label="Scroll left"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ChevronLeft className="w-6 h-6" />
             </button>
             <button
               type="button"
@@ -228,7 +228,7 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
               onClick={() => scrollSlider('right')}
               aria-label="Scroll right"
             >
-              <ArrowLeft className="w-6 h-6 rotate-180" />
+              <ChevronLeft className="w-6 h-6 rotate-180" />
             </button>
           </div>
         </div>

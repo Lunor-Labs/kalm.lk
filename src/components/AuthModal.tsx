@@ -75,8 +75,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     }
 
     if (mode === 'signup') {
+      if (!formData.email) {
+        newErrors.email = 'E-mail is required';
+        isValid = false;
+      }
       if (!formData.displayName) {
         newErrors.displayName = 'Full name is required';
+        isValid = false;
+      }
+      if (!formData.phone) {
+        newErrors.phone = 'Phone Number is required';
         isValid = false;
       }
     }
@@ -260,8 +268,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
   const getModalTitle = () => {
     switch (mode) {
-      case 'login': return 'Welcome Back';
-      case 'signup': return 'Join Kalm';
+      case 'login': return 'Log In to Your Account';
+      case 'signup': return 'Create Your Kalm Account';
       case 'anonymous': return 'Join Anonymously';
       case 'forgot': return 'Reset Your Password';
       default: return 'Join Kalm';
@@ -270,8 +278,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
   const getModalSubtitle = () => {
     switch (mode) {
-      case 'login': return 'Sign in to continue your wellness journey';
-      case 'signup': return 'Create your account and start your mental wellness journey';
+      case 'login': return 'Please enter your credentials to access your account';
+      case 'signup': return 'Start your mental wellness journey with Kalm';
       case 'anonymous': return 'Start privately without sharing personal details';
       case 'forgot': return 'Enter your email to receive a password reset link';
       default: return 'Start your mental wellness journey today';
@@ -397,7 +405,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Phone Number (Optional)
+                  Phone Number
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
@@ -609,10 +617,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   </button>
                 </p>
                 <p className="text-neutral-600">
-                  Want complete privacy?{' '}
+                  Prefer complete privacy?{' '}
                   <button
                     onClick={() => handleModeSwitch('anonymous')}
-                    className="text-accent-green hover:text-accent-green/80 font-medium"
+                    className="text-primary-500 hover:text-accent-green/80 font-medium"
                   >
                     Join anonymously
                   </button>
