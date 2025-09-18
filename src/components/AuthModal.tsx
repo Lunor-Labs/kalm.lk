@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, } from 'react';
+import React, { useState } from 'react';
 import { Phone, X, Eye, EyeOff, Mail, Lock, User, UserCheck } from 'lucide-react';
 import { 
   signIn, 
@@ -24,25 +24,25 @@ const TermsModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center px-2 xs:px-4 sm:px-6 pt-4 sm:pt-8 overflow-y-auto">
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       ></div>
 
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-cream-100">
-          <h2 className="text-2xl font-bold text-neutral-800">Terms of Service</h2>
+      <div className="relative bg-white rounded-2xl xs:rounded-3xl shadow-2xl w-full max-w-[90%] xs:max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-3 xs:p-4 sm:p-6 border-b border-cream-100">
+          <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-neutral-800">Terms of Service</h2>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-cream-100 hover:bg-cream-200 flex items-center justify-center transition-colors duration-200"
+            className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 rounded-full bg-cream-100 hover:bg-cream-200 flex items-center justify-center transition-colors duration-200"
           >
-            <X className="w-5 h-5 text-neutral-600" />
+            <X className="w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-neutral-600" />
           </button>
         </div>
 
-        <div className="p-6">
-          <div className="prose prose-sm max-w-none">
+        <div className="p-3 xs:p-4 sm:p-6">
+          <div className="prose prose-xs xs:prose-sm max-w-none text-xs xs:text-sm sm:text-base">
             <p>
               <strong>Welcome to Kalm.lk:</strong> By using our platform, you agree to our Terms.<br/><br/>
 
@@ -67,10 +67,10 @@ const TermsModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen
           </div>
         </div>
 
-        <div className="p-6 border-t border-cream-100 text-left">
+        <div className="p-3 xs:p-4 sm:p-6 border-t border-cream-100 text-left">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors duration-200"
+            className="px-3 py-1 xs:px-3 xs:py-2 sm:px-4 sm:py-2 bg-primary-500 text-white rounded-lg xs:rounded-xl sm:rounded-2xl hover:bg-primary-600 transition-colors duration-200 text-xs xs:text-sm sm:text-base"
           >
             Close
           </button>
@@ -85,25 +85,25 @@ const PrivacyModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center px-2 xs:px-4 sm:px-6 pt-4 sm:pt-8 overflow-y-auto">
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       ></div>
 
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-cream-100">
-          <h2 className="text-2xl font-bold text-neutral-800">Privacy Policy</h2>
+      <div className="relative bg-white rounded-2xl xs:rounded-3xl shadow-2xl w-full max-w-[90%] xs:max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-3 xs:p-4 sm:p-6 border-b border-cream-100">
+          <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-neutral-800">Privacy Policy</h2>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-cream-100 hover:bg-cream-200 flex items-center justify-center transition-colors duration-200"
+            className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 rounded-full bg-cream-100 hover:bg-cream-200 flex items-center justify-center transition-colors duration-200"
           >
-            <X className="w-5 h-5 text-neutral-600" />
+            <X className="w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-neutral-600" />
           </button>
         </div>
 
-        <div className="p-6">
-          <div className="prose prose-sm max-w-none">
+        <div className="p-3 xs:p-4 sm:p-6">
+          <div className="prose prose-xs xs:prose-sm max-w-none text-xs xs:text-sm sm:text-base">
               <p>
                 <strong>Our Commitment to Privacy</strong><br />
                 At Kalm.lk, we understand that privacy is fundamental to mental health care. This Privacy Policy explains how we collect, use, protect, and share your personal information when you use our platform.
@@ -167,10 +167,10 @@ const PrivacyModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOp
           </div>
         </div>
 
-        <div className="p-6 border-t border-cream-100 text-left">
+        <div className="p-3 xs:p-4 sm:p-6 border-t border-cream-100 text-left">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors duration-200"
+            className="px-3 py-1 xs:px-3 xs:py-2 sm:px-4 sm:py-2 bg-primary-500 text-white rounded-lg xs:rounded-xl sm:rounded-2xl hover:bg-primary-600 transition-colors duration-200 text-xs xs:text-sm sm:text-base"
           >
             Close
           </button>
@@ -204,7 +204,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     displayName: '',
     agreedToTerms: ''
   });
-
 
   if (!isOpen) return null;
 
@@ -272,7 +271,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       }
     }
 
-    // Terms agreement validation for signup and anonymous
     if ((mode === 'signup' || mode === 'anonymous') && !formData.agreedToTerms) {
       newErrors.agreedToTerms = 'You must agree to the terms';
       isValid = false;
@@ -326,18 +324,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       }
 
       if (user) {
-        console.log('User signed up:', user); 
         toast.success('Welcome to Kalm!');
         onClose();
         const redirectPath = getRoleRedirectPath(user.role || 'client');
-        console.log('Redirecting to:', redirectPath); 
         navigate(redirectPath, { replace: true });
       } else {
-        console.error('No user returned from signUp'); // Debug log
         toast.error('Failed to create account. Please try again.');
       }
     } catch (error: any) {
-      console.error('Signup error:', error.code, error.message); // Debug log
       toast.error(error.message || 'Authentication failed');
     } finally {
       setIsSubmitting(false);
@@ -461,38 +455,38 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-start justify-center px-2 xs:px-4 sm:px-6 pt-4 sm:pt-8 overflow-y-auto">
         <div 
           className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           onClick={onClose}
         ></div>
 
-        <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-between p-6 border-b border-cream-100">
+        <div className="relative bg-white rounded-2xl xs:rounded-3xl shadow-2xl w-full max-w-[90%] xs:max-w-[95%] sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between p-3 xs:p-4 sm:p-6 border-b border-cream-100">
             <div>
-              <h2 className="text-2xl font-bold text-neutral-800">
+              <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-neutral-800">
                 {getModalTitle()}
               </h2>
-              <p className="text-neutral-600 mt-1">
+              <p className="text-neutral-600 mt-1 text-xs xs:text-sm sm:text-base">
                 {getModalSubtitle()}
               </p>
             </div>
             <button
               onClick={onClose}
-              className="w-10 h-10 rounded-full bg-cream-100 hover:bg-cream-200 flex items-center justify-center transition-colors duration-200"
+              className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 rounded-full bg-cream-100 hover:bg-cream-200 flex items-center justify-center transition-colors duration-200"
             >
-              <X className="w-5 h-5 text-neutral-600" />
+              <X className="w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-neutral-600" />
             </button>
           </div>
 
           {mode === 'anonymous' && (
-            <div className="p-6 border-b border-cream-100">
-              <div className="bg-accent-green/10 border border-accent-green/20 rounded-2xl p-4">
-                <div className="flex items-start space-x-3">
-                  <UserCheck className="w-5 h-5 text-accent-green flex-shrink-0 mt-0.5" />
+            <div className="p-3 xs:p-4 sm:p-6 border-b border-cream-100">
+              <div className="bg-accent-green/10 border border-accent-green/20 rounded-lg xs:rounded-xl sm:rounded-2xl p-2 xs:p-3 sm:p-4">
+                <div className="flex items-start space-x-2 xs:space-x-3">
+                  <UserCheck className="w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-accent-green flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-accent-green text-sm mb-1">Privacy-First Account</h4>
-                    <ul className="text-xs text-neutral-600 space-y-1">
+                    <h4 className="font-medium text-accent-green text-xs xs:text-sm mb-1">Privacy-First Account</h4>
+                    <ul className="text-xs xs:text-sm text-neutral-600 space-y-1">
                       <li>• No email or personal information required</li>
                       <li>• Your data is stored securely under your username</li>
                       <li>• You can upgrade to a full account anytime</li>
@@ -504,20 +498,20 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-6" noValidate>
+          <form onSubmit={handleSubmit} className="p-3 xs:p-4 sm:p-6 space-y-3 xs:space-y-4 sm:space-y-6" noValidate>
             {(mode === 'login' || mode === 'signup' || mode === 'forgot') && (
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Email Address
+                <label className="block text-xs xs:text-sm font-medium text-neutral-700 mb-1">
+                  Email Address <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <Mail className="absolute left-2 xs:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-neutral-400" />
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                    className={`w-full pl-8 xs:pl-10 pr-4 py-1 xs:py-2 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
                       errors.email ? 'border-red-500' : 'border-cream-200'
                     }`}
                     placeholder="Enter your email"
@@ -531,17 +525,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
             {mode === 'anonymous' && (
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Username
+                <label className="block text-xs xs:text-sm font-medium text-neutral-700 mb-1">
+                  Username <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <User className="absolute left-2 xs:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-neutral-400" />
                   <input
                     type="text"
                     name="username"
                     value={formData.username}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                    className={`w-full pl-8 xs:pl-10 pr-4 py-1 xs:py-2 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
                       errors.username ? 'border-red-500' : 'border-cream-200'
                     }`}
                     placeholder="Choose a unique username"
@@ -556,17 +550,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
             {mode === 'signup' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    Full Name
+                  <label className="block text-xs xs:text-sm font-medium text-neutral-700 mb-1">
+                    Full Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                    <User className="absolute left-2 xs:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-neutral-400" />
                     <input
                       type="text"
                       name="displayName"
                       value={formData.displayName}
                       onChange={handleInputChange}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                      className={`w-full pl-8 xs:pl-10 pr-4 py-1 xs:py-2 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
                         errors.displayName ? 'border-red-500' : 'border-cream-200'
                       }`}
                       placeholder="Enter your full name"
@@ -578,17 +572,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    Phone Number
+                  <label className="block text-xs xs:text-sm font-medium text-neutral-700 mb-1">
+                    Phone Number <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                    <Phone className="absolute left-2 xs:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-neutral-400" />
                     <input
                       type="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                      className={`w-full pl-8 xs:pl-10 pr-4 py-1 xs:py-2 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
                         errors.phone ? 'border-red-500' : 'border-cream-200'
                       }`}
                       placeholder="Enter your phone number"
@@ -603,17 +597,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
             {mode !== 'forgot' && (
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Password
+                <label className="block text-xs xs:text-sm font-medium text-neutral-700 mb-1">
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <Lock className="absolute left-2 xs:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-neutral-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-12 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                    className={`w-full pl-8 xs:pl-10 pr-10 xs:pr-12 py-1 xs:py-2 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
                       errors.password ? 'border-red-500' : 'border-cream-200'
                     }`}
                     placeholder="Enter your password"
@@ -621,9 +615,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                    className="absolute right-2 xs:right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? <EyeOff className="w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5" />}
                   </button>
                 </div>
                 {errors.password && (
@@ -639,17 +633,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
             {(mode === 'signup' || mode === 'anonymous') && (
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Confirm Password
+                <label className="block text-xs xs:text-sm font-medium text-neutral-700 mb-1">
+                  Confirm Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <Lock className="absolute left-2 xs:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-neutral-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                    className={`w-full pl-8 xs:pl-10 pr-4 py-1 xs:py-2 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
                       errors.confirmPassword ? 'border-red-500' : 'border-cream-200'
                     }`}
                     placeholder="Confirm your password"
@@ -662,15 +656,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
             )}
 
             {mode === 'login' && (
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <label className="flex items-center">
                   <input type="checkbox" className="rounded border-cream-200 text-primary-500 focus:ring-primary-500" />
-                  <span className="ml-2 text-sm text-neutral-600">Remember me</span>
+                  <span className="ml-2 text-xs xs:text-sm text-neutral-600">Remember me</span>
                 </label>
                 <button 
                   type="button" 
                   onClick={() => handleModeSwitch('forgot')}
-                  className="text-sm text-primary-500 hover:text-primary-600"
+                  className="text-xs xs:text-sm text-primary-500 hover:text-primary-600"
                 >
                   Forgot password?
                 </button>
@@ -678,27 +672,29 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
             )}
 
             {(mode === 'signup' || mode === 'anonymous') && (
-              <div className="flex items-start space-x-3">
-                <input 
-                  type="checkbox" 
-                  name="agreedToTerms"
-                  checked={formData.agreedToTerms}
-                  onChange={handleInputChange}
-                  className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
-                  required
-                />
-                <p className="text-sm text-neutral-600">
-                  I agree to the{' '}
-                  <button type="button" onClick={handleTermsClick} className="text-primary-500 hover:text-primary-600">
-                    Terms of Service
-                  </button>
-                  {' '}and{' '}
-                  <button type="button" onClick={handlePrivacyClick} className="text-primary-500 hover:text-primary-600">
-                    Privacy Policy
-                  </button>
-                </p>
+              <div>
+                <div className="flex items-start space-x-2 xs:space-x-3">
+                  <input 
+                    type="checkbox" 
+                    name="agreedToTerms"
+                    checked={formData.agreedToTerms}
+                    onChange={handleInputChange}
+                    className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
+                    required
+                  />
+                  <p className="text-xs xs:text-sm text-neutral-600">
+                    I agree to the{' '}
+                    <button type="button" onClick={handleTermsClick} className="text-primary-500 hover:text-primary-600">
+                      Terms of Service
+                    </button>
+                    {' '}and{' '}
+                    <button type="button" onClick={handlePrivacyClick} className="text-primary-500 hover:text-primary-600">
+                      Privacy Policy
+                    </button>
+                  </p>
+                </div>
                 {errors.agreedToTerms && (
-                  <p className="text-red-500 text-xs mt-1">{errors.agreedToTerms}</p>
+                  <p className="text-red-500 text-xs mt-1 ml-6 xs:ml-7">{errors.agreedToTerms}</p>
                 )}
               </div>
             )}
@@ -706,7 +702,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full py-3 rounded-2xl font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`w-full py-1 xs:py-2 sm:py-3 rounded-lg xs:rounded-xl sm:rounded-2xl font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs xs:text-sm sm:text-base ${
                 mode === 'anonymous' 
                   ? 'bg-accent-green text-white hover:bg-accent-green/90'
                   : mode === 'forgot'
@@ -727,7 +723,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-cream-200"></div>
                   </div>
-                  <div className="relative flex justify-center text-sm">
+                  <div className="relative flex justify-center text-xs xs:text-sm">
                     <span className="px-2 bg-white text-neutral-500">Or continue with</span>
                   </div>
                 </div>
@@ -736,9 +732,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={isSubmitting}
-                  className="w-full flex items-center justify-center space-x-3 py-3 border border-cream-200 rounded-2xl hover:bg-cream-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center space-x-2 py-1 xs:py-2 sm:py-3 border border-cream-200 rounded-lg xs:rounded-xl sm:rounded-2xl hover:bg-cream-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs xs:text-sm sm:text-base"
                 >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -750,8 +746,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
             )}
           </form>
 
-          <div className="p-6 border-t border-cream-100 text-center">
-            <div className="space-y-2">
+          <div className="p-3 xs:p-4 sm:p-6 border-t border-cream-100 text-center">
+            <div className="space-y-2 text-xs xs:text-sm">
               {mode === 'forgot' ? (
                 <p className="text-neutral-600">
                   Remember your password?{' '}
@@ -820,7 +816,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
         </div>
       </div>
 
-      {/* Terms and Privacy Modals */}
       <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
       <PrivacyModal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
     </>
