@@ -19,10 +19,173 @@ interface AuthModalProps {
   onSwitchMode: (mode: 'login' | 'signup' | 'anonymous' | 'forgot') => void;
 }
 
+// Terms of Service Modal Component
+const TermsModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      ></div>
+
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-cream-100">
+          <h2 className="text-2xl font-bold text-neutral-800">Terms of Service</h2>
+          <button
+            onClick={onClose}
+            className="w-10 h-10 rounded-full bg-cream-100 hover:bg-cream-200 flex items-center justify-center transition-colors duration-200"
+          >
+            <X className="w-5 h-5 text-neutral-600" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="prose prose-sm max-w-none">
+            <p>
+              <strong>Welcome to Kalm.lk:</strong> By using our platform, you agree to our Terms.<br/><br/>
+
+              <strong>Services:</strong> We connect users with licensed mental health professionals for video, audio, and chat therapy sessions.<br/><br/>
+              
+              <strong>Eligibility:</strong> Must be 13+ (under 18 requires parental consent) and provide accurate information.<br/><br/>
+              
+              <strong>User Responsibilities:</strong> Use lawfully, respect privacy, provide honest information, attend/cancel sessions appropriately.<br/><br/>
+              
+              <strong>Therapists:</strong> Independently licensed professionals (we don't provide medical advice directly).<br/><br/>
+              
+              <strong>Payment:</strong> Fees displayed before booking, processed securely via PayHere.<br/><br/>
+              
+              <strong>Privacy:</strong> All communications encrypted and confidential.<br/><br/>
+              
+              <strong>Liability:</strong> We're not liable for therapy outcomes, therapist actions, or technical issues beyond our control.<br/><br/>
+              
+              <strong>Termination:</strong> Accounts can be deleted anytime or suspended for violations.<br/><br/>
+              
+              <strong>Contact:</strong> legal@kalm.lk | +94 (76) 633 0360
+            </p>
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-cream-100 text-left">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors duration-200"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Privacy Policy Modal Component
+const PrivacyModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      ></div>
+
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-cream-100">
+          <h2 className="text-2xl font-bold text-neutral-800">Privacy Policy</h2>
+          <button
+            onClick={onClose}
+            className="w-10 h-10 rounded-full bg-cream-100 hover:bg-cream-200 flex items-center justify-center transition-colors duration-200"
+          >
+            <X className="w-5 h-5 text-neutral-600" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="prose prose-sm max-w-none">
+              <p>
+                <strong>Our Commitment to Privacy</strong><br />
+                At Kalm.lk, we understand that privacy is fundamental to mental health care. This Privacy Policy explains how we collect, use, protect, and share your personal information when you use our platform.
+              </p>
+
+              <p>
+                <strong>1. Information We Collect</strong><br />
+                <strong>Personal Information:</strong> Name, email address, and phone number; Account credentials and profile information; Payment information (processed securely through PayHere); Communication preferences.<br />
+                <strong>Health Information:</strong> Information shared during therapy sessions; Session notes and records; Treatment preferences and history.<br />
+                <strong>Technical Information:</strong> Device information and IP address; Usage patterns and platform interactions; Session logs and technical diagnostics.
+              </p>
+
+              <p>
+                <strong>2. How We Use Your Information</strong><br />
+                We use your information to: Provide and improve our mental health services; Connect you with appropriate therapists; Process payments and manage your account; Send important updates and notifications; Ensure platform security and prevent fraud; Comply with legal and regulatory requirements.
+              </p>
+
+              <p>
+                <strong>3. Information Sharing</strong><br />
+                <strong>We do not sell your personal information.</strong> We may share information only in these limited circumstances: With your chosen therapist for treatment purposes; With your explicit consent; To comply with legal obligations; To protect safety in emergency situations; With service providers who assist our operations (under strict confidentiality).
+              </p>
+
+              <p>
+                <strong>4. Data Security</strong><br />
+                We implement comprehensive security measures: End-to-end encryption for all communications; Secure data storage with Firebase; Regular security audits and updates; Access controls and authentication; Secure payment processing through PayHere.
+              </p>
+
+              <p>
+                <strong>5. Anonymous Accounts</strong><br />
+                For users who choose anonymous accounts: We collect minimal personal information; Your identity remains protected; Session data is still encrypted and secure; You can upgrade to a regular account anytime.
+              </p>
+
+              <p>
+                <strong>6. Your Privacy Rights</strong><br />
+                You have the right to: Access your personal information; Correct inaccurate information; Delete your account and data; Withdraw consent for data processing; Request data portability; File complaints with regulatory authorities.
+              </p>
+
+              <p>
+                <strong>7. Data Retention</strong><br />
+                We retain your information: For as long as your account is active; As required by law or regulation; To resolve disputes or enforce agreements; Session records may be retained for therapeutic continuity.
+              </p>
+
+              <p>
+                <strong>8. Children's Privacy</strong><br />
+                For users under 18: Parental consent is required; Additional privacy protections apply; Parents may access their child's information; Special care is taken with sensitive information.
+              </p>
+
+              <p>
+                <strong>9. Updates to This Policy</strong><br />
+                We may update this Privacy Policy periodically. We will notify you of significant changes via email or platform notifications. The "Last updated" date at the top indicates when changes were made.
+              </p>
+
+              <p>
+                <strong>Contact Us</strong><br />
+                For privacy-related questions or to exercise your rights, contact us:<br />
+                <strong>Privacy Officer:</strong> privacy@kalm.lk<br />
+                <strong>General Contact:</strong> hello@kalm.lk<br />
+                <strong>Phone:</strong> +94 (76) 633 0360<br />
+                <strong>Address:</strong> Colombo, Sri Lanka
+              </p>
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-cream-100 text-left">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-primary-500 text-white rounded-2xl hover:bg-primary-600 transition-colors duration-200"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMode }) => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -75,8 +238,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
     }
 
     if (mode === 'signup') {
+      if (!formData.email) {
+        newErrors.email = 'E-mail is required';
+        isValid = false;
+      }
       if (!formData.displayName) {
         newErrors.displayName = 'Full name is required';
+        isValid = false;
+      }
+      if (!formData.phone) {
+        newErrors.phone = 'Phone Number is required';
         isValid = false;
       }
     }
@@ -260,8 +431,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
   const getModalTitle = () => {
     switch (mode) {
-      case 'login': return 'Welcome Back';
-      case 'signup': return 'Join Kalm';
+      case 'login': return 'Log In to Your Account';
+      case 'signup': return 'Create Your Kalm Account';
       case 'anonymous': return 'Join Anonymously';
       case 'forgot': return 'Reset Your Password';
       default: return 'Join Kalm';
@@ -270,358 +441,320 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
   const getModalSubtitle = () => {
     switch (mode) {
-      case 'login': return 'Sign in to continue your wellness journey';
-      case 'signup': return 'Create your account and start your mental wellness journey';
+      case 'login': return 'Please enter your credentials to access your account';
+      case 'signup': return 'Start your mental wellness journey with Kalm';
       case 'anonymous': return 'Start privately without sharing personal details';
       case 'forgot': return 'Enter your email to receive a password reset link';
       default: return 'Start your mental wellness journey today';
     }
   };
 
+  const handleTermsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowTermsModal(true);
+  };
+
+  const handlePrivacyClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowPrivacyModal(true);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      ></div>
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div 
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={onClose}
+        ></div>
 
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-cream-100">
-          <div>
-            <h2 className="text-2xl font-bold text-neutral-800">
-              {getModalTitle()}
-            </h2>
-            <p className="text-neutral-600 mt-1">
-              {getModalSubtitle()}
-            </p>
+        <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between p-6 border-b border-cream-100">
+            <div>
+              <h2 className="text-2xl font-bold text-neutral-800">
+                {getModalTitle()}
+              </h2>
+              <p className="text-neutral-600 mt-1">
+                {getModalSubtitle()}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-full bg-cream-100 hover:bg-cream-200 flex items-center justify-center transition-colors duration-200"
+            >
+              <X className="w-5 h-5 text-neutral-600" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="w-10 h-10 rounded-full bg-cream-100 hover:bg-cream-200 flex items-center justify-center transition-colors duration-200"
-          >
-            <X className="w-5 h-5 text-neutral-600" />
-          </button>
-        </div>
 
-        {mode === 'anonymous' && (
-          <div className="p-6 border-b border-cream-100">
-            <div className="bg-accent-green/10 border border-accent-green/20 rounded-2xl p-4">
-              <div className="flex items-start space-x-3">
-                <UserCheck className="w-5 h-5 text-accent-green flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-accent-green text-sm mb-1">Privacy-First Account</h4>
-                  <ul className="text-xs text-neutral-600 space-y-1">
-                    <li>• No email or personal information required</li>
-                    <li>• Your data is stored securely under your username</li>
-                    <li>• You can upgrade to a full account anytime</li>
-                    <li>• Password recovery is not available for anonymous accounts</li>
-                  </ul>
+          {mode === 'anonymous' && (
+            <div className="p-6 border-b border-cream-100">
+              <div className="bg-accent-green/10 border border-accent-green/20 rounded-2xl p-4">
+                <div className="flex items-start space-x-3">
+                  <UserCheck className="w-5 h-5 text-accent-green flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-accent-green text-sm mb-1">Privacy-First Account</h4>
+                    <ul className="text-xs text-neutral-600 space-y-1">
+                      <li>• No email or personal information required</li>
+                      <li>• Your data is stored securely under your username</li>
+                      <li>• You can upgrade to a full account anytime</li>
+                      <li>• Password recovery is not available for anonymous accounts</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6" noValidate>
-          {(mode === 'login' || mode === 'signup' || mode === 'forgot') && (
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                    errors.email ? 'border-red-500' : 'border-cream-200'
-                  }`}
-                  placeholder="Enter your email"
-                />
-              </div>
-              {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-              )}
-            </div>
           )}
 
-          {mode === 'anonymous' && (
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Username
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                <input
-                  type="text"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                    errors.username ? 'border-red-500' : 'border-cream-200'
-                  }`}
-                  placeholder="Choose a unique username"
-                />
-              </div>
-              {errors.username && (
-                <p className="text-red-500 text-xs mt-1">{errors.username}</p>
-              )}
-            </div>
-          )}
-
-          {mode === 'signup' && (
-            <>
+          <form onSubmit={handleSubmit} className="p-6 space-y-6" noValidate>
+            {(mode === 'login' || mode === 'signup' || mode === 'forgot') && (
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Full Name
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                      errors.email ? 'border-red-500' : 'border-cream-200'
+                    }`}
+                    placeholder="Enter your email"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                )}
+              </div>
+            )}
+
+            {mode === 'anonymous' && (
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Username
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
                   <input
                     type="text"
-                    name="displayName"
-                    value={formData.displayName}
+                    name="username"
+                    value={formData.username}
                     onChange={handleInputChange}
                     className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                      errors.displayName ? 'border-red-500' : 'border-cream-200'
+                      errors.username ? 'border-red-500' : 'border-cream-200'
                     }`}
-                    placeholder="Enter your full name"
+                    placeholder="Choose a unique username"
                   />
                 </div>
-                {errors.displayName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.displayName}</p>
+                {errors.username && (
+                  <p className="text-red-500 text-xs mt-1">{errors.username}</p>
                 )}
               </div>
+            )}
 
+            {mode === 'signup' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                    <input
+                      type="text"
+                      name="displayName"
+                      value={formData.displayName}
+                      onChange={handleInputChange}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                        errors.displayName ? 'border-red-500' : 'border-cream-200'
+                      }`}
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  {errors.displayName && (
+                    <p className="text-red-500 text-xs mt-1">{errors.displayName}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                        errors.phone ? 'border-red-500' : 'border-cream-200'
+                      }`}
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+                  {errors.phone && (
+                    <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                  )}
+                </div>
+              </>
+            )}
+
+            {mode !== 'forgot' && (
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Phone Number (Optional)
+                  Password
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
                   <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                      errors.phone ? 'border-red-500' : 'border-cream-200'
+                    className={`w-full pl-10 pr-12 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                      errors.password ? 'border-red-500' : 'border-cream-200'
                     }`}
-                    placeholder="Enter your phone number"
+                    placeholder="Enter your password"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
-                {errors.phone && (
-                  <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                {errors.password && (
+                  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                )}
+                {mode === 'anonymous' && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    ⚠️ Remember your password! Anonymous accounts cannot recover forgotten passwords.
+                  </p>
                 )}
               </div>
-            </>
-          )}
+            )}
 
-          {mode !== 'forgot' && (
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
+            {(mode === 'signup' || mode === 'anonymous') && (
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
+                      errors.confirmPassword ? 'border-red-500' : 'border-cream-200'
+                    }`}
+                    placeholder="Confirm your password"
+                  />
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+                )}
+              </div>
+            )}
+
+            {mode === 'login' && (
+              <div className="flex items-center justify-between">
+                <label className="flex items-center">
+                  <input type="checkbox" className="rounded border-cream-200 text-primary-500 focus:ring-primary-500" />
+                  <span className="ml-2 text-sm text-neutral-600">Remember me</span>
+                </label>
+                <button 
+                  type="button" 
+                  onClick={() => handleModeSwitch('forgot')}
+                  className="text-sm text-primary-500 hover:text-primary-600"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
+            {(mode === 'signup' || mode === 'anonymous') && (
+              <div className="flex items-start space-x-3">
+                <input 
+                  type="checkbox" 
+                  name="agreedToTerms"
+                  checked={formData.agreedToTerms}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                    errors.password ? 'border-red-500' : 'border-cream-200'
-                  }`}
-                  placeholder="Enter your password"
+                  className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
+                  required
                 />
+                <p className="text-sm text-neutral-600">
+                  I agree to the{' '}
+                  <button type="button" onClick={handleTermsClick} className="text-primary-500 hover:text-primary-600">
+                    Terms of Service
+                  </button>
+                  {' '}and{' '}
+                  <button type="button" onClick={handlePrivacyClick} className="text-primary-500 hover:text-primary-600">
+                    Privacy Policy
+                  </button>
+                </p>
+                {errors.agreedToTerms && (
+                  <p className="text-red-500 text-xs mt-1">{errors.agreedToTerms}</p>
+                )}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`w-full py-3 rounded-2xl font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                mode === 'anonymous' 
+                  ? 'bg-accent-green text-white hover:bg-accent-green/90'
+                  : mode === 'forgot'
+                    ? 'bg-blue-500 text-white hover:bg-blue-600'
+                    : 'bg-primary-500 text-white hover:bg-primary-600'
+              }`}
+            >
+              {isSubmitting ? 'Please wait...' : 
+              mode === 'login' ? 'Sign In' : 
+              mode === 'signup' ? 'Create Account' :
+              mode === 'forgot' ? 'Send Reset Link' :
+              'Create Anonymous Account'}
+            </button>
+
+            {(mode === 'login' || mode === 'signup') && (
+              <>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-cream-200"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-neutral-500">Or continue with</span>
+                  </div>
+                </div>
+
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  onClick={handleGoogleSignIn}
+                  disabled={isSubmitting}
+                  className="w-full flex items-center justify-center space-x-3 py-3 border border-cream-200 rounded-2xl hover:bg-cream-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  <span className="text-neutral-700">Google</span>
                 </button>
-              </div>
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-              )}
-              {mode === 'anonymous' && (
-                <p className="text-xs text-amber-600 mt-1">
-                  ⚠️ Remember your password! Anonymous accounts cannot recover forgotten passwords.
-                </p>
-              )}
-            </div>
-          )}
-
-          {(mode === 'signup' || mode === 'anonymous') && (
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-cream-200'
-                  }`}
-                  placeholder="Confirm your password"
-                />
-              </div>
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
-              )}
-            </div>
-          )}
-
-          {mode === 'login' && (
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input type="checkbox" className="rounded border-cream-200 text-primary-500 focus:ring-primary-500" />
-                <span className="ml-2 text-sm text-neutral-600">Remember me</span>
-              </label>
-              <button 
-                type="button" 
-                onClick={() => handleModeSwitch('forgot')}
-                className="text-sm text-primary-500 hover:text-primary-600"
-              >
-                Forgot password?
-              </button>
-            </div>
-          )}
-
-          {(mode === 'signup' || mode === 'anonymous') && (
-            <div className="flex items-start space-x-3">
-              <input 
-                type="checkbox" 
-                name="agreedToTerms"
-                checked={formData.agreedToTerms}
-                onChange={handleInputChange}
-                className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
-                required
-              />
-              <p className="text-sm text-neutral-600">
-                I agree to the{' '}
-                <a href="#" className="text-primary-500 hover:text-primary-600">Terms of Service</a>
-                {' '}and{' '}
-                <a href="#" className="text-primary-500 hover:text-primary-600">Privacy Policy</a>
-              </p>
-              {errors.agreedToTerms && (
-                <p className="text-red-500 text-xs mt-1">{errors.agreedToTerms}</p>
-              )}
-            </div>
-          )}
-
-          {mode === 'anonymous' && (
-            <div className="flex items-start space-x-3">
-              <input 
-                type="checkbox" 
-                name="agreedToTerms"
-                checked={formData.agreedToTerms}
-                onChange={handleInputChange}
-                className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" 
-                required
-              />
-              <p className="text-sm text-neutral-600">
-                I agree to the{' '}
-                <a href="#" className="text-primary-500 hover:text-primary-600">Terms of Service</a>
-                {' '}and understand that anonymous accounts have limited recovery options
-              </p>
-              {errors.agreedToTerms && (
-                <p className="text-red-500 text-xs mt-1">{errors.agreedToTerms}</p>
-              )}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full py-3 rounded-2xl font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-              mode === 'anonymous' 
-                ? 'bg-accent-green text-white hover:bg-accent-green/90'
-                : mode === 'forgot'
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
-                  : 'bg-primary-500 text-white hover:bg-primary-600'
-            }`}
-          >
-            {isSubmitting ? 'Please wait...' : 
-             mode === 'login' ? 'Sign In' : 
-             mode === 'signup' ? 'Create Account' :
-             mode === 'forgot' ? 'Send Reset Link' :
-             'Create Anonymous Account'}
-          </button>
-
-          {(mode === 'login' || mode === 'signup') && (
-            <>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-cream-200"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-neutral-500">Or continue with</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={isSubmitting}
-                className="w-full flex items-center justify-center space-x-3 py-3 border border-cream-200 rounded-2xl hover:bg-cream-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                <span className="text-neutral-700">Google</span>
-              </button>
-            </>
-          )}
-        </form>
-
-        <div className="p-6 border-t border-cream-100 text-center">
-          <div className="space-y-2">
-            {mode === 'forgot' ? (
-              <p className="text-neutral-600">
-                Remember your password?{' '}
-                <button
-                  onClick={() => handleModeSwitch('login')}
-                  className="text-primary-500 hover:text-primary-600 font-medium"
-                >
-                  Sign in
-                </button>
-              </p>
-            ) : mode === 'login' ? (
-              <>
-                <p className="text-neutral-600">
-                  Don't have an account?{' '}
-                  <button
-                    onClick={() => handleModeSwitch('signup')}
-                    className="text-primary-500 hover:text-primary-600 font-medium"
-                  >
-                    Sign up
-                  </button>
-                </p>
-                <p className="text-neutral-600">
-                  Want complete privacy?{' '}
-                  <button
-                    onClick={() => handleModeSwitch('anonymous')}
-                    className="text-accent-green hover:text-accent-green/80 font-medium"
-                  >
-                    Join anonymously
-                  </button>
-                </p>
               </>
-            ) : mode === 'signup' ? (
-              <>
+            )}
+          </form>
+
+          <div className="p-6 border-t border-cream-100 text-center">
+            <div className="space-y-2">
+              {mode === 'forgot' ? (
                 <p className="text-neutral-600">
-                  Already have an account?{' '}
+                  Remember your password?{' '}
                   <button
                     onClick={() => handleModeSwitch('login')}
                     className="text-primary-500 hover:text-primary-600 font-medium"
@@ -629,31 +762,68 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                     Sign in
                   </button>
                 </p>
+              ) : mode === 'login' ? (
+                <>
+                  <p className="text-neutral-600">
+                    Don't have an account?{' '}
+                    <button
+                      onClick={() => handleModeSwitch('signup')}
+                      className="text-primary-500 hover:text-primary-600 font-medium"
+                    >
+                      Sign up
+                    </button>
+                  </p>
+                  <p className="text-neutral-600">
+                    Prefer complete privacy?{' '}
+                    <button
+                      onClick={() => handleModeSwitch('anonymous')}
+                      className="text-primary-500 hover:text-accent-green/80 font-medium"
+                    >
+                      Join anonymously
+                    </button>
+                  </p>
+                </>
+              ) : mode === 'signup' ? (
+                <>
+                  <p className="text-neutral-600">
+                    Already have an account?{' '}
+                    <button
+                      onClick={() => handleModeSwitch('login')}
+                      className="text-primary-500 hover:text-primary-600 font-medium"
+                    >
+                      Sign in
+                    </button>
+                  </p>
+                  <p className="text-neutral-600">
+                    Want complete privacy?{' '}
+                    <button
+                      onClick={() => handleModeSwitch('anonymous')}
+                      className="text-accent-green hover:text-accent-green/80 font-medium"
+                    >
+                      Join anonymously
+                    </button>
+                  </p>
+                </>
+              ) : (
                 <p className="text-neutral-600">
-                  Want complete privacy?{' '}
+                  Want full features?{' '}
                   <button
-                    onClick={() => handleModeSwitch('anonymous')}
-                    className="text-accent-green hover:text-accent-green/80 font-medium"
+                    onClick={() => handleModeSwitch('signup')}
+                    className="text-primary-500 hover:text-primary-600 font-medium"
                   >
-                    Join anonymously
+                    Create regular account
                   </button>
                 </p>
-              </>
-            ) : (
-              <p className="text-neutral-600">
-                Want full features?{' '}
-                <button
-                  onClick={() => handleModeSwitch('signup')}
-                  className="text-primary-500 hover:text-primary-600 font-medium"
-                >
-                  Create regular account
-                </button>
-              </p>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Terms and Privacy Modals */}
+      <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
+      <PrivacyModal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
+    </>
   );
 };
 
