@@ -794,7 +794,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                     </button>
                   </p>
                   <p className="text-neutral-600">
-                    Want complete privacy?{' '}
+                    Prefer complete privacy?{' '}
                     <button
                       onClick={() => handleModeSwitch('anonymous')}
                       className="text-accent-green hover:text-accent-green/80 font-medium"
