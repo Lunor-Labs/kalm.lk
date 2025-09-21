@@ -32,10 +32,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('🔔 Auth state changed:', !!firebaseUser);
       try {
         setError(null);
         if (firebaseUser) {
+          console.log('📊 Fetching user data...');
           const userData = await getCurrentUser(firebaseUser);
+          console.log('✅ User data loaded:', userData?.role);
           setUser(userData);
           
           // Check for pending booking after successful auth
@@ -75,6 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(null);
       } finally {
         setLoading(false);
+        console.log('🏁 Auth context updated');
       }
     });
 

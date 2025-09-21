@@ -326,8 +326,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
       if (user) {
         toast.success('Welcome to Kalm!');
         onClose();
+        console.log('user after auth', user.role);
         const redirectPath = getRoleRedirectPath(user.role || 'client');
         navigate(redirectPath, { replace: true });
+        console.log('redirected', redirectPath);
+
       } else {
         toast.error('Failed to create account. Please try again.');
       }

@@ -122,7 +122,7 @@ export const signUp = async (signupData: SignupData): Promise<User> => {
     };
     
     await setDoc(doc(db, 'users', firebaseUser.uid), userData);
-    
+
     return {
       uid: firebaseUser.uid,
       email: firebaseUser.email,
@@ -262,15 +262,29 @@ export const signOut = async (): Promise<void> => {
 
 export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User | null> => {
   try {
-    if (!firebaseUser) return null;
+    if (!firebaseUser) {
+      console.log('❌ No Firebase user provided');
+      return null;}
     
+    console.log('🔍 Getting user document for:', firebaseUser.uid);
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
     
     if (!userDoc.exists()) {
-      return null;
+      console.log('❌ User document does not exist in Firestore');
+         // Return default user object when Firebase user exists but Firestore doc doesn't
+      return {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || 'User',
+        role: 'client', // Default role
+        isAnonymous: firebaseUser.isAnonymous || false,
+        createdAt: new Date(), // Use current date as fallback
+        updatedAt: new Date(),
+      };
     }
     
     const userData = userDoc.data();
+    console.log('📄 Raw Firestore data:', userData);
     
     return {
       uid: firebaseUser.uid,
