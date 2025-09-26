@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -25,7 +25,6 @@ import Testimonials from './components/Testimonials';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import WhatsAppFloat from './components/WhatsAppFloat';
-import AuthModal from './components/AuthModal';
 import TherapistListing from './components/TherapistListing';
 
 // Dashboard Pages
@@ -48,154 +47,151 @@ import BookingFlow from './features/booking/BookingFlow';
 import TermsOfService from './pages/legal/TermsOfService';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
 import RefundPolicy from './pages/legal/RefundPolicy';
+// Auth Pages
+import Login from './pages/auth/Login';
+import Signup from './pages/auth/Signup';
+import AnonymousSignup from './pages/auth/AnonymousSignup';
 
 // Landing Page Component (unchanged)
 const LandingPage: React.FC = () => {
-  const [isAuthModalOpen, setIsAuthModalOpen] = React.useState(false);
-  const [authMode, setAuthMode] = React.useState<'login' | 'signup' | 'anonymous'>('login');
-  const [currentView, setCurrentView] = React.useState<'home' | 'therapists'>('home');
-  const [serviceFilter, setServiceFilter] = React.useState<string | undefined>(undefined);
+	const [currentView, setCurrentView] = React.useState<'home' | 'therapists'>('home');
+	const [serviceFilter, setServiceFilter] = React.useState<string | undefined>(undefined);
+	const navigate = useNavigate();
 
-  const openAuthModal = (mode: 'login' | 'signup' | 'anonymous') => {
-    setAuthMode(mode);
-    setIsAuthModalOpen(true);
-  };
+	const openAuthModal = (mode: 'login' | 'signup' | 'anonymous') => {
+		if (mode === 'login') navigate('/login');
+		else if (mode === 'signup') navigate('/signup');
+		else navigate('/signup/anonymous');
+	};
 
-  const openTherapistListing = (serviceCategory?: string) => {
-    setServiceFilter(serviceCategory);
-    setCurrentView('therapists');
-  };
+	const openTherapistListing = (serviceCategory?: string) => {
+		setServiceFilter(serviceCategory);
+		setCurrentView('therapists');
+	};
 
-  const backToHome = () => {
-    setCurrentView('home');
-    setServiceFilter(undefined);
-  };
+	const backToHome = () => {
+		setCurrentView('home');
+		setServiceFilter(undefined);
+	};
 
-  if (currentView === 'therapists') {
-    return (
-      <>
-        <TherapistListing onBack={backToHome} initialFilter={serviceFilter} onOpenAuth={openAuthModal} />
-        <AuthModal 
-          isOpen={isAuthModalOpen}
-          onClose={() => setIsAuthModalOpen(false)}
-          mode={authMode}
-          onSwitchMode={setAuthMode}
-        />
-      </>
-    );
-  }
+	if (currentView === 'therapists') {
+		return (
+			<>
+				<TherapistListing onBack={backToHome} initialFilter={serviceFilter} onOpenAuth={openAuthModal} />
+			</>
+		);
+	}
 
-  return (
-    <div className="min-h-screen bg-cream-50">
-      <Header onOpenAuth={openAuthModal} />
-      <Hero onOpenAuth={openAuthModal} />
-      <About />
-      <Features />
-      <HowItWorks />
-      <Services onViewAllTherapists={openTherapistListing} onOpenAuth={openAuthModal} />
-      <Comparison />
-      <Therapists onViewAllTherapists={openTherapistListing} onOpenAuth={openAuthModal} />
-      <Testimonials />
-      <FAQ />
-      <Footer />
-      <WhatsAppFloat />
-      <AuthModal 
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        mode={authMode}
-        onSwitchMode={setAuthMode}
-      />
-    </div>
-  );
+	return (
+		<div className="min-h-screen bg-cream-50">
+			<Header onOpenAuth={openAuthModal} />
+			<Hero onOpenAuth={openAuthModal} />
+			<About />
+			<Features />
+			<HowItWorks />
+			<Services onViewAllTherapists={openTherapistListing} />
+			<Comparison />
+			<Therapists onViewAllTherapists={openTherapistListing} onOpenAuth={openAuthModal} />
+			<Testimonials />
+			<FAQ />
+			<Footer />
+			<WhatsAppFloat />
+		</div>
+	);
 };
 
 function App() {
-  return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          <Routes>
-            {/* Landing Page - unchanged */}
-            <Route path="/" element={<LandingPage />} />
-            
-            {/* Auth Routes */}
-            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+	return (
+		<AuthProvider>
+			<Router>
+				<div className="App">
+					<Routes>
+						{/* Landing Page - unchanged */}
+						<Route path="/" element={<LandingPage />} />
 
-            {/* Legal Pages */}
-            <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/refund-policy" element={<RefundPolicy />} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin/*" element={
-              <ProtectedRoute requiredRole="admin">
-                <AdminLayout />
-              </ProtectedRoute>
-            }>
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="users" element={<UserManagement />} />
-              <Route path="therapists" element={<TherapistManagement />} />
-              <Route path="bookings" element={<div className="text-white">Bookings Management</div>} />
-              <Route path="payments" element={<div className="text-white">Payments Management</div>} />
-              <Route path="notifications" element={<div className="text-white">Notifications</div>} />
-              <Route path="settings" element={<div className="text-white">Settings</div>} />
-              <Route index element={<Navigate to="dashboard" replace />} />
-            </Route>
-            
-            {/* Therapist Routes */}
-            <Route path="/therapist/*" element={
-              <ProtectedRoute requiredRole="therapist">
-                <TherapistLayout />
-              </ProtectedRoute>
-            }>
-              <Route path="schedule" element={<TherapistSchedule />} />
-              <Route path="sessions" element={<TherapistSessions />} />
-              <Route path="session/:sessionId" element={<SessionRoom />} />
-              <Route path="availability" element={<TherapistAvailability />} />
-              <Route path="clients" element={<div className="text-white">Clients</div>} />
-              <Route path="earnings" element={<div className="text-white">Earnings</div>} />
-              <Route path="settings" element={<div className="text-white">Settings</div>} />
-              <Route index element={<Navigate to="schedule" replace />} />
-            </Route>
-            
-            {/* Client Routes */}
-            <Route path="/client/*" element={
-              <ProtectedRoute requiredRole="client" allowAnonymous={true}>
-                <ClientLayout />
-              </ProtectedRoute>
-            }>
-              <Route path="home" element={<ClientHome />} />
-              <Route path="book" element={<BookingFlow />} />
-              <Route path="sessions" element={<ClientSessions />} />
-              <Route path="session/:sessionId" element={<SessionRoom />} />
-              <Route path="therapists" element={<TherapistListing onBack={() => window.history.back()} onOpenAuth={() => {}} />} />
-              <Route path="messages" element={<div className="text-white">Messages</div>} />
-              <Route path="payments" element={<div className="text-white">Payment History</div>} />
-              <Route path="profile" element={<div className="text-white">Profile</div>} />
-              <Route path="settings" element={<div className="text-white">Settings</div>} />
-              <Route index element={<Navigate to="home" replace />} />
-            </Route>
-            
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          
-          {/* Toast Notifications */}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#1f2937',
-                color: '#fff',
-                border: '1px solid #374151',
-              },
-            }}
-          />
-        </div>
-      </Router>
-    </AuthProvider>
-  );
+						{/* New Auth Pages */}
+						<Route path="/login" element={<Login />} />
+						<Route path="/signup" element={<Signup />} />
+						<Route path="/signup/anonymous" element={<AnonymousSignup />} />
+						
+						{/* Auth Routes */}
+						<Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+						{/* Legal Pages */}
+						<Route path="/terms-of-service" element={<TermsOfService />} />
+						<Route path="/privacy-policy" element={<PrivacyPolicy />} />
+						<Route path="/refund-policy" element={<RefundPolicy />} />
+						
+						{/* Admin Routes */}
+						<Route path="/admin/*" element={
+							<ProtectedRoute requiredRole="admin">
+								<AdminLayout />
+							</ProtectedRoute>
+						}>
+							<Route path="dashboard" element={<AdminDashboard />} />
+							<Route path="users" element={<UserManagement />} />
+							<Route path="therapists" element={<TherapistManagement />} />
+							<Route path="bookings" element={<div className="text-white">Bookings Management</div>} />
+							<Route path="payments" element={<div className="text-white">Payments Management</div>} />
+							<Route path="notifications" element={<div className="text-white">Notifications</div>} />
+							<Route path="settings" element={<div className="text-white">Settings</div>} />
+							<Route index element={<Navigate to="dashboard" replace />} />
+						</Route>
+						
+						{/* Therapist Routes */}
+						<Route path="/therapist/*" element={
+							<ProtectedRoute requiredRole="therapist">
+								<TherapistLayout />
+							</ProtectedRoute>
+						}>
+							<Route path="schedule" element={<TherapistSchedule />} />
+							<Route path="sessions" element={<TherapistSessions />} />
+							<Route path="session/:sessionId" element={<SessionRoom />} />
+							<Route path="availability" element={<TherapistAvailability />} />
+							<Route path="clients" element={<div className="text-white">Clients</div>} />
+							<Route path="earnings" element={<div className="text-white">Earnings</div>} />
+							<Route path="settings" element={<div className="text-white">Settings</div>} />
+							<Route index element={<Navigate to="schedule" replace />} />
+						</Route>
+						
+						{/* Client Routes */}
+						<Route path="/client/*" element={
+							<ProtectedRoute requiredRole="client" allowAnonymous={true}>
+								<ClientLayout />
+							</ProtectedRoute>
+						}>
+							<Route path="home" element={<ClientHome />} />
+							<Route path="book" element={<BookingFlow />} />
+							<Route path="sessions" element={<ClientSessions />} />
+							<Route path="session/:sessionId" element={<SessionRoom />} />
+							<Route path="therapists" element={<TherapistListing onBack={() => window.history.back()} onOpenAuth={() => {}} />} />
+							<Route path="messages" element={<div className="text-white">Messages</div>} />
+							<Route path="payments" element={<div className="text-white">Payment History</div>} />
+							<Route path="profile" element={<div className="text-white">Profile</div>} />
+							<Route path="settings" element={<div className="text-white">Settings</div>} />
+							<Route index element={<Navigate to="home" replace />} />
+						</Route>
+						
+						{/* Catch all route */}
+						<Route path="*" element={<Navigate to="/" replace />} />
+					</Routes>
+					
+					{/* Toast Notifications */}
+					<Toaster
+						position="top-right"
+						toastOptions={{
+							duration: 4000,
+							style: {
+								background: '#1f2937',
+								color: '#fff',
+								border: '1px solid #374151',
+							},
+						}}
+					/>
+				</div>
+			</Router>
+		</AuthProvider>
+	);
 }
 
 export default App;
