@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signUpAnonymous } from '../../lib/auth';
-import { User, Lock, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import LegalModal from '../../components/LegalModal';
 
 const AnonymousSignup: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +13,8 @@ const AnonymousSignup: React.FC = () => {
   const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +44,15 @@ const AnonymousSignup: React.FC = () => {
     <div className="min-h-screen bg-neutral-900 flex items-start justify-center px-2 xs:px-4 sm:px-6 pt-6 sm:pt-10">
       <div className="w-full max-w-[90%] xs:max-w-[95%] sm:max-w-md bg-white rounded-2xl xs:rounded-3xl shadow-2xl overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-cream-100">
+          <div className="flex items-center mb-4">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium text-primary-500">Back to Home</span>
+            </button>
+          </div>
           <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">Join Anonymously</h1>
           <p className="text-neutral-600 mt-1 text-sm">Start privately without sharing personal details</p>
         </div>
@@ -98,7 +110,7 @@ const AnonymousSignup: React.FC = () => {
 
           <label className="flex items-start space-x-3">
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" />
-            <span className="text-sm text-neutral-600">I understand password recovery is not available for anonymous accounts. I agree to the <Link to="/terms-of-service" className="text-primary-500 hover:text-primary-600">Terms</Link> and <Link to="/privacy-policy" className="text-primary-500 hover:text-primary-600">Privacy Policy</Link>.</span>
+            <span className="text-sm text-neutral-600">I understand password recovery is not available for anonymous accounts. I agree to the <button type="button" onClick={() => setShowTermsModal(true)} className="text-primary-500 hover:text-primary-600 underline">Terms</button> and <button type="button" onClick={() => setShowPrivacyModal(true)} className="text-primary-500 hover:text-primary-600 underline">Privacy Policy</button>.</span>
           </label>
 
           <button
@@ -115,6 +127,18 @@ const AnonymousSignup: React.FC = () => {
           <p>Already have an account? <Link to="/login" className="text-primary-500 hover:text-primary-600 font-medium">Sign in</Link></p>
         </div>
       </div>
+
+      {/* Legal Modals */}
+      <LegalModal 
+        isOpen={showTermsModal} 
+        onClose={() => setShowTermsModal(false)} 
+        type="terms" 
+      />
+      <LegalModal 
+        isOpen={showPrivacyModal} 
+        onClose={() => setShowPrivacyModal(false)} 
+        type="privacy" 
+      />
     </div>
   );
 };

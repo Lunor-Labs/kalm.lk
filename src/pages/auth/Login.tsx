@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { signIn, signInWithGoogle } from '../../lib/auth';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
 import toast from 'react-hot-toast';
@@ -65,6 +65,15 @@ const Login: React.FC = () => {
     <div className="min-h-screen bg-neutral-900 flex items-start justify-center px-2 xs:px-4 sm:px-6 pt-6 sm:pt-10">
       <div className="w-full max-w-[90%] xs:max-w-[95%] sm:max-w-md bg-white rounded-2xl xs:rounded-3xl shadow-2xl overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-cream-100">
+          <div className="flex items-center mb-4">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium text-primary-500">Back to Home</span>
+            </button>
+          </div>
           <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">Log In to Your Account</h1>
           <p className="text-neutral-600 mt-1 text-sm">Please enter your credentials to access your account</p>
         </div>
