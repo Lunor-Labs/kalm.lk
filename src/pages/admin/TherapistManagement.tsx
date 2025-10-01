@@ -534,22 +534,22 @@ const TherapistManagement: React.FC = () => {
             </div>
           )}
 
-          <button
-            onClick={() => {
-              resetForm();
-              setEditingTherapist(null);
-              setShowAddModal(true);
-            }}
-            className="bg-primary-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-2xl hover:bg-primary-600 flex items-center justify-center gap-2"
-          >
-            <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
-            <span className="text-sm sm:text-base">Add Therapist</span>
-          </button>
+        <button
+          onClick={() => {
+            resetForm();
+            setEditingTherapist(null);
+            setShowAddModal(true);
+          }}
+          className="bg-primary-500 text-white px-3 sm:px-4 py-2 rounded-xl hover:bg-primary-600 flex items-center justify-center gap-1.5 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="text-sm">Add Therapist</span>
+        </button>
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-primary-500/30">
           <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
             <Users className="w-4 sm:w-5 h-4 sm:h-5 text-primary-500" />
             <span className="text-neutral-300 text-xs sm:text-sm">Total Therapists</span>
@@ -557,7 +557,7 @@ const TherapistManagement: React.FC = () => {
           <p className="text-xl sm:text-2xl font-bold text-white">{therapists.length}</p>
         </div>
         
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-primary-500/30">
           <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
             <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-accent-green" />
             <span className="text-neutral-300 text-xs sm:text-sm">Available Now</span>
@@ -568,7 +568,7 @@ const TherapistManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+      <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-primary-500/30">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-neutral-400" />
           <input
@@ -586,7 +586,7 @@ const TherapistManagement: React.FC = () => {
           {paginatedTherapists.map((therapist) => (
             <div
               key={therapist.id}
-              className="bg-black/50 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-neutral-800 overflow-hidden hover:border-neutral-700 transition-all duration-300"
+              className="bg-black/50 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-primary-500/30 overflow-hidden hover:border-primary-500/50 transition-all duration-300"
             >
               <div className="relative p-4 sm:p-6 pb-0">
                 <div className="flex justify-center">
@@ -596,7 +596,7 @@ const TherapistManagement: React.FC = () => {
                       alt={`${therapist.firstName} ${therapist.lastName}`}
                       className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 sm:border-4 border-neutral-700"
                     />
-                    <div className={`absolute bottom-0 right-0輪
+                    <div className={`absolute bottom-0 right-0
  w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-neutral-800 ${
                       therapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-500'
                     }`}></div>
@@ -687,7 +687,7 @@ const TherapistManagement: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-neutral-800 overflow-hidden">
+        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-primary-500/30 overflow-hidden">
           <div className="p-4 sm:p-6 border-b border-neutral-800">
             <h2 className="text-lg sm:text-xl font-semibold text-white">
               Therapists ({filteredTherapists.length})
@@ -860,7 +860,7 @@ const TherapistManagement: React.FC = () => {
             onClick={() => setViewingTherapist(null)}
           ></div>
 
-          <div className="relative bg-neutral-900 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-full sm:max-w-4xl max-h-[90vh] overflow-y-auto border border-neutral-800">
+          <div className="relative bg-neutral-900 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-full sm:max-w-4xl max-h-[90vh] overflow-y-auto border border-primary-500/30">
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-neutral-800">
               <button
                 onClick={() => setViewingTherapist(null)}
@@ -905,7 +905,7 @@ const TherapistManagement: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-4 sm:space-y-6">
-                  <div className="bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                  <div className="bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-primary-500/30">
                     <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center space-x-2">
                       <Award className="w-4 h-4 sm:w-5 sm:h-5 text-primary-500" />
                       <span>Professional Info</span>
@@ -926,7 +926,7 @@ const TherapistManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                  <div className="bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-primary-500/30">
                     <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Credentials</h4>
                     <div className="flex flex-wrap gap-1 sm:gap-2">
                       {viewingTherapist.credentials.map((credential, index) => (
@@ -942,7 +942,7 @@ const TherapistManagement: React.FC = () => {
                 </div>
 
                 <div className="space-y-4 sm:space-y-6">
-                  <div className="bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                  <div className="bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-primary-500/30">
                     <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Specializations</h4>
                     <div className="flex flex-wrap gap-1 sm:gap-2">
                       {viewingTherapist.specializations.map((spec, index) => (
@@ -956,7 +956,7 @@ const TherapistManagement: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                  <div className="bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-primary-500/30">
                     <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Session Formats</h4>
                     <div className="flex items-center space-x-2 sm:space-x-4">
                       {viewingTherapist.sessionFormats.map((format, index) => (
@@ -971,7 +971,7 @@ const TherapistManagement: React.FC = () => {
               </div>
 
               {viewingTherapist.bio && (
-                <div className="mt-4 sm:mt-6 bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                <div className="mt-4 sm:mt-6 bg-neutral-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-primary-500/30">
                   <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">About</h4>
                   <p className="text-neutral-300 text-sm sm:text-base leading-relaxed">{viewingTherapist.bio}</p>
                 </div>
@@ -1005,7 +1005,7 @@ const TherapistManagement: React.FC = () => {
             }}
           ></div>
 
-          <div className="relative bg-neutral-900 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-full sm:max-w-4xl max-h-[90vh] overflow-y-auto border border-neutral-800">
+          <div className="relative bg-neutral-900 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-full sm:max-w-4xl max-h-[90vh] overflow-y-auto border border-primary-500/30">
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-neutral-800">
               <button
                 onClick={() => {
@@ -1177,7 +1177,7 @@ const TherapistManagement: React.FC = () => {
 
               {isMobile ? (
                 <>
-                  <div className="bg-neutral-800/50 rounded-xl overflow-hidden">
+                  <div className="bg-neutral-800/50 rounded-xl overflow-hidden border border-primary-500/30">
                     <button
                       type="button"
                       onClick={() => toggleSection('credentials')}
@@ -1196,7 +1196,7 @@ const TherapistManagement: React.FC = () => {
                       <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                         {credentialOptions.map((credential) => (
                           <div key={credential}>
-                            <label className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                            <label className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg border border-neutral-700 hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                               <input
                                 type="checkbox"
                                 checked={formData.credentials.includes(credential)}
@@ -1242,7 +1242,7 @@ const TherapistManagement: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="bg-neutral-800/50 rounded-xl overflow-hidden">
+                  <div className="bg-neutral-800/50 rounded-xl overflow-hidden border border-primary-500/30">
                     <button
                       type="button"
                       onClick={() => toggleSection('specializations')}
@@ -1290,7 +1290,7 @@ const TherapistManagement: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="bg-neutral-800/50 rounded-xl overflow-hidden">
+                  <div className="bg-neutral-800/50 rounded-xl overflow-hidden border border-primary-500/30">
                     <button
                       type="button"
                       onClick={() => toggleSection('languages')}
@@ -1308,7 +1308,7 @@ const TherapistManagement: React.FC = () => {
                     {expandedSections.languages && (
                       <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                         {languageOptions.map((language) => (
-                          <label key={language} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                          <label key={language} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg border border-neutral-700 hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={formData.languages.includes(language)}
@@ -1322,7 +1322,7 @@ const TherapistManagement: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="bg-neutral-800/50 rounded-xl overflow-hidden">
+                  <div className="bg-neutral-800/50 rounded-xl overflow-hidden border border-primary-500/30">
                     <button
                       type="button"
                       onClick={() => toggleSection('services')}
@@ -1340,7 +1340,7 @@ const TherapistManagement: React.FC = () => {
                     {expandedSections.services && (
                       <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                         {serviceOptions.map((service) => (
-                          <label key={service} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                          <label key={service} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg border border-neutral-700 hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={formData.services.includes(service)}
@@ -1354,7 +1354,7 @@ const TherapistManagement: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="bg-neutral-800/50 rounded-xl overflow-hidden">
+                  <div className="bg-neutral-800/50 rounded-xl overflow-hidden border border-primary-500/30">
                     <button
                       type="button"
                       onClick={() => toggleSection('sessionFormats')}
@@ -1372,7 +1372,7 @@ const TherapistManagement: React.FC = () => {
                     {expandedSections.sessionFormats && (
                       <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                         {sessionFormatOptions.map((format) => (
-                          <label key={format} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                          <label key={format} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg border border-neutral-700 hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={formData.sessionFormats.includes(format)}
@@ -1393,6 +1393,7 @@ const TherapistManagement: React.FC = () => {
                 </>
               ) : (
                 <>
+                  <div className="border-t border-neutral-800 my-3"></div>
                   <div>
                     <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
                       Credentials * (Select or add at least one)
@@ -1400,7 +1401,7 @@ const TherapistManagement: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                       {credentialOptions.map((credential) => (
                         <div key={credential}>
-                          <label className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                          <label className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl border border-neutral-700 hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={formData.credentials.includes(credential)}
@@ -1445,6 +1446,7 @@ const TherapistManagement: React.FC = () => {
                     )}
                   </div>
 
+                  <div className="border-t border-neutral-800 my-3"></div>
                   <div>
                     <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
                       Specializations * (Add at least one)
@@ -1480,13 +1482,14 @@ const TherapistManagement: React.FC = () => {
                     </div>
                   </div>
 
+                  <div className="border-t border-neutral-800 my-3"></div>
                   <div>
                     <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
                       Languages * (Select at least one)
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                       {languageOptions.map((language) => (
-                        <label key={language} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                        <label key={language} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl border border-neutral-700 hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={formData.languages.includes(language)}
@@ -1499,13 +1502,14 @@ const TherapistManagement: React.FC = () => {
                     </div>
                   </div>
 
+                  <div className="border-t border-neutral-800 my-3"></div>
                   <div>
                     <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
                       Services * (Select at least one)
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                       {serviceOptions.map((service) => (
-                        <label key={service} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                        <label key={service} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl border border-neutral-700 hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={formData.services.includes(service)}
@@ -1518,13 +1522,14 @@ const TherapistManagement: React.FC = () => {
                     </div>
                   </div>
 
+                  <div className="border-t border-neutral-800 my-3"></div>
                   <div>
                     <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
                       Session Formats * (Select at least one)
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                       {sessionFormatOptions.map((format) => (
-                        <label key={format} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                        <label key={format} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl border border-neutral-700 hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={formData.sessionFormats.includes(format)}
@@ -1544,6 +1549,7 @@ const TherapistManagement: React.FC = () => {
                 </>
               )}
 
+              <div className="border-t border-neutral-800 my-3"></div>
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
                   Bio
@@ -1575,7 +1581,7 @@ const TherapistManagement: React.FC = () => {
                   className="px-4 py-2 sm:px-6 sm:py-3 bg-primary-500 text-white rounded-xl sm:rounded-2xl hover:bg-primary-600 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                 >
                   <Save className="w-4 h-4" />
-                  <span>{loading ? 'Saving...' : editingTherapist ? 'Update' : 'Add Therapist'}</span>
+                  <span>{loading ? 'Saving...' : editingTherapist ? 'Update' : 'Done'}</span>
                 </button>
               </div>
             </form>
