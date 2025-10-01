@@ -69,6 +69,7 @@ const TherapistManagement: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTherapist, setEditingTherapist] = useState<Therapist | null>(null);
   const [viewingTherapist, setViewingTherapist] = useState<Therapist | null>(null);
+  const [showAvailableModal, setShowAvailableModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [formData, setFormData] = useState<TherapistFormData>({
     firstName: '',
@@ -457,7 +458,7 @@ const TherapistManagement: React.FC = () => {
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -557,7 +558,11 @@ const TherapistManagement: React.FC = () => {
           <p className="text-xl sm:text-2xl font-bold text-white">{therapists.length}</p>
         </div>
         
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <button
+          onClick={() => setShowAvailableModal(true)}
+          className="text-left bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800 hover:border-neutral-700 transition-colors duration-200"
+          aria-label="Show available therapists"
+        >
           <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
             <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-accent-green" />
             <span className="text-neutral-300 text-xs sm:text-sm">Available Now</span>
@@ -565,7 +570,7 @@ const TherapistManagement: React.FC = () => {
           <p className="text-xl sm:text-2xl font-bold text-white">
             {therapists.filter(t => t.isAvailable).length}
           </p>
-        </div>
+        </button>
       </div>
 
       <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
@@ -700,9 +705,9 @@ const TherapistManagement: React.FC = () => {
                 <tr>
                   <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Therapist</th>
                   <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Specializations</th>
-                  <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Experience</th>
+                  {/* <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Experience</th> */}
                   <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Rate</th>
-                  <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Status</th>
+                  {/* <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Status</th> */}
                   <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Actions</th>
                 </tr>
               </thead>
@@ -729,7 +734,7 @@ const TherapistManagement: React.FC = () => {
                         {therapist.specializations.slice(0, 2).map((spec, index) => (
                           <span
                             key={index}
-                            className="px-2 py-1 bg-primary-500/20 text-primary-500 rounded-full text-xs sm:text-sm"
+                            className="text-primary-500 rounded-full text-xs sm:text-sm"
                           >
                             {spec}
                           </span>
@@ -741,13 +746,13 @@ const TherapistManagement: React.FC = () => {
                         )}
                       </div>
                     </td>
-                    <td className="p-4">
+                    {/* <td className="p-4">
                       <p className="text-neutral-300 text-sm sm:text-base">{therapist.experience} years</p>
-                    </td>
+                    </td> */}
                     <td className="p-4">
                       <p className="text-neutral-300 text-sm sm:text-base">LKR {therapist.hourlyRate.toLocaleString()}</p>
                     </td>
-                    <td className="p-4">
+                    {/* <td className="p-4">
                       <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs sm:text-sm ${
                         therapist.isAvailable 
                           ? 'bg-accent-green/20 text-accent-green' 
@@ -758,7 +763,7 @@ const TherapistManagement: React.FC = () => {
                         }`}></div>
                         <span>{therapist.isAvailable ? 'Available' : 'Unavailable'}</span>
                       </span>
-                    </td>
+                    </td> */}
                     <td className="p-4">
                       <div className="flex items-center space-x-2">
                         <button
@@ -989,6 +994,48 @@ const TherapistManagement: React.FC = () => {
                   <span>Edit Therapist</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAvailableModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowAvailableModal(false)}
+          ></div>
+
+          <div className="relative bg-neutral-900 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-y-auto border border-neutral-800">
+            <div className="flex items-center justify-between p-4 border-b border-neutral-800">
+              <h3 className="text-lg font-semibold text-white">Available Therapists</h3>
+              <button onClick={() => setShowAvailableModal(false)} className="w-8 h-8 rounded-full bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center">
+                <X className="w-4 h-4 text-neutral-400" />
+              </button>
+            </div>
+            <div className="p-4 space-y-2">
+              {therapists.filter(t => t.isAvailable).length === 0 && (
+                <p className="text-neutral-400 text-sm">No therapists are available right now.</p>
+              )}
+              {therapists.filter(t => t.isAvailable).map((t) => (
+                <div key={t.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-neutral-800/50">
+                  <div className="flex items-center gap-3">
+                    <img src={t.profilePhoto} alt={`${t.firstName} ${t.lastName}`} className="w-10 h-10 rounded-full object-cover" />
+                    <div>
+                      <p className="text-white font-medium text-sm">{t.firstName} {t.lastName}</p>
+                      <p className="text-neutral-400 text-xs">{t.specializations.slice(0,2).join(', ')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { setViewingTherapist(t); setShowAvailableModal(false); }}
+                      className="px-3 py-1 bg-primary-500 text-white rounded-lg text-sm"
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
