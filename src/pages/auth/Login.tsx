@@ -16,20 +16,31 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
-      await signIn({ email: identifier, password });
-      const from = (location.state as any)?.from?.pathname || '/client/home';
-      navigate(from, { replace: true });
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign in');
-    } finally {
-      setLoading(false);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
+  try {
+    const user = await signIn({ email: identifier, password });
+    
+    const userRole = user.role; 
+    
+    // Redirect based on role
+    let redirectPath = '/client/home';
+    if (userRole === 'admin') {
+      redirectPath = '/admin/dashboard';
+    } else if (userRole === 'therapist') {
+      redirectPath = '/therapist/schedule';
     }
-  };
+    
+    const from = (location.state as any)?.from?.pathname || redirectPath;
+    navigate(from, { replace: true });
+  } catch (err: any) {
+    setError(err.message || 'Failed to sign in');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleGoogle = async () => {
     setLoading(true);
