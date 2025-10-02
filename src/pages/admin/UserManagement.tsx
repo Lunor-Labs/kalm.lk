@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Users, Search, Filter, MoreVertical, Shield, UserCheck, Crown, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { updateUserRole } from '../../lib/auth';
 import { UserManagement, UserRole } from '../../types/auth';
 import toast from 'react-hot-toast';
-import { format, isWithinInterval, parseISO } from 'date-fns';
+import { isWithinInterval, parseISO } from 'date-fns';
 
 const UserManagementPage: React.FC = () => {
   const [users, setUsers] = useState<UserManagement[]>([]);
@@ -16,10 +17,61 @@ const UserManagementPage: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 5;
+  // Custom role select state
+  const [roleOpen, setRoleOpen] = useState(false);
+  const roleRef = useRef<HTMLDivElement | null>(null);
+  const roleOptions: (UserRole | 'all')[] = ['all', 'client', 'therapist', 'admin'];
+  const roleButtonRef = useRef<HTMLButtonElement | null>(null);
+  const portalElRef = useRef<HTMLDivElement | null>(null);
+  const portalContentRef = useRef<HTMLDivElement | null>(null);
+  const [dropdownStyles, setDropdownStyles] = useState<{ top: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
     loadUsers();
   }, []);
+
+  // Close role dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      const clickedInsideRole = roleRef.current && roleRef.current.contains(target);
+      const clickedInsidePortal = portalContentRef.current && portalContentRef.current.contains(target);
+      if (!clickedInsideRole && !clickedInsidePortal) {
+        setRoleOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Create portal element on mount
+  useEffect(() => {
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+    portalElRef.current = el;
+    return () => {
+      if (portalElRef.current) document.body.removeChild(portalElRef.current);
+      portalElRef.current = null;
+    };
+  }, []);
+
+  // Position dropdown when opened and on resize/scroll
+  useEffect(() => {
+    const updatePosition = () => {
+      const btn = roleButtonRef.current;
+      if (btn) {
+        const rect = btn.getBoundingClientRect();
+        setDropdownStyles({ top: rect.bottom + 8 + window.scrollY, left: rect.left + window.scrollX, width: rect.width });
+      }
+    };
+    if (roleOpen) updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [roleOpen]);
 
   useEffect(() => {
     // Reset to page 1 when filters change
@@ -208,34 +260,71 @@ const UserManagementPage: React.FC = () => {
               className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
             />
           </div>
-          <div className="relative">
+          <div className="relative" ref={roleRef}>
             <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value as UserRole | 'all')}
-              className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white text-sm"
+            <button
+              ref={roleButtonRef}
+              type="button"
+              onClick={() => setRoleOpen(prev => !prev)}
+              className="w-full text-left pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white text-sm flex items-center justify-between"
+              aria-haspopup="listbox"
+              aria-expanded={roleOpen}
             >
-              <option value="all">All Roles</option>
-              <option value="client">Clients</option>
-              <option value="therapist">Therapists</option>
-              <option value="admin">Admins</option>
-            </select>
+              <span className="truncate">{roleFilter === 'all' ? 'All Roles' : roleFilter.charAt(0).toUpperCase() + roleFilter.slice(1)}</span>
+              <svg className="w-4 h-4 text-neutral-400" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 8L10 12L14 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            {/* Dropdown options with a small gap to avoid overlap */}
+            {roleOpen && portalElRef.current && dropdownStyles && createPortal(
+              <div
+                ref={portalContentRef}
+                style={{ position: 'absolute', top: dropdownStyles.top, left: dropdownStyles.left, width: dropdownStyles.width }}
+              >
+                <div className="bg-neutral-900 border border-neutral-700 rounded-xl shadow-xl z-50 py-1" role="listbox">
+                  {roleOptions.map((opt) => (
+                    <button
+                      key={String(opt)}
+                      onClick={() => { setRoleFilter(opt); setRoleOpen(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm ${roleFilter === opt ? 'bg-neutral-800 text-white' : 'text-neutral-300 hover:bg-neutral-800'}`}
+                      role="option"
+                      aria-selected={roleFilter === opt}
+                    >
+                      {opt === 'all' ? 'All Roles' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>,
+              portalElRef.current
+            )}
           </div>
-          <div className="relative">
+          <div className="relative group">
             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+            {/* Masked overlay label to cover native date input hint and avoid overlap */}
+            {!dateFilter.startDate && (
+              <span className="absolute left-10 right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 text-sm pointer-events-none bg-neutral-800 px-2 py-0.5 transition-opacity duration-150 group-focus-within:opacity-0 truncate">
+                Start Date
+              </span>
+            )}
             <input
               type="date"
-              placeholder="Start Date"
+              aria-label="Start Date"
               value={dateFilter.startDate}
               onChange={(e) => setDateFilter({ ...dateFilter, startDate: e.target.value })}
               className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
             />
           </div>
-          <div className="relative">
+          <div className="relative group">
             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
+            {!dateFilter.endDate && (
+              <span className="absolute left-10 right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 text-sm pointer-events-none bg-neutral-800 px-2 py-0.5 transition-opacity duration-150 group-focus-within:opacity-0 truncate">
+                End Date
+              </span>
+            )}
             <input
               type="date"
-              placeholder="End Date"
+              aria-label="End Date"
               value={dateFilter.endDate}
               onChange={(e) => setDateFilter({ ...dateFilter, endDate: e.target.value })}
               className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"

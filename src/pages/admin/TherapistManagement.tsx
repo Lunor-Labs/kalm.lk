@@ -422,11 +422,19 @@ const TherapistManagement: React.FC = () => {
     setShowAddModal(true);
   };
 
-  const filteredTherapists = therapists.filter(therapist =>
-    `${therapist.firstName} ${therapist.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    therapist.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    therapist.specializations.some(spec => spec.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Defensive filtering: guard against missing fields (email, specializations, names)
+  const _q = searchQuery.toLowerCase();
+  const filteredTherapists = therapists.filter((therapist) => {
+    const name = `${therapist.firstName ?? ''} ${therapist.lastName ?? ''}`.toLowerCase();
+    const email = (therapist.email ?? '').toLowerCase();
+    const specs = Array.isArray(therapist.specializations) ? therapist.specializations : [];
+
+    return (
+      name.includes(_q) ||
+      email.includes(_q) ||
+      specs.some((spec) => (spec ?? '').toLowerCase().includes(_q))
+    );
+  });
 
   const totalPages = Math.ceil(filteredTherapists.length / therapistsPerPage);
   const startIndex = (currentPage - 1) * therapistsPerPage;
