@@ -140,7 +140,7 @@ const UserManagementPage: React.FC = () => {
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -322,22 +322,22 @@ const UserManagementPage: React.FC = () => {
                               <MoreVertical className="w-4 h-4" />
                             </button>
                             {selectedUser === user.uid && (
-                              <div className="absolute right-0 top-full mt-2 w-48 bg-neutral-800 border border-neutral-700 rounded-xl shadow-xl z-10">
+                              <div className="absolute right-0 top-full mt-2 w-40 bg-neutral-800 border border-neutral-700 rounded-xl shadow-xl z-10">
                                 <div className="p-2">
-                                  <p className="text-neutral-400 text-xs px-3 py-2">Change Role</p>
+                                  <p className="text-neutral-400 text-xs px-3 py-2 ml-3">Change Role</p>
                                   {(['client', 'therapist', 'admin'] as UserRole[]).map((role) => (
                                     <button
                                       key={role}
                                       onClick={() => handleRoleChange(user.uid, role)}
                                       disabled={user.role === role}
-                                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors duration-200 min-h-[40px] ${
+                                      className={`w-full flex items-center gap-2 px-6 py-2 rounded-lg text-sm text-left transition-colors duration-200 min-h-[40px] ${
                                         user.role === role
                                           ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
                                           : 'hover:bg-neutral-700 text-white'
                                       }`}
                                       aria-label={`Change role to ${role} for ${user.displayName || 'user'}`}
                                     >
-                                      {getRoleIcon(role)}
+                                      <span className="ml-1">{getRoleIcon(role)}</span>
                                       <span className="capitalize">{role}</span>
                                     </button>
                                   ))}
@@ -406,7 +406,7 @@ const UserManagementPage: React.FC = () => {
                                 key={role}
                                 onClick={() => handleRoleChange(user.uid, role)}
                                 disabled={user.role === role}
-                                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors duration-200 min-h-[40px] ${
+                                className={`w-full flex items-center gap-2 px-6 py-2 rounded-lg text-sm text-left transition-colors duration-200 min-h-[40px] ${
                                   user.role === role
                                     ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
                                     : 'hover:bg-neutral-700 text-white'
