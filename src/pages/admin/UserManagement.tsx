@@ -216,34 +216,57 @@ const UserManagementPage: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 justify-items-center sm:justify-items-stretch">
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20">
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="w-5 h-5 text-primary-500" />
-            <span className="text-neutral-300 text-sm">Total Users</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+          <div className="flex items-center md:justify-between justify-center mb-4">
+            <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
+            </div>
           </div>
-          <p className="text-lg font-bold text-white">{users.length}</p>
+          <div className="md:text-left text-center">
+            <h3 className="text-2xl font-bold text-white mb-1">{users.length}</h3>
+            <p className="text-neutral-400 text-sm mb-2">Total Users</p>
+            <p className="text-accent-green text-sm">All registered users</p>
+          </div>
         </div>
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20">
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="w-5 h-5 text-primary-500" />
-            <span className="text-neutral-300 text-sm">Clients</span>
+        
+        <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+          <div className="flex items-center md:justify-between justify-center mb-4">
+            <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
+            </div>
           </div>
-          <p className="text-lg font-bold text-white">{users.filter(u => u.role === 'client').length}</p>
+          <div className="md:text-left text-center">
+            <h3 className="text-2xl font-bold text-white mb-1">{users.filter(u => u.role === 'client').length}</h3>
+            <p className="text-neutral-400 text-sm mb-2">Total Clients</p>
+            <p className="text-accent-green text-sm">Active client accounts</p>
+          </div>
         </div>
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20">
-          <div className="flex items-center gap-2 mb-1">
-            <UserCheck className="w-5 h-5 text-accent-green" />
-            <span className="text-neutral-300 text-sm">Therapists</span>
+        
+        <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+          <div className="flex items-center md:justify-between justify-center mb-4">
+            <div className="w-12 h-12 bg-accent-green rounded-2xl flex items-center justify-center">
+              <UserCheck className="w-6 h-6 text-white" />
+            </div>
           </div>
-          <p className="text-lg font-bold text-white">{users.filter(u => u.role === 'therapist').length}</p>
+          <div className="md:text-left text-center">
+            <h3 className="text-2xl font-bold text-white mb-1">{users.filter(u => u.role === 'therapist').length}</h3>
+            <p className="text-neutral-400 text-sm mb-2">Total Therapists</p>
+            <p className="text-accent-green text-sm">Licensed professionals</p>
+          </div>
         </div>
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20">
-          <div className="flex items-center gap-2 mb-1">
-            <Crown className="w-5 h-5 text-accent-yellow" />
-            <span className="text-neutral-300 text-sm">Admins</span>
+        
+        <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+          <div className="flex items-center md:justify-between justify-center mb-4">
+            <div className="w-12 h-12 bg-accent-yellow rounded-2xl flex items-center justify-center">
+              <Crown className="w-6 h-6 text-black" />
+            </div>
           </div>
-          <p className="text-lg font-bold text-white">{users.filter(u => u.role === 'admin').length}</p>
+          <div className="md:text-left text-center">
+            <h3 className="text-2xl font-bold text-white mb-1">{users.filter(u => u.role === 'admin').length}</h3>
+            <p className="text-neutral-400 text-sm mb-2">Total Admins</p>
+            <p className="text-accent-green text-sm">Platform administrators</p>
+          </div>
         </div>
       </div>
 
@@ -459,18 +482,23 @@ const UserManagementPage: React.FC = () => {
                         <p className="text-neutral-400 text-sm truncate">{user.email || 'No email'}</p>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-neutral-300">
-                      <span className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs ${getRoleBadgeColor(user.role)}`}>
-                        {getRoleIcon(user.role)}
-                        <span className="capitalize">{user.role}</span>
-                      </span>
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                        user.isAnonymous ? 'bg-accent-green/20 text-accent-green' : 'bg-neutral-700 text-neutral-300'
-                      }`}>
-                        <Shield className="w-3 h-3" />
-                        <span>{user.isAnonymous ? 'Anonymous' : 'Regular'}</span>
-                      </span>
-                      <span>{user.createdAt.toLocaleDateString()}</span>
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs ${getRoleBadgeColor(user.role)}`}>
+                          {getRoleIcon(user.role)}
+                          <span className="capitalize">{user.role}</span>
+                        </span>
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                          user.isAnonymous ? 'bg-accent-green/20 text-accent-green' : 'bg-neutral-700 text-neutral-300'
+                        }`}>
+                          <Shield className="w-3 h-3" />
+                          <span>{user.isAnonymous ? 'Anonymous' : 'Regular'}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-neutral-400 text-xs">
+                        <Calendar className="w-3 h-3" />
+                        <span>Joined {user.createdAt.toLocaleDateString()}</span>
+                      </div>
                     </div>
                     <div className="flex flex-col items-center gap-2">
                       <button

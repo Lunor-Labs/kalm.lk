@@ -557,28 +557,37 @@ const TherapistManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6">
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-primary-500/30">
-          <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
-            <Users className="w-4 sm:w-5 h-4 sm:h-5 text-primary-500" />
-            <span className="text-neutral-300 text-xs sm:text-sm">Total Therapists</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
+          <div className="flex items-center md:justify-between justify-center mb-4">
+            <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
+            </div>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-white">{therapists.length}</p>
+          <div className="md:text-left text-center">
+            <h3 className="text-2xl font-bold text-white mb-1">{therapists.length}</h3>
+            <p className="text-neutral-400 text-sm mb-2">Total Therapists</p>
+            <p className="text-accent-green text-sm">Licensed professionals</p>
+          </div>
         </div>
 
         <button
           onClick={() => setShowAvailableModal(true)}
-          className="text-left bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800 hover:border-neutral-700 transition-colors duration-200"
+          className="text-left bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800 hover:border-neutral-700 transition-colors duration-200"
           aria-label="Show available therapists"
         >
-
-          <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
-            <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-accent-green" />
-            <span className="text-neutral-300 text-xs sm:text-sm">Available Now</span>
+          <div className="flex items-center md:justify-between justify-center mb-4">
+            <div className="w-12 h-12 bg-accent-green rounded-2xl flex items-center justify-center">
+              <Clock className="w-6 h-6 text-white" />
+            </div>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-white">
-            {therapists.filter(t => t.isAvailable).length}
-          </p>
+          <div className="md:text-left text-center">
+            <h3 className="text-2xl font-bold text-white mb-1">
+              {therapists.filter(t => t.isAvailable).length}
+            </h3>
+            <p className="text-neutral-400 text-sm mb-2">Available Now</p>
+            <p className="text-accent-green text-sm">Ready for sessions</p>
+          </div>
         </button>
       </div>
 
