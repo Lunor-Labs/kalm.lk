@@ -25,6 +25,8 @@ const UserManagementPage: React.FC = () => {
   const portalElRef = useRef<HTMLDivElement | null>(null);
   const portalContentRef = useRef<HTMLDivElement | null>(null);
   const [dropdownStyles, setDropdownStyles] = useState<{ top: number; left: number; width: number } | null>(null);
+  const startDateRef = useRef<HTMLInputElement | null>(null);
+  const endDateRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     loadUsers();
@@ -322,11 +324,36 @@ const UserManagementPage: React.FC = () => {
               portalElRef.current
             )}
           </div>
-          <div className="space-y-1">
+          <div>
             <label className="text-neutral-300 text-xs font-medium block sm:hidden">Start Date</label>
-            <div className="relative">
+            <div
+              className="relative"
+              onClick={() => {
+                // only trigger showPicker on desktop
+                if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(min-width: 640px)').matches) {
+                  try {
+                    // @ts-ignore
+                    if (startDateRef.current && typeof startDateRef.current.showPicker === 'function') {
+                      // @ts-ignore
+                      startDateRef.current.showPicker();
+                    } else if (startDateRef.current) {
+                      startDateRef.current.focus();
+                    }
+                  } catch (e) {
+                    if (startDateRef.current) startDateRef.current.focus();
+                  }
+                }
+              }}
+            >
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+              {/* Desktop overlay label (native date hint masked) */}
+              {!dateFilter.startDate && (
+                <span className="hidden sm:flex absolute left-11 right-3 top-1/2 transform -translate-y-1/2 items-center text-neutral-400 text-sm pointer-events-none bg-neutral-800 px-2 py-0.5 rounded truncate">
+                  Start Date
+                </span>
+              )}
               <input
+                ref={startDateRef}
                 type="date"
                 placeholder="Start Date"
                 value={dateFilter.startDate}
@@ -336,11 +363,34 @@ const UserManagementPage: React.FC = () => {
               />
             </div>
           </div>
-          <div className="space-y-1">
+          <div>
             <label className="text-neutral-300 text-xs font-medium block sm:hidden">End Date</label>
-            <div className="relative">
+            <div
+              className="relative"
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(min-width: 640px)').matches) {
+                  try {
+                    // @ts-ignore
+                    if (endDateRef.current && typeof endDateRef.current.showPicker === 'function') {
+                      // @ts-ignore
+                      endDateRef.current.showPicker();
+                    } else if (endDateRef.current) {
+                      endDateRef.current.focus();
+                    }
+                  } catch (e) {
+                    if (endDateRef.current) endDateRef.current.focus();
+                  }
+                }
+              }}
+            >
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+              {!dateFilter.endDate && (
+                <span className="hidden sm:flex absolute left-11 right-3 top-1/2 transform -translate-y-1/2 items-center text-neutral-400 text-sm pointer-events-none bg-neutral-800 px-2 py-0.5 rounded truncate">
+                  End Date
+                </span>
+              )}
               <input
+                ref={endDateRef}
                 type="date"
                 placeholder="End Date"
                 value={dateFilter.endDate}
@@ -394,9 +444,7 @@ const UserManagementPage: React.FC = () => {
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-primary-500/20 rounded-full flex items-center justify-center">
-                              <span className="text-primary-500 font-semibold">
-                                {user.displayName?.charAt(0) || 'U'}
-                              </span>
+                              <span className="text-primary-500 font-semibold">{user.displayName?.charAt(0) || 'U'}</span>
                             </div>
                             <div>
                               <p className="text-white font-medium">{user.displayName || 'Unknown User'}</p>
@@ -411,9 +459,7 @@ const UserManagementPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="p-4">
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                            user.isAnonymous ? 'bg-accent-green/20 text-accent-green' : 'bg-neutral-700 text-neutral-300'
-                          }`}>
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${user.isAnonymous ? 'bg-accent-green/20 text-accent-green' : 'bg-neutral-700 text-neutral-300'}`}>
                             <Shield className="w-3 h-3" />
                             <span>{user.isAnonymous ? 'Anonymous' : 'Regular'}</span>
                           </span>
