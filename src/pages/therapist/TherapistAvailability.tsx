@@ -84,27 +84,8 @@ const TherapistAvailability: React.FC = () => {
     return days.map((dayName, index) => ({
       dayOfWeek: index,
       dayName,
-      isAvailable: index >= 1 && index <= 5, // Monday to Friday
-      timeSlots: index >= 1 && index <= 5 ? [
-        {
-          id: `default-${index}-1`,
-          startTime: '09:00',
-          endTime: '12:00',
-          isAvailable: true,
-          isRecurring: true,
-          sessionType: 'video',
-          price: 4500
-        },
-        {
-          id: `default-${index}-2`,
-          startTime: '14:00',
-          endTime: '17:00',
-          isAvailable: true,
-          isRecurring: true,
-          sessionType: 'video',
-          price: 4500
-        }
-      ] : []
+      isAvailable: false,
+      timeSlots: []
     }));
   };
 

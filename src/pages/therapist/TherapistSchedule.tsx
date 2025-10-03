@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar as CalendarIcon, Clock, Video, Users, Plus, X, Dot } from 'lucide-react';
 import { format, addDays, startOfWeek, isSameDay, startOfDay, endOfDay, startOfWeek as startOfWeekDate, endOfWeek } from 'date-fns';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
@@ -27,6 +28,7 @@ interface Session {
 
 const TherapistSchedule: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'week' | 'day'>('week');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -222,7 +224,10 @@ const TherapistSchedule: React.FC = () => {
             </button>
           </div>
           
-          <button className="bg-primary-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-2xl hover:bg-primary-600 flex items-center justify-center gap-2">
+          <button 
+            onClick={() => navigate('/therapist/availability')}
+            className="bg-primary-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-2xl hover:bg-primary-600 flex items-center justify-center gap-2"
+          >
             <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
             <span className="text-sm sm:text-base">Add Availability</span>
           </button>
