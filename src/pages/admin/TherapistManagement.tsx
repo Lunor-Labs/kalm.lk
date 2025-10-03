@@ -213,9 +213,29 @@ const TherapistManagement: React.FC = () => {
     }
   };
 
+  const addCustomCredential = () => {
+    if (customCredential.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        credentials: [...prev.credentials, customCredential.trim()]
+      }));
+      setCustomCredential('');
+    }
+  };
+
   const handleSpecializationKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && customSpecialization.trim()) {
       e.preventDefault();
+      setFormData(prev => ({
+        ...prev,
+        specializations: [...prev.specializations, customSpecialization.trim()]
+      }));
+      setCustomSpecialization('');
+    }
+  };
+
+  const addCustomSpecialization = () => {
+    if (customSpecialization.trim()) {
       setFormData(prev => ({
         ...prev,
         specializations: [...prev.specializations, customSpecialization.trim()]
@@ -1271,15 +1291,22 @@ const TherapistManagement: React.FC = () => {
                               <span className="text-neutral-300 text-xs">{credential}</span>
                             </label>
                             {credential === 'Other' && formData.credentials.includes('Other') && (
-                              <div className="mt-2">
+                              <div className="mt-2 flex gap-2">
                                 <input
                                   type="text"
                                   value={customCredential}
                                   onChange={(e) => setCustomCredential(e.target.value)}
                                   onKeyPress={handleCredentialKeyPress}
-                                  className="w-full px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
-                                  placeholder="Enter custom credential and press Enter"
+                                  className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
+                                  placeholder="Enter custom credential"
                                 />
+                                <button
+                                  type="button"
+                                  onClick={addCustomCredential}
+                                  className="px-3 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors duration-200 flex items-center justify-center"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
                               </div>
                             )}
                           </div>
@@ -1323,17 +1350,26 @@ const TherapistManagement: React.FC = () => {
                       )}
                     </button>
                     {expandedSections.specializations && (
-                      <div className="p-4 pt-0">
-                        <input
-                          type="text"
-                          value={customSpecialization}
-                          onChange={(e) => setCustomSpecialization(e.target.value)}
-                          onKeyPress={handleSpecializationKeyPress}
-                          className="w-full px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
-                          placeholder="Enter specialization and press Enter"
-                        />
+                      <div className="p-4 pt-0 flex flex-col gap-2">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={customSpecialization}
+                            onChange={(e) => setCustomSpecialization(e.target.value)}
+                            onKeyPress={handleSpecializationKeyPress}
+                            className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
+                            placeholder="Enter specialization"
+                          />
+                          <button
+                            type="button"
+                            onClick={addCustomSpecialization}
+                            className="px-3 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors duration-200 flex items-center justify-center"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
                         {formData.specializations.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mt-3">
+                          <div className="flex flex-wrap gap-2">
                             {formData.specializations.map((spec, index) => (
                               <div
                                 key={index}
