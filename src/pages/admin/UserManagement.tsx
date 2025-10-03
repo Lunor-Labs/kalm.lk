@@ -331,7 +331,8 @@ const UserManagementPage: React.FC = () => {
                 placeholder="Start Date"
                 value={dateFilter.startDate}
                 onChange={(e) => setDateFilter({ ...dateFilter, startDate: e.target.value })}
-                className="w-full pl-9 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white text-sm [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-2 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                className="w-full pl-9 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden [&::-moz-calendar-picker-indicator]:hidden"
+                style={{ colorScheme: 'dark' }}
               />
             </div>
           </div>
@@ -344,7 +345,8 @@ const UserManagementPage: React.FC = () => {
                 placeholder="End Date"
                 value={dateFilter.endDate}
                 onChange={(e) => setDateFilter({ ...dateFilter, endDate: e.target.value })}
-                className="w-full pl-9 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white text-sm [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-2 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                className="w-full pl-9 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden [&::-moz-calendar-picker-indicator]:hidden"
+                style={{ colorScheme: 'dark' }}
               />
             </div>
           </div>
@@ -468,22 +470,22 @@ const UserManagementPage: React.FC = () => {
                   className="bg-black/50 backdrop-blur-sm rounded-xl p-4 border border-primary-500/20 hover:border-primary-500/40 transition-colors duration-200"
                   aria-label={`User card for ${user.displayName || 'user'}`}
                 >
-                  <div className="flex flex-col gap-2.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary-500/20 rounded-full flex items-center justify-center">
-                        <span className="text-primary-500 font-semibold">
+                  <div className="flex flex-col gap-2.5 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-12 h-12 bg-primary-500/20 rounded-full flex items-center justify-center">
+                        <span className="text-primary-500 font-semibold text-lg">
                           {user.displayName?.charAt(0) || 'U'}
                         </span>
                       </div>
                       <div className="flex-1">
-                        <p className="text-white font-semibold text-base truncate">
+                        <p className="text-white font-semibold text-base">
                           {user.displayName || 'Unknown User'}
                         </p>
-                        <p className="text-neutral-400 text-sm truncate">{user.email || 'No email'}</p>
+                        <p className="text-neutral-400 text-sm">{user.email || 'No email'}</p>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 justify-center">
                         <span className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs ${getRoleBadgeColor(user.role)}`}>
                           {getRoleIcon(user.role)}
                           <span className="capitalize">{user.role}</span>
@@ -495,7 +497,7 @@ const UserManagementPage: React.FC = () => {
                           <span>{user.isAnonymous ? 'Anonymous' : 'Regular'}</span>
                         </span>
                       </div>
-                      <div className="flex items-center gap-1 text-neutral-400 text-xs">
+                      <div className="flex items-center justify-center gap-1 text-neutral-400 text-xs">
                         <Calendar className="w-3 h-3" />
                         <span>Joined {user.createdAt.toLocaleDateString()}</span>
                       </div>
