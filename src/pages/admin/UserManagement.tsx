@@ -257,7 +257,7 @@ const UserManagementPage: React.FC = () => {
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
+              className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
             />
           </div>
           <div className="relative" ref={roleRef}>
@@ -312,7 +312,7 @@ const UserManagementPage: React.FC = () => {
               aria-label="Start Date"
               value={dateFilter.startDate}
               onChange={(e) => setDateFilter({ ...dateFilter, startDate: e.target.value })}
-              className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
+              className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
             />
           </div>
           <div className="relative group">
@@ -327,7 +327,7 @@ const UserManagementPage: React.FC = () => {
               aria-label="End Date"
               value={dateFilter.endDate}
               onChange={(e) => setDateFilter({ ...dateFilter, endDate: e.target.value })}
-              className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
+              className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
             />
           </div>
         </div>
@@ -477,14 +477,13 @@ const UserManagementPage: React.FC = () => {
                       </span>
                       <span>{user.createdAt.toLocaleDateString()}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-center gap-2">
                       <button
                         onClick={() => setSelectedUser(selectedUser === user.uid ? null : user.uid)}
                         className="bg-primary-500 text-white px-3 py-2 rounded-xl hover:bg-primary-600 transition-colors duration-200 flex items-center gap-1.5 min-h-[40px] text-sm"
                         aria-label={`Manage actions for ${user.displayName || 'user'}`}
                       >
-                        <MoreVertical className="w-4 h-4" />
-                        <span>Actions</span>
+                        <span>Change Role</span>
                       </button>
                       {selectedUser === user.uid && (
                         <div className="w-full mt-2 bg-neutral-800 border border-neutral-700 rounded-xl shadow-xl">
