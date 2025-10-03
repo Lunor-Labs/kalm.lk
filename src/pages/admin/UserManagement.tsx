@@ -478,7 +478,7 @@ const UserManagementPage: React.FC = () => {
                             </button>
                             {selectedUser === user.uid && (
                               <div className="absolute right-0 top-full mt-2 w-40 bg-neutral-800 border border-neutral-700 rounded-xl shadow-xl z-10">
-                                <div className="p-2">
+                                <div className="p-2 space-y-1">
                                   <p className="text-neutral-400 text-xs px-3 py-2 ml-3">Change Role</p>
                                   {(['client', 'therapist', 'admin'] as UserRole[]).map((role) => (
                                     <button
@@ -558,7 +558,7 @@ const UserManagementPage: React.FC = () => {
                       </button>
                       {selectedUser === user.uid && (
                         <div className="w-full mt-2 bg-neutral-800 border border-neutral-700 rounded-xl shadow-xl">
-                          <div className="p-2">
+                          <div className="p-2 space-y-1">
                             <p className="text-neutral-400 text-xs px-3 py-2">Change Role</p>
                             {(['client', 'therapist', 'admin'] as UserRole[]).map((role) => (
                               <button
