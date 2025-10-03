@@ -1,55 +1,136 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, Video, Users, Plus, X, Dot } from 'lucide-react';
-import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
+import { format, addDays, startOfWeek, isSameDay, startOfDay, endOfDay, startOfWeek as startOfWeekDate, endOfWeek } from 'date-fns';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
+import { useAuth } from '../../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 interface Session {
   id: string;
+  clientId: string;
   clientName: string;
-  time: string;
+  therapistId: string;
+  therapistName: string;
+  scheduledTime: Date;
   duration: number;
-  type: string;
-  status: string;
+  sessionType: 'video' | 'audio' | 'chat';
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled';
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  // Computed fields for display
+  time: string;
   date: Date;
+  type: string;
 }
 
 const TherapistSchedule: React.FC = () => {
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'week' | 'day'>('week');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [selectedDaySessions, setSelectedDaySessions] = useState<Session[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showDayModal, setShowDayModal] = useState(false);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    todaysSessions: 0,
+    thisWeekSessions: 0,
+    totalClients: 0,
+    nextSessionTime: ''
+  });
 
-  // Mock data
-  const sessions: Session[] = [
-    {
-      id: '1',
-      clientName: 'Anonymous User',
-      time: '10:00 AM',
-      duration: 60,
-      type: 'video',
-      status: 'confirmed',
-      date: new Date()
-    },
-    {
-      id: '2',
-      clientName: 'John D.',
-      time: '2:00 PM',
-      duration: 60,
-      type: 'audio',
-      status: 'confirmed',
-      date: new Date()
-    },
-    {
-      id: '3',
-      clientName: 'Anonymous User',
-      time: '4:00 PM',
-      duration: 60,
-      type: 'video',
-      status: 'pending',
-      date: addDays(new Date(), 1)
+  // Load sessions from database
+  useEffect(() => {
+    if (user) {
+      loadSessions();
     }
-  ];
+  }, [user, selectedDate]);
+
+  const loadSessions = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      
+      // Get sessions for the current therapist
+      const sessionsRef = collection(db, 'sessions');
+      const q = query(
+        sessionsRef,
+        where('therapistId', '==', user.uid),
+        where('status', 'in', ['scheduled', 'confirmed']),
+        orderBy('scheduledTime', 'asc')
+      );
+
+      const snapshot = await getDocs(q);
+      const sessionsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        const scheduledTime = data.scheduledTime?.toDate() || new Date();
+        
+        return {
+          id: doc.id,
+          clientId: data.clientId || '',
+          clientName: data.clientName || 'Anonymous User',
+          therapistId: data.therapistId || '',
+          therapistName: data.therapistName || '',
+          scheduledTime,
+          duration: data.duration || 60,
+          sessionType: data.sessionType || 'video',
+          status: data.status || 'scheduled',
+          notes: data.notes || '',
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          // Computed fields for display
+          time: format(scheduledTime, 'h:mm a'),
+          date: scheduledTime,
+          type: data.sessionType || 'video'
+        } as Session;
+      });
+
+      setSessions(sessionsData);
+      calculateStats(sessionsData);
+    } catch (error) {
+      console.error('Error loading sessions:', error);
+      toast.error('Failed to load sessions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateStats = (sessionsData: Session[]) => {
+    const today = new Date();
+    const startOfToday = startOfDay(today);
+    const endOfToday = endOfDay(today);
+    const startOfThisWeek = startOfWeekDate(today);
+    const endOfThisWeek = endOfWeek(today);
+
+    const todaysSessions = sessionsData.filter(session => 
+      session.scheduledTime >= startOfToday && session.scheduledTime <= endOfToday
+    ).length;
+
+    const thisWeekSessions = sessionsData.filter(session =>
+      session.scheduledTime >= startOfThisWeek && session.scheduledTime <= endOfThisWeek
+    ).length;
+
+    const uniqueClients = new Set(sessionsData.map(session => session.clientId)).size;
+
+    const upcomingSessions = sessionsData
+      .filter(session => session.scheduledTime > new Date())
+      .sort((a, b) => a.scheduledTime.getTime() - b.scheduledTime.getTime());
+
+    const nextSessionTime = upcomingSessions.length > 0 
+      ? format(upcomingSessions[0].scheduledTime, 'h:mm a')
+      : 'None';
+
+    setStats({
+      todaysSessions,
+      thisWeekSessions,
+      totalClients: uniqueClients,
+      nextSessionTime
+    });
+  };
 
   const weekDays = Array.from({ length: 7 }, (_, i) => 
     addDays(startOfWeek(selectedDate), i)
@@ -85,6 +166,31 @@ const TherapistSchedule: React.FC = () => {
     setShowDayModal(false);
     setSelectedSession(null);
   };
+
+  // Show loading state
+  if (loading && sessions.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white">Loading schedule...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if user is not authenticated
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="text-center">
+          <CalendarIcon className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
+          <p className="text-white mb-2">Please log in to view your schedule</p>
+          <p className="text-neutral-400">You need to be authenticated as a therapist</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 px-4">
@@ -130,7 +236,9 @@ const TherapistSchedule: React.FC = () => {
             <CalendarIcon className="w-4 sm:w-5 h-4 sm:h-5 text-primary-500" />
             <span className="text-neutral-300 text-xs sm:text-sm">Today's</span>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-white">3</p>
+          <p className="text-xl sm:text-2xl font-bold text-white">
+            {loading ? '...' : stats.todaysSessions}
+          </p>
         </div>
         
         <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
@@ -138,7 +246,9 @@ const TherapistSchedule: React.FC = () => {
             <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-accent-green" />
             <span className="text-neutral-300 text-xs sm:text-sm">This Week</span>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-white">12</p>
+          <p className="text-xl sm:text-2xl font-bold text-white">
+            {loading ? '...' : stats.thisWeekSessions}
+          </p>
         </div>
         
         <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
@@ -146,7 +256,9 @@ const TherapistSchedule: React.FC = () => {
             <Users className="w-4 sm:w-5 h-4 sm:h-5 text-accent-yellow" />
             <span className="text-neutral-300 text-xs sm:text-sm">Total Clients</span>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-white">45</p>
+          <p className="text-xl sm:text-2xl font-bold text-white">
+            {loading ? '...' : stats.totalClients}
+          </p>
         </div>
         
         <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
@@ -154,7 +266,9 @@ const TherapistSchedule: React.FC = () => {
             <Video className="w-4 sm:w-5 h-4 sm:h-5 text-accent-orange" />
             <span className="text-neutral-300 text-xs sm:text-sm">Next Session</span>
           </div>
-          <p className="text-base sm:text-lg font-bold text-white">10:00 AM</p>
+          <p className="text-base sm:text-lg font-bold text-white">
+            {loading ? '...' : stats.nextSessionTime}
+          </p>
         </div>
       </div>
 
