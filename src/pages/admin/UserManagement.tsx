@@ -8,6 +8,178 @@ import { UserManagement, UserRole } from '../../types/auth';
 import toast from 'react-hot-toast';
 import { isWithinInterval, parseISO } from 'date-fns';
 
+// --- Small custom DatePickerInput ---
+type DatePickerInputProps = {
+  value: string;
+  onChange: (isoDate: string) => void;
+  placeholder?: string;
+  className?: string;
+};
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const toIso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromIso = (s: string) => {
+  try {
+    const parts = s.split('-').map(Number);
+    if (parts.length === 3 && parts.every(p => !Number.isNaN(p))) return new Date(parts[0], parts[1] - 1, parts[2]);
+  } catch (e) {
+    // ignore
+  }
+  return null;
+};
+
+const DatePickerInput: React.FC<DatePickerInputProps> = ({ value, onChange, placeholder, className }) => {
+  const [open, setOpen] = useState(false);
+  const [viewDate, setViewDate] = useState<Date>(() => fromIso(value) || new Date());
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const portalElRef = useRef<HTMLDivElement | null>(null);
+  const portalContentRef = useRef<HTMLDivElement | null>(null);
+  const [styles, setStyles] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  // create portal element
+  useEffect(() => {
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+    portalElRef.current = el;
+    return () => {
+      if (portalElRef.current) document.body.removeChild(portalElRef.current);
+      portalElRef.current = null;
+    };
+  }, []);
+
+  // position popup
+  useEffect(() => {
+    const update = () => {
+      const wr = wrapperRef.current;
+      if (!wr) return;
+      const rect = wr.getBoundingClientRect();
+      setStyles({ top: rect.bottom + 8 + window.scrollY, left: rect.left + window.scrollX, width: rect.width });
+    };
+    if (open) update();
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [open]);
+
+  // outside click to close
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const t = e.target as Node;
+      const inside = wrapperRef.current && wrapperRef.current.contains(t);
+      const insidePortal = portalContentRef.current && portalContentRef.current.contains(t);
+      if (!inside && !insidePortal) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  useEffect(() => {
+    // when external value changes, update viewDate
+    const d = fromIso(value);
+    if (d) setViewDate(d);
+  }, [value]);
+
+  const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
+  const prevMonth = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+  const nextMonth = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+
+  const daysForMonth = (d: Date) => {
+    const first = startOfMonth(d);
+    const startDay = first.getDay(); // 0 (Sun) - 6
+    const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    const arr: Array<{ date: Date; inMonth: boolean }> = [];
+
+    // previous month overflow
+    for (let i = startDay - 1; i >= 0; i--) {
+      const day = new Date(d.getFullYear(), d.getMonth(), -i);
+      arr.push({ date: day, inMonth: false });
+    }
+    for (let i = 1; i <= daysInMonth; i++) arr.push({ date: new Date(d.getFullYear(), d.getMonth(), i), inMonth: true });
+
+    // fill to complete weeks (42 cells)
+    while (arr.length % 7 !== 0) {
+      const last = arr[arr.length - 1].date;
+      const next = new Date(last.getFullYear(), last.getMonth(), last.getDate() + 1);
+      arr.push({ date: next, inMonth: false });
+    }
+    return arr;
+  };
+
+  const handleSelect = (d: Date) => {
+    const iso = toIso(d);
+    onChange(iso);
+    setOpen(false);
+  };
+
+  const today = new Date();
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <div onClick={() => setOpen(prev => !prev)}>
+        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+        {!value && (
+          <span className="hidden sm:flex absolute left-11 right-3 top-1/2 transform -translate-y-1/2 items-center text-neutral-400 text-sm pointer-events-none bg-neutral-800 px-2 py-0.5 rounded truncate">
+            {placeholder}
+          </span>
+        )}
+        <input
+          readOnly
+          value={value}
+          placeholder={placeholder}
+          className={`${className || ''} w-full pl-11 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white text-sm`}
+        />
+      </div>
+
+      {open && portalElRef.current && styles && createPortal(
+        <div
+          ref={portalContentRef}
+          style={{ position: 'absolute', top: styles.top, left: styles.left, width: styles.width, zIndex: 9999 }}
+        >
+          <div className="bg-neutral-900 border border-neutral-700 rounded-xl shadow-xl py-3 px-3">
+            <div className="flex items-center justify-between mb-2">
+              <button onClick={prevMonth} className="p-1 text-neutral-300 hover:text-white rounded">◀</button>
+              <div className="text-neutral-200 font-medium">
+                {viewDate.toLocaleString(undefined, { month: 'long' })} {viewDate.getFullYear()}
+              </div>
+              <button onClick={nextMonth} className="p-1 text-neutral-300 hover:text-white rounded">▶</button>
+            </div>
+            <div className="grid grid-cols-7 gap-1 text-center text-xs text-neutral-400 mb-2">
+              {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+                <div key={d} className="text-neutral-400">{d}</div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1 text-center">
+              {daysForMonth(viewDate).map(({ date, inMonth }) => {
+                const iso = toIso(date);
+                const isSelected = value && value === iso;
+                const isToday = date.toDateString() === today.toDateString();
+                return (
+                  <button
+                    key={iso}
+                    onClick={() => handleSelect(date)}
+                    className={`py-1 rounded ${inMonth ? 'text-neutral-200' : 'text-neutral-500'} ${isSelected ? 'bg-primary-500 text-white' : ''} ${isToday && !isSelected ? 'ring-1 ring-primary-500' : ''}`}
+                  >
+                    {date.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex items-center justify-between mt-3">
+              <button onClick={() => { onChange(''); setOpen(false); }} className="text-sm text-neutral-300 hover:text-white">Clear</button>
+              <button onClick={() => { onChange(toIso(today)); setOpen(false); }} className="text-sm bg-primary-500 text-white px-3 py-1 rounded">Today</button>
+            </div>
+          </div>
+        </div>,
+        portalElRef.current
+      )}
+    </div>
+  );
+};
+
+
 const UserManagementPage: React.FC = () => {
   const [users, setUsers] = useState<UserManagement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,8 +197,7 @@ const UserManagementPage: React.FC = () => {
   const portalElRef = useRef<HTMLDivElement | null>(null);
   const portalContentRef = useRef<HTMLDivElement | null>(null);
   const [dropdownStyles, setDropdownStyles] = useState<{ top: number; left: number; width: number } | null>(null);
-  const startDateRef = useRef<HTMLInputElement | null>(null);
-  const endDateRef = useRef<HTMLInputElement | null>(null);
+  // start/end refs removed in favor of custom DatePickerInput
 
   useEffect(() => {
     loadUsers();
@@ -326,79 +497,21 @@ const UserManagementPage: React.FC = () => {
           </div>
           <div>
             <label className="text-neutral-300 text-xs font-medium block sm:hidden">Start Date</label>
-            <div
-              className="relative"
-              onClick={() => {
-                // only trigger showPicker on desktop
-                if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(min-width: 640px)').matches) {
-                  try {
-                    // @ts-ignore
-                    if (startDateRef.current && typeof startDateRef.current.showPicker === 'function') {
-                      // @ts-ignore
-                      startDateRef.current.showPicker();
-                    } else if (startDateRef.current) {
-                      startDateRef.current.focus();
-                    }
-                  } catch (e) {
-                    if (startDateRef.current) startDateRef.current.focus();
-                  }
-                }
-              }}
-            >
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
-              {/* Desktop overlay label (native date hint masked) */}
-              {!dateFilter.startDate && (
-                <span className="hidden sm:flex absolute left-11 right-3 top-1/2 transform -translate-y-1/2 items-center text-neutral-400 text-sm pointer-events-none bg-neutral-800 px-2 py-0.5 rounded truncate">
-                  Start Date
-                </span>
-              )}
-              <input
-                ref={startDateRef}
-                type="date"
-                placeholder="Start Date"
-                value={dateFilter.startDate}
-                onChange={(e) => setDateFilter({ ...dateFilter, startDate: e.target.value })}
-                className="w-full pl-11 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden [&::-moz-calendar-picker-indicator]:hidden"
-                style={{ colorScheme: 'dark' }}
-              />
-            </div>
+            <DatePickerInput
+              value={dateFilter.startDate}
+              onChange={(iso) => setDateFilter({ ...dateFilter, startDate: iso })}
+              placeholder="Start Date"
+              className="w-full"
+            />
           </div>
           <div>
             <label className="text-neutral-300 text-xs font-medium block sm:hidden">End Date</label>
-            <div
-              className="relative"
-              onClick={() => {
-                if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(min-width: 640px)').matches) {
-                  try {
-                    // @ts-ignore
-                    if (endDateRef.current && typeof endDateRef.current.showPicker === 'function') {
-                      // @ts-ignore
-                      endDateRef.current.showPicker();
-                    } else if (endDateRef.current) {
-                      endDateRef.current.focus();
-                    }
-                  } catch (e) {
-                    if (endDateRef.current) endDateRef.current.focus();
-                  }
-                }
-              }}
-            >
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
-              {!dateFilter.endDate && (
-                <span className="hidden sm:flex absolute left-11 right-3 top-1/2 transform -translate-y-1/2 items-center text-neutral-400 text-sm pointer-events-none bg-neutral-800 px-2 py-0.5 rounded truncate">
-                  End Date
-                </span>
-              )}
-              <input
-                ref={endDateRef}
-                type="date"
-                placeholder="End Date"
-                value={dateFilter.endDate}
-                onChange={(e) => setDateFilter({ ...dateFilter, endDate: e.target.value })}
-                className="w-full pl-11 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white text-sm [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden [&::-moz-calendar-picker-indicator]:hidden"
-                style={{ colorScheme: 'dark' }}
-              />
-            </div>
+            <DatePickerInput
+              value={dateFilter.endDate}
+              onChange={(iso) => setDateFilter({ ...dateFilter, endDate: iso })}
+              placeholder="End Date"
+              className="w-full"
+            />
           </div>
         </div>
         {(searchQuery || roleFilter !== 'all' || dateFilter.startDate || dateFilter.endDate) && (
