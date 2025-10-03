@@ -296,12 +296,12 @@ const AdminDashboard: React.FC = () => {
         <h2 className="text-xl font-semibold text-white mb-4">User Statistics</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center md:justify-between justify-center mb-4">
               <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center">
                 <Users className="w-6 h-6 text-white" />
               </div>
             </div>
-            <div>
+            <div className="md:text-left text-center">
               <h3 className="text-2xl font-bold text-white mb-1">{stats.totalUsers}</h3>
               <p className="text-neutral-400 text-sm mb-2">Total Users</p>
               <p className="text-accent-green text-sm">All registered users</p>
@@ -309,12 +309,12 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center md:justify-between justify-center mb-4">
               <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center">
                 <Users className="w-6 h-6 text-white" />
               </div>
             </div>
-            <div>
+            <div className="md:text-left text-center">
               <h3 className="text-2xl font-bold text-white mb-1">{stats.totalClients}</h3>
               <p className="text-neutral-400 text-sm mb-2">Total Clients</p>
               <p className="text-accent-green text-sm">Active client accounts</p>
@@ -322,12 +322,12 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center md:justify-between justify-center mb-4">
               <div className="w-12 h-12 bg-accent-green rounded-2xl flex items-center justify-center">
                 <UserCheck className="w-6 h-6 text-white" />
               </div>
             </div>
-            <div>
+            <div className="md:text-left text-center">
               <h3 className="text-2xl font-bold text-white mb-1">{stats.totalTherapists}</h3>
               <p className="text-neutral-400 text-sm mb-2">Total Therapists</p>
               <p className="text-accent-green text-sm">Licensed professionals</p>
@@ -335,12 +335,12 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center md:justify-between justify-center mb-4">
               <div className="w-12 h-12 bg-accent-yellow rounded-2xl flex items-center justify-center">
                 <Crown className="w-6 h-6 text-black" />
               </div>
             </div>
-            <div>
+            <div className="md:text-left text-center">
               <h3 className="text-2xl font-bold text-white mb-1">{stats.totalAdmins}</h3>
               <p className="text-neutral-400 text-sm mb-2">Total Admins</p>
               <p className="text-accent-green text-sm">Platform administrators</p>
@@ -354,12 +354,12 @@ const AdminDashboard: React.FC = () => {
         <h2 className="text-xl font-semibold text-white mb-4">Session Statistics</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center md:justify-between justify-center mb-4">
               <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-white" />
               </div>
             </div>
-            <div>
+            <div className="md:text-left text-center">
               <h3 className="text-2xl font-bold text-white mb-1">{stats.totalSessions}</h3>
               <p className="text-neutral-400 text-sm mb-2">Total Sessions</p>
               <p className="text-accent-green text-sm">All time sessions</p>
@@ -367,12 +367,12 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center md:justify-between justify-center mb-4">
               <div className="w-12 h-12 bg-accent-yellow rounded-2xl flex items-center justify-center">
                 <Clock className="w-6 h-6 text-black" />
               </div>
             </div>
-            <div>
+            <div className="md:text-left text-center">
               <h3 className="text-2xl font-bold text-white mb-1">{stats.todaySessions}</h3>
               <p className="text-neutral-400 text-sm mb-2">Today's Sessions</p>
               <p className="text-accent-green text-sm">Scheduled for today</p>
@@ -380,12 +380,12 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center md:justify-between justify-center mb-4">
               <div className="w-12 h-12 bg-accent-green rounded-2xl flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-white" />
               </div>
             </div>
-            <div>
+            <div className="md:text-left text-center">
               <h3 className="text-2xl font-bold text-white mb-1">{stats.activeSessions}</h3>
               <p className="text-neutral-400 text-sm mb-2">Active Sessions</p>
               <p className="text-accent-green text-sm">Currently ongoing</p>
@@ -393,12 +393,12 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center md:justify-between justify-center mb-4">
               <div className="w-12 h-12 bg-accent-orange rounded-2xl flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
             </div>
-            <div>
+            <div className="md:text-left text-center">
               <h3 className="text-2xl font-bold text-white mb-1">{stats.completedSessions}</h3>
               <p className="text-neutral-400 text-sm mb-2">Completed Sessions</p>
               <p className="text-accent-green text-sm">Successfully finished</p>
