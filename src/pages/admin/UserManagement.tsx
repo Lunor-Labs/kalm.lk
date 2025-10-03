@@ -216,7 +216,7 @@ const UserManagementPage: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 justify-items-center sm:justify-items-stretch">
         <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20">
           <div className="flex items-center gap-2 mb-1">
             <Users className="w-5 h-5 text-primary-500" />
@@ -299,36 +299,31 @@ const UserManagementPage: React.FC = () => {
               portalElRef.current
             )}
           </div>
-          <div className="relative group">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-            {/* Masked overlay label to cover native date input hint and avoid overlap */}
-            {!dateFilter.startDate && (
-              <span className="absolute left-10 right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 text-sm pointer-events-none bg-neutral-800 px-2 py-0.5 transition-opacity duration-150 group-focus-within:opacity-0 truncate">
-                Start Date
-              </span>
-            )}
-            <input
-              type="date"
-              aria-label="Start Date"
-              value={dateFilter.startDate}
-              onChange={(e) => setDateFilter({ ...dateFilter, startDate: e.target.value })}
-              className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
-            />
+          <div className="space-y-1">
+            <label className="text-neutral-300 text-xs font-medium block sm:hidden">Start Date</label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+              <input
+                type="date"
+                placeholder="Start Date"
+                value={dateFilter.startDate}
+                onChange={(e) => setDateFilter({ ...dateFilter, startDate: e.target.value })}
+                className="w-full pl-9 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white text-sm [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-2 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+              />
+            </div>
           </div>
-          <div className="relative group">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
-            {!dateFilter.endDate && (
-              <span className="absolute left-10 right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 text-sm pointer-events-none bg-neutral-800 px-2 py-0.5 transition-opacity duration-150 group-focus-within:opacity-0 truncate">
-                End Date
-              </span>
-            )}
-            <input
-              type="date"
-              aria-label="End Date"
-              value={dateFilter.endDate}
-              onChange={(e) => setDateFilter({ ...dateFilter, endDate: e.target.value })}
-              className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
-            />
+          <div className="space-y-1">
+            <label className="text-neutral-300 text-xs font-medium block sm:hidden">End Date</label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+              <input
+                type="date"
+                placeholder="End Date"
+                value={dateFilter.endDate}
+                onChange={(e) => setDateFilter({ ...dateFilter, endDate: e.target.value })}
+                className="w-full pl-9 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white text-sm [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-2 [&::-webkit-calendar-picker-indicator]:w-5 [&::-webkit-calendar-picker-indicator]:h-5 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+              />
+            </div>
           </div>
         </div>
         {(searchQuery || roleFilter !== 'all' || dateFilter.startDate || dateFilter.endDate) && (
