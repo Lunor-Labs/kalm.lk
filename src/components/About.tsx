@@ -22,8 +22,8 @@ const About: React.FC = () => {
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
             <div className="flex items-start space-x-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-primary-500/20 rounded-xl flex items-center justify-center">
-                <Heart className="w-5 h-5 text-primary-500" />
+              <div className="flex-shrink-0 w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                <Heart className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-neutral-800 mb-2">
@@ -37,8 +37,8 @@ const About: React.FC = () => {
             </div>
 
             <div className="flex items-start space-x-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-accent-green/20 rounded-xl flex items-center justify-center">
-                <Shield className="w-5 h-5 text-accent-green" />
+              <div className="flex-shrink-0 w-10 h-10 bg-cyan-100 rounded-xl flex items-center justify-center">
+                <Shield className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-neutral-800 mb-2">
@@ -52,8 +52,8 @@ const About: React.FC = () => {
             </div>
 
             <div className="flex items-start space-x-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-accent-yellow/20 rounded-xl flex items-center justify-center">
-                <Users className="w-5 h-5 text-accent-yellow" />
+              <div className="flex-shrink-0 w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                <Users className="w-5 h-5 text-amber-600" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-neutral-800 mb-2">

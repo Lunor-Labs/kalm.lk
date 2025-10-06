@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, X, Phone, User, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '../lib/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Instagram, Mail, MapPin, Facebook, Youtube } from 'lucide-react';
 
@@ -16,6 +16,8 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const location = useLocation();
+  const [mobileRightMargin, setMobileRightMargin] = useState<string>('-12rem');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,6 +46,40 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Smooth marginRight calculation across widths (linear interpolation)
+  useEffect(() => {
+    const minW = 360; // px
+    const maxW = 1020; // px
+    const minRem = -6; // rem at minW
+    const maxRem = -27; // rem at maxW
+
+    const interpolate = (w: number) => {
+      if (w <= minW) return minRem;
+      if (w >= maxW) return maxRem;
+      const t = (w - minW) / (maxW - minW);
+      return minRem + t * (maxRem - minRem);
+    };
+
+    let rafId: number | null = null;
+
+    const updateMargin = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const w = window.innerWidth;
+        const remValue = interpolate(w);
+        // format to 4 decimal places to avoid long floats
+        setMobileRightMargin(`${remValue.toFixed(4)}rem`);
+      });
+    };
+
+    updateMargin();
+    window.addEventListener('resize', updateMargin);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', updateMargin);
+    };
   }, []);
 
   const handleSignOut = async () => {
@@ -110,11 +146,22 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 lg:h-16">
-          {/* Logo */}
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            <img 
-              src="logo.jpg" 
-              alt="Kalm Logo" 
+          {/* Logo (click to go to homepage) */}
+          <button
+            onClick={() => {
+              if (location.pathname === '/') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setIsMenuOpen(false);
+              } else {
+                navigate('/');
+              }
+            }}
+            className="flex items-center space-x-2 flex-shrink-0 cursor-pointer focus:outline-none"
+            aria-label="Go to homepage"
+          >
+            <img
+              src="logo.jpg"
+              alt="Kalm Logo"
               className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg"
             />
             <span className={`text-lg lg:text-xl font-bold transition-colors duration-300 ${
@@ -122,7 +169,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             }`}>
               kalm.lk
             </span>
-          </div>
+          </button>
 
           {/* Desktop Navigation - Centered */}
           <nav className="hidden lg:flex items-center justify-center flex-1">
@@ -218,8 +265,12 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             )}
           </div>
 
-            <div className="ml-6 pt-3 flex items-center justify-end border-t border-neutral-700 mb-3 sm:hidden">
-              <div className="ml-16 flex items-center justify-end gap-3 overflow-x-auto px-2 py-2">
+            <div className="pr-4 pt-3 flex items-center justify-end border-t border-neutral-700 mb-3 lg:hidden">
+              {/* Adjust the marginRight value below to move this block further from the right edge as you wish */}
+              <div
+                className="flex items-center justify-end gap-3 overflow-x-auto px-2 py-2"
+                style={{ marginRight: mobileRightMargin }}
+              >
                 {!user ? (
                   <>
                   <a
@@ -368,7 +419,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                 )}
               </div>
           {/* <div className="pt-3 border-t border-neutral-700 space-y-2 text-center"></div> */}
-                <div className="flex items-center space-x-3 justify-center md:justify-start block md:hidden">
+                <div className="flex items-center space-x-3 justify-center block lg:hidden">
               <a
                 href="https://www.instagram.com/kalm_lk?igsh=dHJ1YWExNDg1Mmpz"
                 target="_blank"

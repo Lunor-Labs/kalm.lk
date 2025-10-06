@@ -178,7 +178,9 @@ function App() {
 					
 					{/* Toast Notifications */}
 					<Toaster
-						position="top-right"
+						position="top-center"
+						// move the toast container down so messages appear below the fixed header
+						containerStyle={{ top: '0rem' }}
 						toastOptions={{
 							duration: 4000,
 							style: {
