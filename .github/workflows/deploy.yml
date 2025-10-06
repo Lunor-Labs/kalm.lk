@@ -67,7 +67,7 @@ jobs:
           artifact_name: 'github-pages'
 
   # ====================================
-  # PROD DEPLOYMENT → Vercel
+  # PROD DEPLOYMENT → Vercel (CLI)
   # ====================================
   deploy-prod:
     if: github.ref == 'refs/heads/main'
@@ -106,14 +106,14 @@ jobs:
           echo "VITE_DAILY_API_KEY=${{ secrets.VITE_DAILY_API_KEY }}" >> .env
           echo "VITE_DAILY_DOMAIN=${{ secrets.VITE_DAILY_DOMAIN }}" >> .env
 
-      - name: Build (Vite)
-        run: npm run build
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Pull Vercel Environment Info
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: .
-          prod: true
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
