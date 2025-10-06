@@ -52,12 +52,12 @@ const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onBookNow }) =
 
         <div className="space-y-3 mb-6">
           <div>
-            <p className="text-xs text-neutral-400 mb-2 font-bold">Languages:</p>
+            <p className="text-xs text-neutral-300 mb-2 font-bold">Languages:</p>
             <div className="flex flex-wrap gap-1">
               {therapist.languages.map((lang, langIndex) => (
                 <span
                   key={langIndex}
-                  className="px-2 py-1 bg-neutral-800 text-neutral-300 text-xs rounded-full"
+                  className="px-2 py-1 bg-neutral-500 text-neutral-300 text-xs rounded-full"
                 >
                   {lang}
                 </span>

@@ -24,6 +24,7 @@ import Therapists from './components/Therapists';
 import Testimonials from './components/Testimonials';
 import FAQ from './components/FAQ';
 import Footer from './components/Footer';
+import InstagramStrip from './components/InstagramStrip';
 import WhatsAppFloat from './components/WhatsAppFloat';
 import TherapistListing from './components/TherapistListing';
 
@@ -94,6 +95,8 @@ const LandingPage: React.FC = () => {
 			<Therapists onViewAllTherapists={openTherapistListing} onOpenAuth={openAuthModal} />
 			<Testimonials />
 			<FAQ />
+			{/* Instagram strip inserted above footer */}
+			<InstagramStrip />
 			<Footer />
 			<WhatsAppFloat />
 		</div>

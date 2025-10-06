@@ -71,7 +71,7 @@ const About: React.FC = () => {
             <img
               src="About Calm.jpg?auto=compress&cs=tinysrgb&w=800"
               alt="Supportive therapy session"
-              className="w-full h-80 lg:h-96 object-cover rounded-3xl shadow-2xl"
+              className="w-full h-100 lg:h-96 object-cover rounded-3xl shadow-2xl"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-primary-500/20 to-transparent rounded-3xl"></div>
           </div>

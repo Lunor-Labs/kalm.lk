@@ -53,7 +53,14 @@ const HowItWorks: React.FC = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-8">
           {steps.map((step, index) => (
-            <div key={index} className="relative text-center group">
+            // Make the last item span both columns and center on md screens so
+            // a lone tile on the last row is centered on tablet devices.
+            <div
+              key={index}
+              className={`relative text-center group ${
+                index === steps.length - 1 ? 'md:col-span-2 md:justify-self-center lg:col-span-1' : ''
+              }`}
+            >
               <div className="relative z-10">
                 {/* Number on top, centered */}
                 <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-cream-50 border-2 border-neutral-200 rounded-full flex items-center justify-center text-xs font-bold text-neutral-800 shadow-md">
@@ -65,12 +72,14 @@ const HowItWorks: React.FC = () => {
                 </div>
               </div>
         
-              <h3 className="text-lg font-semibold text-neutral-800 mb-4 mt-8 lg:mt-0">
-                {step.title}
-              </h3>
-              <p className="text-neutral-600 leading-relaxed text-sm">
-                {step.description}
-              </p>
+              <div className="max-w-xs mx-auto text-center">
+                <h3 className="text-lg font-semibold text-neutral-800 mb-4 mt-8 lg:mt-0">
+                  {step.title}
+                </h3>
+                <p className="text-neutral-600 leading-relaxed text-sm">
+                  {step.description}
+                </p>
+              </div>
             </div>
           ))}
         </div>

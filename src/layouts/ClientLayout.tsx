@@ -39,7 +39,7 @@ const ClientLayout: React.FC = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      toast.success('Signed out successfully');
+      // toast.success('Signed out successfully');
       navigate('/');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign out');
