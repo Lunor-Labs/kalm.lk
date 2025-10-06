@@ -1,14 +1,19 @@
-name: Deploy to GitHub Pages (dev)
+name: Deploy Website
 
 on:
   push:
     branches:
       - dev
+      - main
 
 jobs:
-  deploy:
+  # ====================================
+  # DEV DEPLOYMENT → GitHub Pages
+  # ====================================
+  deploy-dev:
+    if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
-    environment: dev  
+    environment: dev
     permissions:
       contents: read
       pages: write
@@ -25,11 +30,6 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-
-      - name: Test secret
-        run: echo "🔒 VITE_APP_ENV is $VITE_APP_ENV"
-        env:
-          VITE_APP_ENV: ${{ secrets.VITE_APP_ENV }}
 
       - name: Create .env file from GitHub Secrets
         run: |
@@ -51,9 +51,8 @@ jobs:
           echo "VITE_DAILY_API_KEY=${{ secrets.VITE_DAILY_API_KEY }}" >> .env
           echo "VITE_DAILY_DOMAIN=${{ secrets.VITE_DAILY_DOMAIN }}" >> .env
 
-      - name: Build
+      - name: Build (Vite)
         run: npm run build
-
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
@@ -63,6 +62,58 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
-        with: 
+        with:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifact_name: 'github-pages'
+
+  # ====================================
+  # PROD DEPLOYMENT → Vercel
+  # ====================================
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create .env file from GitHub Secrets
+        run: |
+          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> .env
+          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> .env
+          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> .env
+          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" >> .env
+          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
+          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> .env
+          echo "VITE_FIREBASE_MEASUREMENT_ID=${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}" >> .env
+          echo "VITE_PAYHERE_MERCHANT_ID=${{ secrets.VITE_PAYHERE_MERCHANT_ID }}" >> .env
+          echo "VITE_PAYHERE_MERCHANT_SECRET=${{ secrets.VITE_PAYHERE_MERCHANT_SECRET }}" >> .env
+          echo "VITE_PAYHERE_SANDBOX=${{ secrets.VITE_PAYHERE_SANDBOX }}" >> .env
+          echo "VITE_PAYHERE_NOTIFY_URL=${{ secrets.VITE_PAYHERE_NOTIFY_URL }}" >> .env
+          echo "VITE_PAYHERE_RETURN_URL=${{ secrets.VITE_PAYHERE_RETURN_URL }}" >> .env
+          echo "VITE_PAYHERE_CANCEL_URL=${{ secrets.VITE_PAYHERE_CANCEL_URL }}" >> .env
+          echo "VITE_APP_ENV=${{ secrets.VITE_APP_ENV }}" >> .env
+          echo "VITE_APP_URL=${{ secrets.VITE_APP_URL }}" >> .env
+          echo "VITE_DAILY_API_KEY=${{ secrets.VITE_DAILY_API_KEY }}" >> .env
+          echo "VITE_DAILY_DOMAIN=${{ secrets.VITE_DAILY_DOMAIN }}" >> .env
+
+      - name: Build (Vite)
+        run: npm run build
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: .
+          prod: true
