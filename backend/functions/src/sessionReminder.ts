@@ -1,0 +1,71 @@
+import { onSchedule } from "firebase-functions/v2/scheduler";
+import nodemailer from "nodemailer";
+
+// Configure transporter with Gmail SMTP
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS,
+  },
+});
+
+
+
+// Helper: return IST Date object (keeps comparisons in IST)
+function getISTDate(date: Date): Date {
+  return new Date(
+    date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+  );
+}
+
+export const sessionReminder = onSchedule("every 15 minutes", async (event) => {
+  try {
+    // --- Hardcoded bookings for testing (IST times with +05:30 offset) ---
+    const bookings = [
+      {
+        email: "imdineshsandaru@gmail.com",
+        datetime: "2025-09-10T10:26:00",
+        subject: "Reminder: Your booking soon",
+        text: "Hi Dinesh, just reminding you of your booking at 10:20 AM.",
+      },
+      {
+        email: "imalkadhananja28@gmail.com",
+        datetime: "2025-09-10T10:30:00",
+        subject: "Reminder: Later session",
+        text: "Hi Imalka, this is for your booking at 10:05 AM.",
+      },
+    ];
+
+    const now = getISTDate(new Date());
+    const cutoff = new Date(now.getTime() + 15 * 60000);
+    console.log(" now:", now);
+    console.log(" cutoff:", cutoff);
+
+    const remindersToSend = bookings.filter((b) => {
+      const bookingTime = new Date(b.datetime);
+      console.log("BookingTime (IST):", bookingTime);
+
+      return bookingTime > now && bookingTime <= cutoff;
+    });
+
+    if (remindersToSend.length === 0) {
+      console.log("No reminders due in the next 15 mins (IST check)");
+      return;
+    }
+
+    for (const reminder of remindersToSend) {
+      const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: reminder.email,
+        subject: reminder.subject,
+        text: reminder.text,
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log(`Sent reminder to ${reminder.email}`);
+    }
+  } catch (error) {
+    console.error("Error sending reminders:", error);
+  }
+});

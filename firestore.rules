@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Helper function to check if user is therapist
+    function isTherapist() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'therapist';
+    }
+    
+    // Helper function to check if user is client
+    function isClient() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'client';
+    }
+
+    // Users collection
+    match /users/{uid} {
+      // Users can read and write their own data
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+      
+      // Admins can read all users and update roles
+      allow read: if isAdmin();
+      allow update: if isAdmin() && 
+                      request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['role', 'updatedAt']);
+    }
+
+    // Therapists collection
+    match /therapists/{therapistId} {
+      // Therapists can read and write their own profile
+      allow read, write: if request.auth != null && 
+                           request.auth.uid == therapistId;
+      
+      // Clients can read therapist profiles (for booking)
+      allow read: if request.auth != null;
+      
+      // Admins can read and write all therapist profiles
+      allow read, write: if isAdmin();
+    }
+
+    // Sessions collection
+    match /sessions/{sessionId} {
+      // Participants can read and update their own sessions
+      allow read, update: if request.auth != null && 
+                            (request.auth.uid == resource.data.therapistId || 
+                             request.auth.uid == resource.data.clientId);
+      
+      // Only system can create sessions (via booking flow)
+      allow create: if request.auth != null;
+      
+      // Admins can read all sessions
+      allow read: if isAdmin();
+    }
+
+    // Chat messages collection
+    match /chatMessages/{messageId} {
+      // Participants can read messages from their sessions
+      allow read: if request.auth != null && 
+                    request.auth.uid in get(/databases/$(database)/documents/sessions/$(resource.data.sessionId)).data.keys();
+      
+      // Participants can create messages in their sessions
+      allow create: if request.auth != null && 
+                      request.auth.uid == request.resource.data.senderId;
+      
+      // No updates or deletes allowed
+      allow update, delete: if false;
+    }
+
+    // Session participants collection
+    match /sessionParticipants/{participantId} {
+      // Participants can read and update their own participation status
+      allow read, update: if request.auth != null && 
+                            request.auth.uid == resource.data.userId;
+      
+      // System can create participant records
+      allow create: if request.auth != null;
+      
+      // Admins can read all participant records
+      allow read: if isAdmin();
+    }
+
+    // Bookings collection
+    match /bookings/{bookingId} {
+      // Clients can read and create their own bookings
+      allow read, create: if request.auth != null && 
+                            request.auth.uid == resource.data.clientId;
+      
+      // Therapists can read bookings assigned to them
+      allow read: if request.auth != null && 
+                    request.auth.uid == resource.data.therapistId;
+      
+      // Admins can read all bookings
+      allow read: if isAdmin();
+      
+      // Only allow updates to specific fields by therapists and clients
+      allow update: if request.auth != null && 
+                      (request.auth.uid == resource.data.clientId || 
+                       request.auth.uid == resource.data.therapistId) &&
+                      request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['status', 'notes', 'updatedAt']);
+    }
+
+    // Payments collection
+    match /payments/{paymentId} {
+      // Clients can read their own payments
+      allow read: if request.auth != null && 
+                    request.auth.uid == resource.data.clientId;
+      
+      // Therapists can read payments for their sessions
+      allow read: if request.auth != null && 
+                    request.auth.uid == resource.data.therapistId;
+      
+      // Admins can read all payments
+      allow read: if isAdmin();
+      
+      // Only system can create/update payments (via Cloud Functions)
+      allow write: if false;
+    }
+
+    // Time slots collection (for therapist availability)
+    match /timeSlots/{slotId} {
+      // Therapists can manage their own time slots
+      allow read, write: if request.auth != null && 
+                           request.auth.uid == resource.data.therapistId;
+      
+      // Clients can read available slots for booking
+      allow read: if request.auth != null;
+      
+      // Admins can read all slots
+      allow read: if isAdmin();
+    }
+
+    // Default deny all other documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
