@@ -181,19 +181,36 @@ const Footer: React.FC = () => {
               <div className="flex items-start space-x-2 justify-center md:justify-start">
                 <Mail className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-neutral-400 text-sm">team@kalm.lk</p>
+                  <a 
+                    href="mailto:team@kalm.lk"
+                    className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
+                  >
+                    team@kalm.lk
+                  </a>
                 </div>
               </div>
               <div className="flex items-start space-x-2 justify-center md:justify-start">
                 <Phone className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-neutral-400 text-sm">+94 (76) 633 0360</p>
+                  <a 
+                    href="tel:+94766330360"
+                    className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
+                  >
+                    +94 (76) 633 0360
+                  </a>
                 </div>
               </div>
               <div className="flex items-start space-x-2 justify-center md:justify-start">
                 <MapPin className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-neutral-400 text-sm">Colombo, Sri Lanka</p>
+                  <a 
+                    href="https://www.google.com/maps/search/?api=1&query=Colombo%2C+Sri+Lanka"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
+                  >
+                    Colombo, Sri Lanka
+                  </a>
                 </div>
               </div>
             </div>
