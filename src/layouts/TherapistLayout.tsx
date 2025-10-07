@@ -35,7 +35,7 @@ const TherapistLayout: React.FC = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      toast.success('Signed out successfully');
+      // toast.success('Signed out successfully');
       navigate('/');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign out');
@@ -59,14 +59,26 @@ const TherapistLayout: React.FC = () => {
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-neutral-800">
-            <div className="flex items-center space-x-2">
-              <img 
-                src="logo.jpg" 
-                alt="Kalm Logo" 
+            <button
+              onClick={() => {
+                if (location.pathname === '/') {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setSidebarOpen(false);
+                } else {
+                  navigate('/');
+                  setSidebarOpen(false);
+                }
+              }}
+              className="flex items-center space-x-2 cursor-pointer focus:outline-none"
+              aria-label="Go to homepage"
+            >
+              <img
+                src="logo.jpg"
+                alt="Kalm Logo"
                 className="w-8 h-8 rounded-lg"
               />
               <span className="text-xl font-bold text-white">Therapist</span>
-            </div>
+            </button>
             <button
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden text-neutral-400 hover:text-white"
