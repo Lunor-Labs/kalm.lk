@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Calendar, Clock, Plus, X, Save, Settings, Copy, Trash2, Edit3, ChevronLeft, ChevronRight } from 'lucide-react';
 import ReactCalendar from 'react-calendar';
 import { format, isSameDay, addDays, startOfDay, startOfWeek, addWeeks, subWeeks } from 'date-fns';
@@ -29,7 +30,7 @@ const TherapistAvailability: React.FC = () => {
   const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
   const [editingTimeSlot, setEditingTimeSlot] = useState<TimeSlot | null>(null);
   const [currentWeek, setCurrentWeek] = useState(new Date());
-  const [newTimeSlot, setNewTimeSlot] = useState<Partial<TimeSlot>>({
+  const [newTimeSlot, setNewTimeSlot] = useState<Partial<TimeSlot> & { sessionType?: string | string[] }>({
     startTime: '09:00',
     endTime: '10:00',
     isAvailable: true,
@@ -243,48 +244,82 @@ const TherapistAvailability: React.FC = () => {
       return;
     }
 
-    const timeSlot: TimeSlot = {
-      id: editingTimeSlot?.id || `slot-${Date.now()}`,
-      startTime: newTimeSlot.startTime!,
-      endTime: newTimeSlot.endTime!,
-      isAvailable: newTimeSlot.isAvailable ?? true,
-      isRecurring: newTimeSlot.isRecurring ?? false,
-      sessionType: newTimeSlot.sessionType || 'video',
-      price: newTimeSlot.price || 4500
-    };
+    // Normalize selected session types to an array
+    const selectedTypes: string[] = Array.isArray(newTimeSlot.sessionType)
+      ? newTimeSlot.sessionType
+      : [newTimeSlot.sessionType || 'video'];
 
     if (editingTimeSlot) {
-      // Update existing time slot
-      const selectedDateData = getSelectedDateData();
-      
-      if (selectedDateData.isSpecialDate) {
-        const dateString = format(selectedDate, 'yyyy-MM-dd');
-        const updatedSpecialDates = specialDates.map(sd => {
-          if (sd.date === dateString) {
-            return {
-              ...sd,
-              timeSlots: (sd.timeSlots || []).map(ts => ts.id === editingTimeSlot.id ? timeSlot : ts)
-            };
-          }
-          return sd;
+      // If editing and multiple types selected, remove the original slot and add new slots for each selected type.
+      if (selectedTypes.length > 1) {
+        // remove original
+        removeTimeSlotFromSelectedDate(editingTimeSlot.id);
+        // add new slots
+        selectedTypes.forEach((type) => {
+          const ts: TimeSlot = {
+            id: `slot-${Date.now()}-${type}`,
+            startTime: newTimeSlot.startTime!,
+            endTime: newTimeSlot.endTime!,
+            isAvailable: newTimeSlot.isAvailable ?? true,
+            isRecurring: newTimeSlot.isRecurring ?? false,
+            sessionType: type as any,
+            price: newTimeSlot.price || 4500
+          };
+          addTimeSlotToSelectedDate(ts);
         });
-        setSpecialDates(updatedSpecialDates);
       } else {
-        const dayOfWeek = selectedDate.getDay();
-        const updatedWeeklySchedule = weeklySchedule.map(day => {
-          if (day.dayOfWeek === dayOfWeek) {
-            return {
-              ...day,
-              timeSlots: day.timeSlots.map(ts => ts.id === editingTimeSlot.id ? timeSlot : ts)
-            };
-          }
-          return day;
-        });
-        setWeeklySchedule(updatedWeeklySchedule);
+        // Single type - update existing slot in place
+        const timeSlot: TimeSlot = {
+          id: editingTimeSlot.id,
+          startTime: newTimeSlot.startTime!,
+          endTime: newTimeSlot.endTime!,
+          isAvailable: newTimeSlot.isAvailable ?? true,
+          isRecurring: newTimeSlot.isRecurring ?? false,
+          sessionType: selectedTypes[0] as any,
+          price: newTimeSlot.price || 4500
+        };
+
+        const selectedDateData = getSelectedDateData();
+        if (selectedDateData.isSpecialDate) {
+          const dateString = format(selectedDate, 'yyyy-MM-dd');
+          const updatedSpecialDates = specialDates.map(sd => {
+            if (sd.date === dateString) {
+              return {
+                ...sd,
+                timeSlots: (sd.timeSlots || []).map(ts => ts.id === editingTimeSlot.id ? timeSlot : ts)
+              };
+            }
+            return sd;
+          });
+          setSpecialDates(updatedSpecialDates);
+        } else {
+          const dayOfWeek = selectedDate.getDay();
+          const updatedWeeklySchedule = weeklySchedule.map(day => {
+            if (day.dayOfWeek === dayOfWeek) {
+              return {
+                ...day,
+                timeSlots: day.timeSlots.map(ts => ts.id === editingTimeSlot.id ? timeSlot : ts)
+              };
+            }
+            return day;
+          });
+          setWeeklySchedule(updatedWeeklySchedule);
+        }
       }
     } else {
-      // Add new time slot
-      addTimeSlotToSelectedDate(timeSlot);
+      // Add new time slots - create one per selected session type
+      selectedTypes.forEach((type) => {
+        const timeSlot: TimeSlot = {
+          id: `slot-${Date.now()}-${type}`,
+          startTime: newTimeSlot.startTime!,
+          endTime: newTimeSlot.endTime!,
+          isAvailable: newTimeSlot.isAvailable ?? true,
+          isRecurring: newTimeSlot.isRecurring ?? false,
+          sessionType: type as any,
+          price: newTimeSlot.price || 4500
+        };
+        addTimeSlotToSelectedDate(timeSlot);
+      });
     }
 
     // Reset form
@@ -424,6 +459,119 @@ const TherapistAvailability: React.FC = () => {
   };
 
   const selectedDateData = getSelectedDateData();
+
+  // Custom dropdown/select for reminder choices — renders menu into a portal to avoid clipping/overflow
+  const ReminderSelect: React.FC<{ value: number; onChange: (v: number) => void }> = ({ value, onChange }) => {
+    const [open, setOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const buttonRef = useRef<HTMLButtonElement | null>(null);
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+
+    const options = [
+      { value: 0.25, label: '15 minutes' },
+      { value: 0.5, label: '30 minutes' },
+      { value: 1, label: '1 hour' },
+      { value: 24, label: '1 day' }
+    ];
+
+    const selected = options.find((o) => o.value === value) || options[0];
+
+    useEffect(() => {
+      const onDocClick = (e: MouseEvent) => {
+        if (
+          containerRef.current &&
+          !containerRef.current.contains(e.target as Node) &&
+          !buttonRef.current?.contains(e.target as Node)
+        ) {
+          setOpen(false);
+        }
+      };
+
+      const onScrollOrResize = () => {
+        if (!open) return;
+        positionMenu();
+      };
+
+      document.addEventListener('click', onDocClick);
+      window.addEventListener('resize', onScrollOrResize);
+      window.addEventListener('scroll', onScrollOrResize, true);
+      return () => {
+        document.removeEventListener('click', onDocClick);
+        window.removeEventListener('resize', onScrollOrResize);
+        window.removeEventListener('scroll', onScrollOrResize, true);
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
+
+    const positionMenu = () => {
+      const btn = buttonRef.current;
+      if (!btn) return;
+      const rect = btn.getBoundingClientRect();
+      const style: React.CSSProperties = {
+        position: 'absolute',
+        top: rect.bottom + window.scrollY + 6,
+        left: rect.left + window.scrollX,
+        minWidth: rect.width,
+        zIndex: 9999
+      };
+      setMenuStyle(style);
+    };
+
+    useEffect(() => {
+      if (open) positionMenu();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
+
+    const menu = (
+      <div
+        ref={containerRef}
+        style={menuStyle}
+        className="bg-black/95 border border-cream-200/20 rounded-2xl shadow-2xl max-h-56 overflow-auto text-cream-50"
+      >
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            role="option"
+            aria-selected={opt.value === value ? 'true' : 'false'}
+            onClick={() => {
+              onChange(opt.value);
+              setOpen(false);
+            }}
+            className={`w-full text-left px-4 py-3 text-cream-50 hover:bg-cream-100/5 ${opt.value === value ? 'bg-cream-100/5' : ''}`}
+          >
+            <span className="block">{opt.label}</span>
+          </button>
+        ))}
+      </div>
+    );
+
+    return (
+      <div className="relative">
+        <button
+          ref={buttonRef}
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          onClick={() => setOpen((s) => !s)}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setOpen(true);
+            } else if (e.key === 'Escape') {
+              setOpen(false);
+            }
+          }}
+          className="w-full text-left p-3 border border-cream-200/20 rounded-2xl bg-black/20 text-cream-50 flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-accent-green"
+        >
+          <span>{selected.label}</span>
+          <span className="ml-2 text-cream-200">▾</span>
+        </button>
+
+        {open && createPortal(menu, document.body)}
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -828,20 +976,16 @@ const TherapistAvailability: React.FC = () => {
                         </label>
 
                         <div className="mt-4">
-                          <label className="block text-sm font-medium text-cream-200 mb-2">Reminder Hours Before Session</label>
-                          <input
-                            type="number"
+                          <label className="block text-sm font-medium text-cream-200 mb-2">Session reminder</label>
+                          <ReminderSelect
                             value={notificationSettings.emailNotifications.hoursBeforeSession}
-                            onChange={(e) => setNotificationSettings({
+                            onChange={(v) => setNotificationSettings({
                               ...notificationSettings,
                               emailNotifications: {
                                 ...notificationSettings.emailNotifications,
-                                hoursBeforeSession: parseInt(e.target.value)
+                                hoursBeforeSession: v
                               }
                             })}
-                            className="w-full p-3 border border-cream-200/20 rounded-2xl focus:ring-2 focus:ring-accent-green focus:border-transparent bg-black/20 text-cream-50 placeholder-cream-200/50"
-                            min="1"
-                            max="168"
                           />
                         </div>
                       </div>
@@ -922,7 +1066,7 @@ const TherapistAvailability: React.FC = () => {
                     endTime: '10:00',
                     isAvailable: true,
                     isRecurring: false,
-                    sessionType: 'video',
+                    sessionType: ['video'] as any,
                     price: 4500
                   });
                 }}
@@ -957,16 +1101,42 @@ const TherapistAvailability: React.FC = () => {
 
               {/* Session Type */}
               <div>
-                <label className="block text-sm font-medium text-cream-200 mb-2">Session Type</label>
-                <select
-                  value={newTimeSlot.sessionType}
-                  onChange={(e) => setNewTimeSlot({ ...newTimeSlot, sessionType: e.target.value as any })}
-                  className="w-full p-3 border border-cream-200/20 rounded-2xl focus:ring-2 focus:ring-accent-green focus:border-transparent bg-black/20 text-cream-50"
-                >
-                  <option value="video">Video Session</option>
-                  <option value="audio">Audio Session</option>
-                  <option value="chat">Chat Session</option>
-                </select>
+                <label className="block text-sm font-medium text-cream-200 mb-2">Session Type (select one or more)</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { value: 'video', label: 'Video Session' },
+                    { value: 'audio', label: 'Audio Session' },
+                    { value: 'chat', label: 'Chat Session' }
+                  ].map((opt) => {
+                    const selected = Array.isArray(newTimeSlot.sessionType)
+                      ? newTimeSlot.sessionType
+                      : [newTimeSlot.sessionType as string];
+                    const checked = selected.includes(opt.value);
+                    return (
+                      <label key={opt.value} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            const current = Array.isArray(newTimeSlot.sessionType)
+                              ? [...newTimeSlot.sessionType]
+                              : [newTimeSlot.sessionType as string];
+                            let updated: string[];
+                            if (e.target.checked) {
+                              updated = Array.from(new Set([...current, opt.value]));
+                            } else {
+                              updated = current.filter((t) => t !== opt.value);
+                            }
+                            // keep as string when only one selected for compatibility
+                            setNewTimeSlot({ ...newTimeSlot, sessionType: updated.length === 1 ? updated[0] : updated } as any);
+                          }}
+                          className="w-4 h-4 rounded border-cream-200/30 text-accent-green focus:ring-accent-green focus:ring-offset-0 bg-black/20"
+                        />
+                        <span className="text-cream-50 text-sm">{opt.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Price */}
@@ -1016,7 +1186,7 @@ const TherapistAvailability: React.FC = () => {
                       endTime: '10:00',
                       isAvailable: true,
                       isRecurring: false,
-                      sessionType: 'video',
+                      sessionType: ['video'] as any,
                       price: 4500
                     });
                   }}
