@@ -36,17 +36,17 @@ const HowItWorks: React.FC = () => {
   ];
 
   return (
-    <section id="how-it-works" className="py-8 lg:py-12 bg-cream-50 relative">
-      <div className="absolute inset-0 bg-black/10 pointer-events-none z-0"></div>
-      {/* Subtle grain texture overlay for cream background */}
-      <div className="absolute inset-0 opacity-5 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23000000%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2247%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+    <section id="how-it-works" className="py-8 lg:py-12 bg-[#0e100b] relative">
+      <div className="absolute inset-0 bg-white/5 pointer-events-none z-0"></div>
+      {/* Subtle grain texture overlay for dark background */}
+      <div className="absolute inset-0 opacity-5 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2247%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-8">
-          <h2 className="text-2xl lg:text-3xl font-bold text-neutral-800 mb-4">
+          <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4">
             How It Works
           </h2>
-          <p className="text-base lg:text-lg text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base lg:text-lg text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Getting started with your mental wellness journey is simple and straightforward.
           </p>
         </div>
@@ -57,13 +57,13 @@ const HowItWorks: React.FC = () => {
             // a lone tile on the last row is centered on tablet devices.
             <div
               key={index}
-              className={`relative text-center group ${
+              className={`relative text-center group bg-white/10 backdrop-blur-sm rounded-2xl p-4 ${
                 index === steps.length - 1 ? 'md:col-span-2 md:justify-self-center lg:col-span-1' : ''
               }`}
             >
               <div className="relative z-10">
                 {/* Number on top, centered */}
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-cream-50 border-2 border-neutral-200 rounded-full flex items-center justify-center text-xs font-bold text-neutral-800 shadow-md">
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-black/50 border-2 border-white/20 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-md">
                   {index + 1}
                 </div>
         
@@ -73,10 +73,10 @@ const HowItWorks: React.FC = () => {
               </div>
         
               <div className="max-w-xs mx-auto text-center">
-                <h3 className="text-lg font-semibold text-neutral-800 mb-4 mt-8 lg:mt-0">
+                <h3 className="text-lg font-semibold text-white mb-4 mt-8 lg:mt-0">
                   {step.title}
                 </h3>
-                <p className="text-neutral-600 leading-relaxed text-sm">
+                <p className="text-gray-300 leading-relaxed text-sm">
                   {step.description}
                 </p>
               </div>
