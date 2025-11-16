@@ -200,19 +200,17 @@ export const signInWithGoogle = async (): Promise<User> => {
 
 export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promise<User> => {
   try {
-    // Check if username already exists
+    // First, sign in anonymously with Firebase
+    const userCredential = await signInAnonymously(auth);
+    const firebaseUser = userCredential.user;
     const usersRef = collection(db, 'users');
     const q = query(usersRef, where('username', '==', anonymousData.username));
     const querySnapshot = await getDocs(q);
     
     if (!querySnapshot.empty) {
+      await firebaseSignOut(auth);
       throw new Error('Username already exists. Please choose a different username.');
-    }
-    
-    // First, sign in anonymously with Firebase
-    const userCredential = await signInAnonymously(auth);
-    const firebaseUser = userCredential.user;
-    
+    }    
     // Create user document in Firestore for anonymous user
     const userData = {
       uid: firebaseUser.uid,
@@ -227,6 +225,8 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
     
     await setDoc(doc(db, 'users', firebaseUser.uid), userData);
     
+    console.log('✅ User document created successfully');
+    
     return {
       uid: firebaseUser.uid,
       email: null,
@@ -237,15 +237,18 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
       updatedAt: new Date(),
     };
   } catch (error: any) {
-    console.error('Anonymous sign up error:', error);
+    console.error('❌ Anonymous sign up error:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
     
-    // Provide more specific error messages
     if (error.code === 'auth/operation-not-allowed') {
       throw new Error('Anonymous authentication is not enabled. Please contact support.');
     } else if (error.code === 'auth/network-request-failed') {
       throw new Error('Network error. Please check your connection and try again.');
     } else if (error.code === 'auth/too-many-requests') {
       throw new Error('Too many requests. Please wait a moment and try again.');
+    } else if (error.code === 'permission-denied' || error.message.includes('permission')) {
+      throw new Error('Permission error. Please try again or contact support.');
     } else {
       throw new Error(error.message || 'Failed to create anonymous account');
     }
