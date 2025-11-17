@@ -358,6 +358,11 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           </div>
 
 
+          {/* Disclaimer */}
+          <div className=" text-neutral-400 text-xs">
+            “I understand that cancelling a session less than 48 hours before will result in a partial refund. I also understand that my chat history is stored only for my personal reference, and that Kalm has no access to private conversations. All sessions are confidential.”
+          </div>
+
           {/* Payment Button */}
           <button
             onClick={handlePayment}
