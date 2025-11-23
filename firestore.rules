@@ -1,7 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is authenticated
+    // Helper function to check if user is authenticated (including anonymous)
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -9,18 +9,21 @@ service cloud.firestore {
     // Helper function to check if user is admin
     function isAdmin() {
       return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
     // Helper function to check if user is therapist
     function isTherapist() {
       return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'therapist';
     }
     
     // Helper function to check if user is client
     function isClient() {
       return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'client';
     }
     
@@ -31,25 +34,30 @@ service cloud.firestore {
 
     // Users collection - Strict access control
     match /users/{uid} {
-      // Users can only read their own data
-      allow read: if isOwner(uid);
+      // Users can read their own data (single document)
+      allow get: if isOwner(uid);
       
-      // Users can create their own account during signup
-      allow create: if isOwner(uid) && 
+      // CRITICAL: Allow any authenticated user (including anonymous who just signed in) 
+      // to query users collection for username checks
+      allow list: if request.auth != null;
+      
+      // Allow creation if user is creating their own document
+      // OR if user is anonymous and creating their first profile
+      allow create: if request.auth != null &&
+                      request.auth.uid == uid &&
                       request.resource.data.uid == uid &&
-                      request.resource.data.role == 'client'; // Default role only
+                      request.resource.data.role == 'client';
       
       // Users can update their own profile (excluding role)
       allow update: if isOwner(uid) && 
                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'uid']);
       
-      // Admins can read all users
-      allow read: if isAdmin();
+      // Admins can do everything (but need to check if user doc exists first)
+      allow read, write: if request.auth != null && 
+                           exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
       
-      // Admins can update user roles and create therapist accounts
-      allow update, create: if isAdmin();
-      
-      // No one can delete users
+      // No one else can delete users
       allow delete: if false;
     }
 
@@ -58,12 +66,13 @@ service cloud.firestore {
       // Anyone authenticated can read therapist profiles (for browsing/booking)
       allow read: if isAuthenticated();
       
-      // Therapists can only update their own profile (not create)
-      allow update: if isOwner(therapistId) && 
+      // Therapists can update their own profile (matching userId field, not document ID)
+      allow update: if isAuthenticated() && 
+                      resource.data.userId == request.auth.uid &&
                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'userId', 'createdAt']);
       
-      // Only admins can create or delete therapist profiles
-      allow create, delete: if isAdmin();
+      // Admins can create, update, or delete any therapist profile
+      allow create, update, delete: if isAdmin();
     }
 
     // Sessions collection - Strict participant access
@@ -96,12 +105,14 @@ service cloud.firestore {
     match /chatMessages/{messageId} {
       // Only session participants can read messages
       allow read: if isAuthenticated() && 
+                    exists(/databases/$(database)/documents/sessions/$(resource.data.sessionId)) &&
                     (request.auth.uid == get(/databases/$(database)/documents/sessions/$(resource.data.sessionId)).data.therapistId ||
                      request.auth.uid == get(/databases/$(database)/documents/sessions/$(resource.data.sessionId)).data.clientId);
       
       // Participants can create messages only for their sessions
       allow create: if isAuthenticated() && 
                       request.resource.data.senderId == request.auth.uid &&
+                      exists(/databases/$(database)/documents/sessions/$(request.resource.data.sessionId)) &&
                       (request.auth.uid == get(/databases/$(database)/documents/sessions/$(request.resource.data.sessionId)).data.therapistId ||
                        request.auth.uid == get(/databases/$(database)/documents/sessions/$(request.resource.data.sessionId)).data.clientId);
       
@@ -143,8 +154,6 @@ service cloud.firestore {
                    request.auth.uid == resource.data.therapistId;
       
       // Allow authenticated users to list/query bookings
-      // This is needed for checking availability during booking flow
-      // Note: Users will only see bookings that match their query filters
       allow list: if isAuthenticated();
       
       // Clients can create their own bookings
@@ -162,11 +171,11 @@ service cloud.firestore {
       // Admins can read all bookings
       allow read: if isAdmin();
       
-      // No one can delete bookings (for audit trail)
+      // No one can delete bookings
       allow delete: if false;
     }
 
-    // Payments collection - Read-only for users, write via Cloud Functions
+    // Payments collection - Read-only for users
     match /payments/{paymentId} {
       // Clients can read their own payments
       allow read: if isAuthenticated() && 
@@ -179,7 +188,7 @@ service cloud.firestore {
       // Admins can read all payments
       allow read: if isAdmin();
       
-      // Only Cloud Functions can write payments (no client-side writes)
+      // Only Cloud Functions can write payments
       allow write: if false;
     }
 
@@ -225,7 +234,7 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Time slots collection (deprecated - using therapistAvailability instead)
+    // Time slots collection
     match /timeSlots/{slotId} {
       // Anyone authenticated can read slots
       allow read: if isAuthenticated();
