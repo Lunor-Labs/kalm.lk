@@ -60,7 +60,7 @@ const FAQ: React.FC = () => {
               key={index}
               className={`bg-black/50 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border ${
                 openIndex === index 
-                  ? 'border-cream-500' 
+                  ? 'border-primary-500' 
                   : 'border-neutral-800'
               }`}
             >
@@ -79,7 +79,7 @@ const FAQ: React.FC = () => {
                 </h3>
                 <div className="flex-shrink-0">
                   {openIndex === index ? (
-                    <Minus className="w-4 h-4 text-cream-500" />
+                    <Minus className="w-4 h-4 text-primary-500" />
                   ) : (
                     <Plus className="w-4 h-4 text-neutral-400" />
                   )}

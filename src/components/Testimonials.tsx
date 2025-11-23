@@ -32,7 +32,7 @@ const Testimonials: React.FC = () => {
                   {[...Array(5)].map((_, i) => (
                   <svg
                     key={i}
-                    className={`w-5 h-5 ${i < 4 ? 'text-yellow-400' : 'text-neutral-300'} fill-current`}
+                    className={`w-5 h-5 ${i < 4 ? 'text-accent-yellow' : 'text-neutral-300'} fill-current`}
                     viewBox="0 0 24 24"
                   >
                     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />

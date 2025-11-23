@@ -69,11 +69,11 @@ const Comparison: React.FC = () => {
             <div></div>
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center mb-2">
-                <img
-                  src="logo.jpg"
-                  alt="Kalm"
-                  className="w-6 h-6 rounded-lg"
-                />
+              <img
+                src="/logo.jpg"
+                alt="Kalm"
+                className="w-6 h-6 rounded-lg"
+              />
               </div>
               <h3 className="font-bold text-primary-500 text-sm">Kalm.lk</h3>
             </div>

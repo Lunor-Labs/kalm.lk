@@ -7,7 +7,7 @@ interface ServicesProps {
 const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
   const services = [
     {
-      image: "Teen.jpg?auto=compress&cs=tinysrgb&w=800",
+      image: "/Teen.jpg",
       imageAlt: "Teenager in a thoughtful pose",
       title: "TEENS",
       subtitle: "(13-17)",
@@ -17,7 +17,7 @@ const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
       category: "TEENS"
     },
     {
-      image: "Individual.jpg?auto=compress&cs=tinysrgb&w=800",
+      image: "/Individual.jpg",
       imageAlt: "Adult in a calm, reflective setting",
       title: "INDIVIDUALS",
       subtitle: "(18+)",
@@ -27,7 +27,7 @@ const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
       category: "INDIVIDUALS"
     },
     {
-      image: "Family.jpg?auto=compress&cs=tinysrgb&w=800",
+      image: "/Family.jpg",
       imageAlt: "Family or couple sharing a warm moment",
       title: "FAMILY & COUPLES",
       subtitle: "(FOR US)",
@@ -37,7 +37,7 @@ const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
       category: "FAMILY & COUPLES"
     },
     {
-      image: "LGBTQ.jpg?auto=compress&cs=tinysrgb&w=800",
+      image: "/LGBTQ.jpg",
       imageAlt: "Inclusive scene with rainbow elements",
       title: "LGBTQIA+",
       subtitle: "",
