@@ -134,18 +134,23 @@ service cloud.firestore {
 
     // Bookings collection - Restricted access
     match /bookings/{bookingId} {
-      // Clients can read their own bookings
-      allow read: if isAuthenticated() && 
-                    request.auth.uid == resource.data.clientId;
+      // Clients can read their own bookings (individual document)
+      allow get: if isAuthenticated() && 
+                   request.auth.uid == resource.data.clientId;
+      
+      // Therapists can read bookings assigned to them (individual document)
+      allow get: if isAuthenticated() && 
+                   request.auth.uid == resource.data.therapistId;
+      
+      // Allow authenticated users to list/query bookings
+      // This is needed for checking availability during booking flow
+      // Note: Users will only see bookings that match their query filters
+      allow list: if isAuthenticated();
       
       // Clients can create their own bookings
       allow create: if isAuthenticated() && 
                       request.resource.data.clientId == request.auth.uid &&
                       request.resource.data.keys().hasAll(['therapistId', 'clientId', 'sessionTime', 'serviceType', 'amount']);
-      
-      // Therapists can read bookings assigned to them
-      allow read: if isAuthenticated() && 
-                    request.auth.uid == resource.data.therapistId;
       
       // Only allow updates to specific fields by participants
       allow update: if isAuthenticated() && 
