@@ -35,6 +35,7 @@ import TherapistManagement from './pages/admin/TherapistManagement';
 import TherapistSchedule from './pages/therapist/TherapistSchedule';
 import TherapistSessions from './pages/therapist/TherapistSessions';
 import TherapistAvailability from './pages/therapist/TherapistAvailability';
+import TherapistProfile from './pages/therapist/TherapistProfile';
 import ClientHome from './pages/client/ClientHome';
 import ClientSessions from './pages/client/ClientSessions';
 
@@ -147,13 +148,14 @@ function App() {
 								<TherapistLayout />
 							</ProtectedRoute>
 						}>
-							<Route path="schedule" element={<TherapistSchedule />} />
-							<Route path="sessions" element={<TherapistSessions />} />
-							<Route path="session/:sessionId" element={<SessionRoom />} />
-							<Route path="availability" element={<TherapistAvailability />} />
-							<Route path="clients" element={<div className="text-white">Clients</div>} />
-							<Route path="earnings" element={<div className="text-white">Earnings</div>} />
-							<Route path="settings" element={<div className="text-white">Settings</div>} />
+						<Route path="schedule" element={<TherapistSchedule />} />
+						<Route path="sessions" element={<TherapistSessions />} />
+						<Route path="session/:sessionId" element={<SessionRoom />} />
+						<Route path="availability" element={<TherapistAvailability />} />
+						<Route path="profile" element={<TherapistProfile />} />
+						<Route path="clients" element={<div className="text-white">Clients</div>} />
+						<Route path="earnings" element={<div className="text-white">Earnings</div>} />
+						<Route path="settings" element={<div className="text-white">Settings</div>} />
 							<Route index element={<Navigate to="schedule" replace />} />
 						</Route>
 						

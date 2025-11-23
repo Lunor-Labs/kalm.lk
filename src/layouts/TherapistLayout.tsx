@@ -3,13 +3,11 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Calendar, 
   Clock, 
-  Users, 
-  CreditCard, 
-  Settings, 
   LogOut,
   Menu,
   X,
-  Video
+  Video,
+  User
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '../lib/auth';
@@ -25,6 +23,7 @@ const TherapistLayout: React.FC = () => {
     { name: 'Schedule', href: '/therapist/schedule', icon: Calendar },
     { name: 'Sessions', href: '/therapist/sessions', icon: Video },
     { name: 'Availability', href: '/therapist/availability', icon: Clock },
+    { name: 'Profile', href: '/therapist/profile', icon: User },
     /*
     { name: 'Clients', href: '/therapist/clients', icon: Users },
     { name: 'Earnings', href: '/therapist/earnings', icon: CreditCard },
@@ -73,7 +72,7 @@ const TherapistLayout: React.FC = () => {
               aria-label="Go to homepage"
             >
               <img
-                src="logo.jpg"
+                src="/logo.jpg"
                 alt="Kalm Logo"
                 className="w-8 h-8 rounded-lg"
               />
@@ -91,7 +90,7 @@ const TherapistLayout: React.FC = () => {
           <nav className="flex-1 p-6">
             <ul className="space-y-2">
               {navigation.map((item) => {
-                const isActive = location.pathname === item.href;
+                const isActive = location.pathname.startsWith(item.href);
                 return (
                   <li key={item.name}>
                     <button
@@ -152,7 +151,15 @@ const TherapistLayout: React.FC = () => {
             
             <div className="flex items-center space-x-4">
               <div className="text-white">
-                <h1 className="text-xl font-semibold">Therapist Portal</h1>
+                <h1 className="text-xl font-semibold">
+                  {(() => {
+                    if (location.pathname.startsWith('/therapist/profile')) return 'My Profile';
+                    if (location.pathname.startsWith('/therapist/sessions')) return 'My Sessions';
+                    if (location.pathname.startsWith('/therapist/availability')) return 'Availability';
+                    if (location.pathname.startsWith('/therapist/schedule')) return 'Schedule';
+                    return 'Therapist Portal';
+                  })()}
+                </h1>
               </div>
             </div>
           </div>
