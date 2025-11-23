@@ -72,7 +72,7 @@ const TherapistLayout: React.FC = () => {
               aria-label="Go to homepage"
             >
               <img
-                src="/logo.jpg"
+                src="logo.jpg"
                 alt="Kalm Logo"
                 className="w-8 h-8 rounded-lg"
               />
