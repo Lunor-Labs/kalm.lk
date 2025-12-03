@@ -51,20 +51,17 @@ jobs:
           echo "VITE_DAILY_API_KEY=${{ secrets.VITE_DAILY_API_KEY }}" >> .env
           echo "VITE_DAILY_DOMAIN=${{ secrets.VITE_DAILY_DOMAIN }}" >> .env
 
-      - name: Build (Vite)
-        run: npm run build
+      - name: Install Vercel CLI
+        run: npm install -g vercel
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          name: "github-pages"
-          path: dist
+      - name: Pull Vercel Environment Info
+        run: vercel pull --yes --environment=development --token=${{ secrets.VERCEL_TOKEN }} --team=${{ secrets.VERCEL_TEAM_ID}
 
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          artifact_name: 'github-pages'
+      - name: Build Project
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }} --team=${{ secrets.VERCEL_TEAM_ID}
+
+      - name: Deploy to Vercel (Development/Preview)
+        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --team=${{ secrets.VERCEL_TEAM_ID}
 
   # ====================================
   # PROD DEPLOYMENT → Vercel (CLI)
@@ -110,10 +107,9 @@ jobs:
         run: npm install -g vercel
 
       - name: Pull Vercel Environment Info
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} --team=${{ secrets.VERCEL_TEAM_ID}
 
       - name: Build Project
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }} --prod
-
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }} --team=${{ secrets.VERCEL_TEAM_ID}
       - name: Deploy to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --team=${{ secrets.VERCEL_TEAM_ID}
