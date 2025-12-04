@@ -55,13 +55,13 @@ jobs:
         run: npm install -g vercel
 
       - name: Pull Vercel Environment Info
-        run: vercel pull --yes --environment=development --token=${{ secrets.VERCEL_TOKEN }} --scope=kalm
+        run: vercel pull --yes --environment=development --token=${{ secrets.VERCEL_TOKEN }} --scope=Kalm
         
       - name: Build Project
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }} --scope=kalm
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }} --scope=Kalm
 
       - name: Deploy to Vercel (Development/Preview)
-        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --scope=kalm
+        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} --scope=Kalm
 
   # ====================================
   # PROD DEPLOYMENT → Vercel (CLI)
