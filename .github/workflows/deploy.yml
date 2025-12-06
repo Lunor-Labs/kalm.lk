@@ -8,7 +8,7 @@ on:
 
 jobs:
   # ====================================
-  # DEV DEPLOYMENT → GitHub Pages
+  # DEV DEPLOYMENT → vercel Preview
   # ====================================
   deploy-dev:
     if: github.ref == 'refs/heads/dev'
@@ -50,21 +50,20 @@ jobs:
           echo "VITE_APP_URL=${{ secrets.VITE_APP_URL }}" >> .env
           echo "VITE_DAILY_API_KEY=${{ secrets.VITE_DAILY_API_KEY }}" >> .env
           echo "VITE_DAILY_DOMAIN=${{ secrets.VITE_DAILY_DOMAIN }}" >> .env
+          echo "VERCEL_ORG_ID=${{ secrets.VERCEL_ORG_ID }}" >> .env
+          echo "VERCEL_PROJECT_ID=${{ secrets.VERCEL_PROJECT_ID }}" >> .env
 
-      - name: Build (Vite)
-        run: npm run build
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          name: "github-pages"
-          path: dist
+      - name: Pull Vercel Environment Info
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        
+      - name: Build Project
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          artifact_name: 'github-pages'
+      - name: Deploy to Vercel (Development/Preview)
+        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
 
   # ====================================
   # PROD DEPLOYMENT → Vercel (CLI)
@@ -105,15 +104,17 @@ jobs:
           echo "VITE_APP_URL=${{ secrets.VITE_APP_URL }}" >> .env
           echo "VITE_DAILY_API_KEY=${{ secrets.VITE_DAILY_API_KEY }}" >> .env
           echo "VITE_DAILY_DOMAIN=${{ secrets.VITE_DAILY_DOMAIN }}" >> .env
+          echo "VERCEL_ORG_ID=${{ secrets.VERCEL_ORG_ID }}" >> .env
+          echo "VERCEL_PROJECT_ID=${{ secrets.VERCEL_PROJECT_ID }}" >> .env
 
       - name: Install Vercel CLI
-        run: npm install -g vercel
+        run: npm install --global vercel@latest
 
       - name: Pull Vercel Environment Info
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build Project
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }} --prod
-
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        
       - name: Deploy to Vercel
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
