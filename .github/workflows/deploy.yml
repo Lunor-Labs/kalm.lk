@@ -8,7 +8,7 @@ on:
 
 jobs:
   # ====================================
-  # DEV DEPLOYMENT → GitHub Pages
+  # DEV DEPLOYMENT → vercel Preview
   # ====================================
   deploy-dev:
     if: github.ref == 'refs/heads/dev'
