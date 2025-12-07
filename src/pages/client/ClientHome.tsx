@@ -98,13 +98,6 @@ const ClientHome: React.FC = () => {
       action: () => navigate('/client/sessions')
     },
     {
-      title: 'Messages',
-      description: 'Chat with your therapists',
-      icon: MessageCircle,
-      color: 'bg-accent-yellow',
-      action: () => navigate('/client/messages')
-    },
-    {
       title: 'Find Therapists',
       description: 'Browse our network of professionals',
       icon: Search,
@@ -296,7 +289,7 @@ const ClientHome: React.FC = () => {
       {/* Quick Actions */}
       <div className="hidden lg:block">
         <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {quickActions.map((action, index) => {
             const Icon = action.icon;
             return (
