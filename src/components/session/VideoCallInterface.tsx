@@ -262,7 +262,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
 
         {/* Custom End Call Button */}
         {isConnected && !error && !showEndCallConfirm && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-40">
+          <div className="absolute bottom-1 left-[40%] transform -translate-x-1/2 z-40">
             <button
               onClick={handleEndCallClick}
               className="bg-red-500 text-white px-6 py-3 rounded-full hover:bg-red-600 transition-colors duration-200 flex items-center gap-2 shadow-lg"
