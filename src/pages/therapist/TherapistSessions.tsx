@@ -92,14 +92,15 @@ const TherapistSessions: React.FC = () => {
   };
 
   const canJoinSession = (session: Session) => {
-    if (session.status === 'active') return true;
-    if (session.status !== 'scheduled') return false;
+    return session.status === 'scheduled' || session.status === 'active';
+    // if (session.status === 'active') return true;
+    // if (session.status !== 'scheduled') return false;
     
-    const now = new Date();
-    const sessionTime = session.scheduledTime;
-    const joinWindow = subMinutes(sessionTime, 15);
+    // const now = new Date();
+    // const sessionTime = session.scheduledTime;
+    // const joinWindow = subMinutes(sessionTime, 15);
     
-    return now >= joinWindow;
+    // return now >= joinWindow;
   };
 
   const handleJoinSession = (session: Session) => {
