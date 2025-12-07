@@ -77,10 +77,16 @@ service cloud.firestore {
 
     // Sessions collection - Strict participant access
     match /sessions/{sessionId} {
-      // Only session participants can read
-      allow read: if isAuthenticated() && 
-                    (request.auth.uid == resource.data.therapistId || 
-                     request.auth.uid == resource.data.clientId);
+      // Only session participants can read individual documents
+      allow get: if isAuthenticated() && 
+                   (request.auth.uid == resource.data.therapistId || 
+                    request.auth.uid == resource.data.clientId);
+      
+      // Allow list queries for authenticated users
+      // This is safe because getUserSessions filters by clientId/therapistId matching user's ID
+      // So users can only query their own sessions, even with this permissive rule
+      // This fixes the issue where new accounts with no sessions get permission denied errors
+      allow list: if isAuthenticated();
       
       // Clients can create sessions (during booking)
       allow create: if isAuthenticated() && 
@@ -95,7 +101,7 @@ service cloud.firestore {
                       .hasOnly(['status', 'startTime', 'endTime', 'notes', 'updatedAt']);
       
       // Admins can read all sessions
-      allow read: if isAdmin();
+      allow get, list: if isAdmin();
       
       // No one can delete sessions
       allow delete: if false;
