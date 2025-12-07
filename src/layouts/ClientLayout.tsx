@@ -27,9 +27,9 @@ const ClientLayout: React.FC = () => {
     { name: 'Home', href: '/client/home', icon: Home },
     { name: 'My Sessions', href: '/client/sessions', icon: Video },
     { name: 'Find Therapists', href: '/client/therapists', icon: Search },
-
-    { name: 'Messages', href: '/client/messages', icon: MessageCircle },
     /*
+    { name: 'Messages', href: '/client/messages', icon: MessageCircle },
+
     { name: 'Payments', href: '/client/payments', icon: CreditCard },
     { name: 'Profile', href: '/client/profile', icon: User },
     { name: 'Settings', href: '/client/settings', icon: Settings },
