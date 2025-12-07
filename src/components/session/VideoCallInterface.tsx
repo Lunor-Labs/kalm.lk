@@ -8,264 +8,218 @@ interface VideoCallInterfaceProps {
   onEndCall: () => void;
   onToggleChat: () => void;
   isChatOpen: boolean;
+  onLeftCall?: () => void; // Called when user leaves but doesn't end session
 }
 
 const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
   session,
   token,
   onEndCall,
-  // onToggleChat,
-  // isChatOpen
+  onLeftCall,
 }) => {
   const callFrameRef = useRef<HTMLDivElement>(null);
   const callObjectRef = useRef<DailyCall | null>(null);
-  const userInitiatedLeave = useRef(false);
+
   const [isConnected, setIsConnected] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isUnmountingRef = useRef(false); // Track if component is unmounting (navigation away)
 
-  // Robust async cleanup to prevent duplicate DailyIframe errors
-  const cleanupPromiseRef = useRef<Promise<void>>(Promise.resolve());
+  // 🔥 Forces iframe + Daily object to recreate
+  const [reloadKey, setReloadKey] = useState(Date.now());
 
-  useEffect(() => {
-    let isMounted = true;
-    let cancelled = false;
-    const callInstanceId = Symbol('callInstanceId');
-    (callObjectRef as any).currentInstanceId = callInstanceId;
-
-    const cleanupCallObject = async () => {
+  // ------------------------------------------------------------
+  // 🧹 CLEANUP (safe, never double-destroy, avoids postMessage error)
+  // ------------------------------------------------------------
+  const safeCleanup = async () => {
+    try {
       if (callObjectRef.current) {
-        try {
-          userInitiatedLeave.current = false;
-          if (callObjectRef.current.meetingState() !== 'left-meeting') {
-            await callObjectRef.current.leave();
+        const call = callObjectRef.current;
+
+        const state = call.meetingState();
+        if (state !== "left-meeting" && state !== "new") {
+          try {
+            await call.leave();
+          } catch (e) {
+            console.warn("Error leaving call:", e);
           }
-          callObjectRef.current.destroy();
-        } catch (e) {
-          console.warn('Error destroying previous Daily call object:', e);
         }
-        callObjectRef.current = null;
+
+        try {
+          call.destroy();
+        } catch (e) {
+          console.warn("Error destroying call:", e);
+        }
       }
-    };
+    } catch (e) {
+      console.warn("Cleanup failed:", e);
+    }
 
-    const initializeCall = async () => {
+    callObjectRef.current = null;
+
+    // Clear the iframe container
+    if (callFrameRef.current) {
+      callFrameRef.current.innerHTML = '';
+    }
+  };
+
+  // ------------------------------------------------------------
+  // 🔄 INIT + JOIN MEETING
+  // ------------------------------------------------------------
+  useEffect(() => {
+    let cancelled = false;
+
+    const startCall = async () => {
       setIsInitializing(true);
+      setIsConnected(false);
       setError(null);
-      
-      // Await any previous cleanup before creating a new call object
-      await cleanupPromiseRef.current;
-      const cleanupPromise = cleanupCallObject();
-      cleanupPromiseRef.current = cleanupPromise;
-      await cleanupPromise;
 
-      if (!isMounted || !session.dailyRoomUrl || !callFrameRef.current) {
+      // ensure previous call is fully cleaned
+      await safeCleanup();
+
+      // Small delay to ensure DOM is ready and cleanup is complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (!callFrameRef.current || cancelled) {
         setIsInitializing(false);
         return;
       }
 
-      let call: DailyCall | null = null;
-      try {
-        console.log('Initializing Daily.co call with:', {
-          roomUrl: session.dailyRoomUrl,
-          sessionType: session.sessionType,
-          hasToken: !!token
-        });
+      // Ensure the container is empty
+      if (callFrameRef.current.innerHTML) {
+        callFrameRef.current.innerHTML = '';
+      }
 
-        // Create Daily.co iframe with default UI
-        call = DailyIframe.createFrame(callFrameRef.current!, {
-          // Use Daily.co's default UI - remove custom theme
-          showLeaveButton: true,
-          showFullscreenButton: true,
-          showLocalVideo: true,
-          showParticipantsBar: true,
-          // You can still customize some colors if needed
-          theme: {
-            colors: {
-              accent: '#00BFA5',
-              accentText: '#FFFFFF',
-              background: '#202020',
-              backgroundAccent: '#464440',
-              baseText: '#FFFFFF',
-              border: '#464440',
-              mainAreaBg: '#202020',
-              mainAreaBgAccent: '#464440',
-              mainAreaText: '#FFFFFF',
-              supportiveText: '#B3B0A9'
-            }
-          }
-        });
-        
-        callObjectRef.current = call;
-        (callObjectRef as any).currentInstanceId = callInstanceId;
+      // Create fresh frame
+      const call = DailyIframe.createFrame(callFrameRef.current, {
+        showLeaveButton: true,
+        showParticipantsBar: true,
+        showFullscreenButton: true,
+      });
 
-        const isCurrentCall = () => (callObjectRef.current === call && (callObjectRef as any).currentInstanceId === callInstanceId && !cancelled);
+      callObjectRef.current = call;
 
-        // Set up event listeners
-        call.on('joined-meeting', (event: any) => {
-          if (!isCurrentCall()) return;
-          console.log('Successfully joined meeting:', event);
-          setIsConnected(true);
-          setIsInitializing(false);
-        });
+      // Events
+      call.on("joined-meeting", () => {
+        if (cancelled) return;
+        setIsConnected(true);
+        setIsInitializing(false);
+      });
 
-        call.on('left-meeting', (event: any) => {
-          if (!isCurrentCall()) return;
-          console.log('Left meeting:', event);
-          setIsConnected(false);
-          // Always call onEndCall when leaving, regardless of who initiated
+      call.on("left-meeting", () => {
+        if (cancelled) return;
+        setIsConnected(false);
+
+        // 🔥 force fresh Daily instance next time
+        setReloadKey(Date.now());
+
+        // Only end session if user explicitly ended it, not if they just navigated away
+        // If component is unmounting (navigation), just notify parent but don't end session
+        // This allows users to rejoin the same session after navigating away
+        if (isUnmountingRef.current) {
+          // User navigated away - just leave the call, don't end the session
+          // Session remains active and they can rejoin
+          onLeftCall?.();
+        } else {
+          // User explicitly left via Daily.co UI leave button - end the session
           onEndCall();
-        });
+        }
+      });
 
-        call.on('camera-error', (event: any) => {
-          if (!isCurrentCall()) return;
-          console.error('Camera error:', event);
-          setError('Camera access denied or unavailable');
-          setIsInitializing(false);
-        });
+      call.on("error", (event: any) => {
+        if (cancelled) return;
+        console.error("Daily error:", event);
+        setError(event.errorMsg || "Unknown error");
+        setIsInitializing(false);
+      });
 
-        call.on('error', (event: any) => {
-          if (!isCurrentCall()) return;
-          console.error('Daily.co error:', event);
-          setError(`Connection error: ${event.errorMsg || 'Unknown error'}`);
-          setIsInitializing(false);
-        });
-
-        call.on('loading', (event: any) => {
-          if (!isCurrentCall()) return;
-          console.log('Loading state:', event);
-        });
-
-        call.on('loaded', (event: any) => {
-          if (!isCurrentCall()) return;
-          console.log('Call loaded:', event);
-        });
-
-        // Join the room with proper configuration
-        const joinConfig: any = {
+      // Join with config
+      try {
+        await call.join({
           url: session.dailyRoomUrl,
-          userName: 'User',
-          startVideoOff: session.sessionType === 'audio',
-          startAudioOff: false
-        };
-
-        if (token && token.trim()) {
-          joinConfig.token = token;
-        }
-
-        console.log('Joining with config:', joinConfig);
-        await call.join(joinConfig);
-        
-        if (!isCurrentCall()) {
-          if (call) {
-            call.destroy();
-            if (callObjectRef.current === call) callObjectRef.current = null;
-          }
-          setIsInitializing(false);
-          return;
-        }
-
-        console.log('Call initialization completed');
-
-      } catch (error: any) {
-        if (callObjectRef.current === call && !cancelled) {
-          console.error('Failed to initialize call:', error);
-          setError(`Failed to join session: ${error.message || 'Unknown error'}`);
-          setIsInitializing(false);
-        }
+          userName: "User",
+          token: token || undefined,
+          startVideoOff: session.sessionType === "audio",
+          startAudioOff: false,
+        });
+      } catch (err: any) {
+        if (cancelled) return;
+        setError(err.message || "Failed to join session");
+        setIsInitializing(false);
       }
     };
 
-    // Only allow one initialization at a time, and always await previous cleanup
-    const initPromise = initializeCall();
-    cleanupPromiseRef.current = initPromise;
+    startCall();
 
-    // Cleanup function
     return () => {
-      isMounted = false;
       cancelled = true;
-      cleanupPromiseRef.current = cleanupPromiseRef.current.then(() => cleanupCallObject());
+      isUnmountingRef.current = true; // Mark that component is unmounting
+      safeCleanup(); // only once
     };
-  }, [session.dailyRoomUrl, token, session.sessionType, onEndCall]);
+  }, [
+    session.dailyRoomUrl,
+    token,
+    session.sessionType,
+    reloadKey, // 🔥 ensures full re-init
+    onEndCall,
+    onLeftCall,
+  ]);
 
+  // Reset unmounting flag and state when component remounts (user rejoins)
+  useEffect(() => {
+    isUnmountingRef.current = false;
+    setIsConnected(false);
+    setIsInitializing(false);
+    setError(null);
+  }, [session.dailyRoomUrl]);
+
+  // ------------------------------------------------------------
+  // UI
+  // ------------------------------------------------------------
   return (
     <div className="flex flex-col h-full bg-neutral-900">
-      {/* Daily.co Default UI Container */}
       <div className="flex-1 relative bg-black rounded-2xl overflow-hidden">
-        <div ref={callFrameRef} className="w-full h-full" />
-        
-        {/* Loading State */}
-        {/* {isInitializing && !error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
-            <div className="text-center">
-              <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-white text-lg mb-2">Initializing session...</p>
-              <p className="text-neutral-300 text-sm">
-                Please allow camera and microphone access when prompted
-              </p>
-            </div>
-          </div>
-        )} */}
 
-        {/* Error State */}
+        {/* 🔥 key={reloadKey} forces full iframe remount */}
+        <div key={reloadKey} ref={callFrameRef} className="w-full h-full" />
+
         {error && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
             <div className="text-center max-w-md mx-auto p-6">
-              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <div className="w-8 h-8 text-red-500">⚠️</div>
-              </div>
               <h3 className="text-xl font-bold text-white mb-2">Connection Error</h3>
               <p className="text-neutral-300 mb-6">{error}</p>
-              <div className="space-y-3">
-                <button
-                  onClick={async () => {
-                    setError(null);
-                    setIsInitializing(false);
-                    // Trigger re-initialization
-                    if (callObjectRef.current) {
-                      try {
-                        if (callObjectRef.current.meetingState() !== 'left-meeting') {
-                          await callObjectRef.current.leave();
-                        }
-                        if (callObjectRef.current) {
-                          callObjectRef.current.destroy();
-                        }
-                      } catch (e) {
-                        console.warn('Error destroying call object on retry:', e);
-                      }
-                      callObjectRef.current = null;
-                    }
-                  }}
-                  className="w-full bg-primary-500 text-white py-3 rounded-2xl hover:bg-primary-600 transition-colors duration-200"
-                >
-                  Try Again
-                </button>
-                <button
-                  onClick={onEndCall}
-                  className="w-full bg-neutral-700 text-white py-3 rounded-2xl hover:bg-neutral-600 transition-colors duration-200"
-                >
-                  End Session
-                </button>
-              </div>
+
+              <button
+                onClick={() => {
+                  setError(null);
+                  setReloadKey(Date.now()); // 🔥 retry
+                }}
+                className="w-full bg-primary-500 text-white py-3 rounded-2xl"
+              >
+                Try Again
+              </button>
+
+              <button
+                onClick={onEndCall}
+                className="w-full mt-3 bg-neutral-700 text-white py-3 rounded-2xl"
+              >
+                End Session
+              </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Optional: Connection Status Footer */}
-      <div className="p-4 bg-neutral-800/50 backdrop-blur-sm">
-        <div className="text-center">
-          <p className="text-neutral-400 text-sm">
-            {isConnected ? (
-              <span className="text-accent-green">● Connected - Using Daily.co interface</span>
-            ) : isInitializing ? (
-              <span className="text-accent-yellow">● Connecting...</span>
-            ) : error ? (
-              <span className="text-red-400">● Connection failed</span>
-            ) : (
-              <span className="text-neutral-400">● Not connected</span>
-            )}
-          </p>
-        </div>
+      <div className="p-4 bg-neutral-800/50">
+        <p className="text-center text-neutral-400 text-sm">
+          {isConnected
+            ? "● Connected"
+            : isInitializing
+            ? "● Connecting..."
+            : error
+            ? "● Error"
+            : "● Not Connected"}
+        </p>
       </div>
     </div>
   );

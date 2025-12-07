@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, Clock, Video, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -19,9 +19,10 @@ const SessionRoom: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const userExplicitlyEndedRef = useRef(false); // Track if user explicitly ended session
 
   useEffect(() => {
-    if (!sessionId || !user || isInitialized) return;
+    if (!sessionId || !user) return;
 
     const initializeSession = async () => {
       try {
@@ -38,6 +39,11 @@ const SessionRoom: React.FC = () => {
         const isAuthorized = sessionData.therapistId === user.uid || sessionData.clientId === user.uid;
         if (!isAuthorized) {
           throw new Error('You are not authorized to join this session');
+        }
+
+        // Check if session is still joinable (active or scheduled)
+        if (sessionData.status === 'completed' || sessionData.status === 'cancelled') {
+          throw new Error('This session has already ended');
         }
 
         setSession(sessionData);
@@ -71,14 +77,37 @@ const SessionRoom: React.FC = () => {
 
     initializeSession();
 
-    // Cleanup function
+    // Cleanup function - reset initialization state when sessionId or user changes
     return () => {
       setIsInitialized(false);
+      userExplicitlyEndedRef.current = false; // Reset when session changes
     };
   }, [sessionId, user]);
 
+  // Add beforeunload warning to prevent accidental navigation away
+  useEffect(() => {
+    if (!session || session.status !== 'active') return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Only warn if session is active
+      if (session.status === 'active') {
+        e.preventDefault();
+        e.returnValue = 'You are in an active session. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [session]);
+
   const handleEndSession = async () => {
     if (!session) return;
+
+    userExplicitlyEndedRef.current = true; // Mark that user explicitly ended session
 
     try {
       // End session without notes for now
@@ -94,6 +123,16 @@ const SessionRoom: React.FC = () => {
     } catch (error: any) {
       console.error('Failed to end session:', error);
       toast.error('Failed to end session');
+    }
+  };
+
+  const handleLeftCall = () => {
+    // User navigated away from call but didn't end session
+    // Just navigate back - session remains active and they can rejoin
+    if (user?.role === 'therapist') {
+      navigate('/therapist/sessions');
+    } else {
+      navigate('/client/sessions');
     }
   };
 
@@ -215,6 +254,7 @@ const SessionRoom: React.FC = () => {
                 session={session}
                 token={meetingToken}
                 onEndCall={handleEndSession}
+                onLeftCall={handleLeftCall}
                 onToggleChat={() => setIsChatOpen(!isChatOpen)}
                 isChatOpen={isChatOpen}
               />
