@@ -3,13 +3,11 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Calendar, 
   Clock, 
-  Users, 
-  CreditCard, 
-  Settings, 
   LogOut,
   Menu,
   X,
-  Video
+  Video,
+  User
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '../lib/auth';
@@ -25,6 +23,7 @@ const TherapistLayout: React.FC = () => {
     { name: 'Schedule', href: '/therapist/schedule', icon: Calendar },
     { name: 'Sessions', href: '/therapist/sessions', icon: Video },
     { name: 'Availability', href: '/therapist/availability', icon: Clock },
+    { name: 'Profile', href: '/therapist/profile', icon: User },
     /*
     { name: 'Clients', href: '/therapist/clients', icon: Users },
     { name: 'Earnings', href: '/therapist/earnings', icon: CreditCard },
@@ -35,7 +34,7 @@ const TherapistLayout: React.FC = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      toast.success('Signed out successfully');
+      // toast.success('Signed out successfully');
       navigate('/');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign out');
@@ -59,14 +58,26 @@ const TherapistLayout: React.FC = () => {
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-neutral-800">
-            <div className="flex items-center space-x-2">
-              <img 
-                src="logo.jpg" 
-                alt="Kalm Logo" 
+            <button
+              onClick={() => {
+                if (location.pathname === '/') {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setSidebarOpen(false);
+                } else {
+                  navigate('/');
+                  setSidebarOpen(false);
+                }
+              }}
+              className="flex items-center space-x-2 cursor-pointer focus:outline-none"
+              aria-label="Go to homepage"
+            >
+              <img
+                src="logo.jpg"
+                alt="Kalm Logo"
                 className="w-8 h-8 rounded-lg"
               />
               <span className="text-xl font-bold text-white">Therapist</span>
-            </div>
+            </button>
             <button
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden text-neutral-400 hover:text-white"
@@ -79,7 +90,7 @@ const TherapistLayout: React.FC = () => {
           <nav className="flex-1 p-6">
             <ul className="space-y-2">
               {navigation.map((item) => {
-                const isActive = location.pathname === item.href;
+                const isActive = location.pathname.startsWith(item.href);
                 return (
                   <li key={item.name}>
                     <button
@@ -140,7 +151,15 @@ const TherapistLayout: React.FC = () => {
             
             <div className="flex items-center space-x-4">
               <div className="text-white">
-                <h1 className="text-xl font-semibold">Therapist Portal</h1>
+                <h1 className="text-xl font-semibold">
+                  {(() => {
+                    if (location.pathname.startsWith('/therapist/profile')) return 'My Profile';
+                    if (location.pathname.startsWith('/therapist/sessions')) return 'My Sessions';
+                    if (location.pathname.startsWith('/therapist/availability')) return 'Availability';
+                    if (location.pathname.startsWith('/therapist/schedule')) return 'Schedule';
+                    return 'Therapist Portal';
+                  })()}
+                </h1>
               </div>
             </div>
           </div>

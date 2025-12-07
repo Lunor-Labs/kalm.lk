@@ -2,6 +2,84 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   CSS VARIABLES - Centralized Design System
+   Change values here to update entire app
+   ============================================ */
+@layer base {
+  :root {
+    /* Primary Colors */
+    --primary-50: #F0F9FF;
+    --primary-100: #E0F2FE;
+    --primary-200: #BAE6FD;
+    --primary-300: #7DD3FC;
+    --primary-400: #38BDF8;
+    --primary-500: #00BFA5;
+    --primary-600: #0891B2;
+    --primary-700: #0E7490;
+    --primary-800: #075985;
+    --primary-900: #0C4A6E;
+
+    /* Cream Colors */
+    --cream-50: #FEF9F1;
+    --cream-100: #E9E1D4;
+    --cream-200: #B3B0A9;
+    --cream-300: #8B8578;
+
+    /* Accent Colors */
+    --accent-yellow: #FFEB3B;
+    --accent-pink: #880E4F;
+    --accent-green: #A6E3B0;
+    --accent-orange: #FF7043;
+    --accent-success: #A6E3B0;
+    --accent-warning: #FFEB3B;
+    --accent-error: #FF7043;
+    --accent-info: #00BFA5;
+
+    /* Neutral Colors */
+    --neutral-50: #FAFAFA;
+    --neutral-100: #F5F5F5;
+    --neutral-200: #E5E5E5;
+    --neutral-300: #D4D4D4;
+    --neutral-400: #B3B0A9;
+    --neutral-500: #737373;
+    --neutral-600: #464440;
+    --neutral-700: #404040;
+    --neutral-800: #202020;
+    --neutral-900: #171717;
+
+    /* Semantic Feature Colors */
+    --feature-care-bg: #D1FAE5;
+    --feature-care-icon: #059669;
+    --feature-privacy-bg: #CFFAFE;
+    --feature-privacy-icon: #22D3EE;
+    --feature-community-bg: #FEF3C7;
+    --feature-community-icon: #D97706;
+
+    /* Backgrounds */
+    --bg-page-light: #FEF9F1;
+    --bg-page-dark: #202020;
+    --bg-page-admin: #0A0A0A;
+    --bg-card-light: #FFFFFF;
+    --bg-card-dark: #1A1A1A;
+    --bg-card-glass: rgba(255, 255, 255, 0.05);
+
+    /* Fonts */
+    --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Menlo', 'Monaco', 'Consolas', monospace;
+
+    /* Border Radius */
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --radius-2xl: 2rem;
+    --radius-3xl: 3rem;
+    --radius-full: 9999px;
+  }
+}
+
 /* Hide scrollbar for elements with .hide-scrollbar */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;

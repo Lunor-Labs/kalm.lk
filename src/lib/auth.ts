@@ -16,6 +16,8 @@ import { User, UserRole, LoginCredentials, SignupData, AnonymousSignupData } fro
 
 // Enhanced login function that supports both email and username
 export const signIn = async (credentials: LoginCredentials): Promise<User> => {
+  let tempAuthUser: FirebaseUser | null = null; // Track temp anonymous auth for cleanup
+  
   try {
     let firebaseUser: FirebaseUser;
     
@@ -23,36 +25,41 @@ export const signIn = async (credentials: LoginCredentials): Promise<User> => {
     const isEmail = credentials.email.includes('@');
     
     if (isEmail) {
-      // Regular email login
+      // Regular email login (unchanged)
       const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
       firebaseUser = userCredential.user;
     } else {
-      // Username login - find the user by username first
+      // Username login - NEW: Sign in anonymously FIRST for authenticated query
+      const tempCredential = await signInAnonymously(auth);
+      tempAuthUser = tempCredential.user; // Temp auth for query
+      
+      // Now query users collection (authenticated, so rules allow list)
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('username', '==', credentials.email));
       const querySnapshot = await getDocs(q);
       
       if (querySnapshot.empty) {
+        await firebaseSignOut(auth); 
         throw new Error('Username not found. Please check your username or create an account.');
       }
       
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data();
+      const oldUid = userDoc.id; // UID from doc
       
-      // For anonymous users, we need to handle authentication differently
       if (userData.isAnonymous) {
-        // For anonymous users, sign in anonymously and link to existing user data
-        const userCredential = await signInAnonymously(auth);
-        firebaseUser = userCredential.user;
+        firebaseUser = tempAuthUser; 
+        tempAuthUser = null; 
         
-        // Update the existing user document with the new anonymous session UID
         await setDoc(doc(db, 'users', firebaseUser.uid), {
           ...userData,
           uid: firebaseUser.uid,
           updatedAt: serverTimestamp()
-        });
+        }, { merge: true }); 
       } else {
-        // For regular users with usernames, we need their email
+        await firebaseSignOut(auth);
+        tempAuthUser = null;
+        
         if (!userData.email) {
           throw new Error('This account cannot be accessed with username login.');
         }
@@ -62,7 +69,6 @@ export const signIn = async (credentials: LoginCredentials): Promise<User> => {
       }
     }
     
-    // Get user role from Firestore
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
     
     if (!userDoc.exists()) {
@@ -81,9 +87,13 @@ export const signIn = async (credentials: LoginCredentials): Promise<User> => {
       updatedAt: userData.updatedAt?.toDate() || new Date(),
     };
   } catch (error: any) {
+    if (tempAuthUser) {
+      await firebaseSignOut(auth);
+    }
+    
     console.error('Sign in error:', error);
     
-    // Provide more specific error messages
+    // Provide more specific error messages (unchanged)
     if (error.code === 'auth/user-not-found') {
       throw new Error('No account found with this email or username. Please check your input or sign up.');
     } else if (error.code === 'auth/wrong-password') {
@@ -200,19 +210,17 @@ export const signInWithGoogle = async (): Promise<User> => {
 
 export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promise<User> => {
   try {
-    // Check if username already exists
+    // First, sign in anonymously with Firebase
+    const userCredential = await signInAnonymously(auth);
+    const firebaseUser = userCredential.user;
     const usersRef = collection(db, 'users');
     const q = query(usersRef, where('username', '==', anonymousData.username));
     const querySnapshot = await getDocs(q);
     
     if (!querySnapshot.empty) {
+      await firebaseSignOut(auth);
       throw new Error('Username already exists. Please choose a different username.');
-    }
-    
-    // First, sign in anonymously with Firebase
-    const userCredential = await signInAnonymously(auth);
-    const firebaseUser = userCredential.user;
-    
+    }    
     // Create user document in Firestore for anonymous user
     const userData = {
       uid: firebaseUser.uid,
@@ -227,6 +235,8 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
     
     await setDoc(doc(db, 'users', firebaseUser.uid), userData);
     
+    console.log('✅ User document created successfully');
+    
     return {
       uid: firebaseUser.uid,
       email: null,
@@ -237,15 +247,18 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
       updatedAt: new Date(),
     };
   } catch (error: any) {
-    console.error('Anonymous sign up error:', error);
+    console.error('❌ Anonymous sign up error:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
     
-    // Provide more specific error messages
     if (error.code === 'auth/operation-not-allowed') {
       throw new Error('Anonymous authentication is not enabled. Please contact support.');
     } else if (error.code === 'auth/network-request-failed') {
       throw new Error('Network error. Please check your connection and try again.');
     } else if (error.code === 'auth/too-many-requests') {
       throw new Error('Too many requests. Please wait a moment and try again.');
+    } else if (error.code === 'permission-denied' || error.message.includes('permission')) {
+      throw new Error('Permission error. Please try again or contact support.');
     } else {
       throw new Error(error.message || 'Failed to create anonymous account');
     }

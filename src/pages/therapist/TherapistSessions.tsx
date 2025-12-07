@@ -138,7 +138,7 @@ const TherapistSessions: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">My Sessions</h1>
-          <p className="text-neutral-300 text-sm">Manage your therapy appointments</p>
+          <p className="text-neutral-300 text-sm">Manage Your Therapy Appointments</p>
         </div>
       </div>
 

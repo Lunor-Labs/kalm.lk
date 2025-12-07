@@ -7,7 +7,7 @@ interface ServicesProps {
 const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
   const services = [
     {
-      image: "Teen.jpg?auto=compress&cs=tinysrgb&w=800",
+      image: "Teen.jpg",
       imageAlt: "Teenager in a thoughtful pose",
       title: "TEENS",
       subtitle: "(13-17)",
@@ -17,7 +17,7 @@ const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
       category: "TEENS"
     },
     {
-      image: "Individual.jpg?auto=compress&cs=tinysrgb&w=800",
+      image: "Individual.jpg",
       imageAlt: "Adult in a calm, reflective setting",
       title: "INDIVIDUALS",
       subtitle: "(18+)",
@@ -27,7 +27,7 @@ const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
       category: "INDIVIDUALS"
     },
     {
-      image: "Family.jpg?auto=compress&cs=tinysrgb&w=800",
+      image: "Family.jpg",
       imageAlt: "Family or couple sharing a warm moment",
       title: "FAMILY & COUPLES",
       subtitle: "(FOR US)",
@@ -37,7 +37,7 @@ const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
       category: "FAMILY & COUPLES"
     },
     {
-      image: "LGBTQ.jpg?auto=compress&cs=tinysrgb&w=800",
+      image: "LGBTQ.jpg",
       imageAlt: "Inclusive scene with rainbow elements",
       title: "LGBTQIA+",
       subtitle: "",
@@ -83,25 +83,23 @@ const Services: React.FC<ServicesProps> = ({ onViewAllTherapists }) => {
               </div>
 
               {/* Reduced text area padding from p-6 to p-4 (25% of card) */}
-              <div className="p-4 flex flex-col justify-between flex-1">
-                <div className="flex-1 flex flex-col justify-center">
-                  <h3 className="text-lg font-semibold text-white mb-1 text-center">
-                    {service.title}
-                  </h3>
-                  {service.subtitle && (
-                    <p className="text-sm text-primary-500 font-medium mb-3 text-center">
-                      {service.subtitle}
-                    </p>
-                  )}
-                  <p className="text-neutral-300 leading-relaxed text-sm text-center">
-                    {service.description}
+              <div className="p-4 flex flex-col flex-1">
+                <h3 className="text-lg font-semibold text-white mb-1 text-center whitespace-nowrap">
+                  {service.title}
+                </h3>
+                {service.subtitle && (
+                  <p className="text-sm text-primary-500 font-medium mb-3 text-center">
+                    {service.subtitle}
                   </p>
-                </div>
+                )}
+                <p className="text-neutral-300 leading-relaxed text-sm text-center flex-1">
+                  {service.description}
+                </p>
 
                 {/* Button always at the bottom */}
                 <button 
                   onClick={() => onViewAllTherapists(service.category)}
-                  className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200 flex items-center space-x-2 group text-sm mx-auto"
+                  className="text-primary-500 font-medium hover:text-primary-600 transition-colors duration-200 flex items-center space-x-2 group text-sm mx-auto mt-2"
                 >
                   <span>Get Started</span>
                   <svg

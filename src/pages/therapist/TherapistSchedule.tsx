@@ -6,6 +6,7 @@ import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Session {
   id: string;
@@ -200,7 +201,7 @@ const TherapistSchedule: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">My Schedule</h1>
-          <p className="text-neutral-300 text-sm sm:text-base">Manage your appointments and availability</p>
+          <p className="text-neutral-300 text-sm sm:text-base">Manage Your Appointments And Availability</p>
         </div>
         
         <div className="flex flex-col xs:flex-row items-stretch sm:items-center gap-3">
@@ -285,24 +286,25 @@ const TherapistSchedule: React.FC = () => {
               {format(selectedDate, 'MMMM yyyy')}
             </h2>
             <div className="flex items-center justify-between sm:justify-end gap-2">
-              <button
-                onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? -7 : -1))}
-                className="p-2 text-neutral-400 hover:text-white"
-              >
-                ←
-              </button>
-              <button
-                onClick={() => setSelectedDate(new Date())}
-                className="px-3 sm:px-4 py-1 sm:py-2 bg-neutral-800 text-white rounded-xl hover:bg-neutral-700 text-xs sm:text-sm"
-              >
-                Today
-              </button>
-              <button
-                onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? 7 : 1))}
-                className="p-2 text-neutral-400 hover:text-white"
-              >
-                →
-              </button>
+
+            <button
+              onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? -7 : -1))}
+              className="p-2 bg-neutral-800 rounded-xl text-white hover:bg-neutral-700 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setSelectedDate(new Date())}
+              className="px-3 sm:px-4 py-1 sm:py-2 bg-neutral-800 text-white rounded-xl hover:bg-neutral-700 text-xs sm:text-sm"
+            >
+              Today
+            </button>
+            <button
+              onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? 7 : 1))}
+              className="p-2 bg-neutral-800 rounded-xl text-white hover:bg-neutral-700 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
             </div>
           </div>
         </div>

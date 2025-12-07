@@ -1,6 +1,6 @@
 import * as firestore from 'firebase/firestore';
 import { db } from './firebase';
-import { format, subHours } from 'date-fns';
+import { format, subMinutes } from 'date-fns';
 
 export interface NotificationSettings {
   therapistId: string;
@@ -97,7 +97,9 @@ export const scheduleSessionReminder = async (
   hoursBeforeSession: number = 24
 ): Promise<void> => {
   try {
-    const reminderTime = subHours(sessionDate, hoursBeforeSession);
+  // support fractional hours (e.g. 0.25 = 15 minutes) by converting to minutes
+  const minutes = Math.round(hoursBeforeSession * 60);
+  const reminderTime = subMinutes(sessionDate, minutes);
     
     // Don't schedule if the reminder time is in the past
     if (reminderTime <= new Date()) {

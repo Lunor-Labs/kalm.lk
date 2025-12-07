@@ -1,6 +1,6 @@
 import * as firestore from 'firebase/firestore';
 import { db } from './firebase';
-import { TherapistAvailability, DayAvailability, SpecialDate, AvailabilitySettings } from '../types/availability';
+import { TherapistAvailability, DayAvailability, SpecialDate, AvailabilitySettings, TimeSlot } from '../types/availability';
 import { scheduleSessionReminder, scheduleNewBookingNotification } from './notifications';
 
 export const saveTherapistAvailability = async (
@@ -9,13 +9,65 @@ export const saveTherapistAvailability = async (
   specialDates: SpecialDate[]
 ): Promise<void> => {
   try {
+    // Build cleaned copies without undefined fields (preserve behavior/UI state)
+    const cleanedWeeklySchedule: DayAvailability[] = weeklySchedule.map((day) => ({
+      ...day,
+      timeSlots: day.timeSlots.map((ts: TimeSlot) => {
+        const { price, sessionType, ...rest } = ts as any;
+        const base: any = { ...rest };
+        if (price !== undefined) base.price = price;
+        if (sessionType !== undefined) base.sessionType = sessionType;
+        return base as TimeSlot;
+      }),
+    }));
+
+    const cleanedSpecialDates: SpecialDate[] = specialDates.map((sd) => {
+      const { reason, timeSlots, ...rest } = sd as any;
+      const base: any = { ...rest };
+      if (reason !== undefined) base.reason = reason;
+      if (Array.isArray(timeSlots)) {
+        base.timeSlots = timeSlots.map((ts: TimeSlot) => {
+          const { price, sessionType, ...tsRest } = ts as any;
+          const tsBase: any = { ...tsRest };
+          if (price !== undefined) tsBase.price = price;
+          if (sessionType !== undefined) tsBase.sessionType = sessionType;
+          return tsBase as TimeSlot;
+        });
+      }
+      return base as SpecialDate;
+    });
+
     const availabilityData: Omit<TherapistAvailability, 'createdAt' | 'updatedAt'> = {
       therapistId,
-      weeklySchedule,
-      specialDates,
+      weeklySchedule: cleanedWeeklySchedule,
+      specialDates: cleanedSpecialDates,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       isActive: true,
     };
+
+    // Debug: log payload and undefined field paths
+    try {
+      console.group('saveTherapistAvailability payload');
+      console.dir(availabilityData, { depth: null });
+      const undefinedPaths: string[] = [];
+      const scan = (o: any, path: string[] = []) => {
+        if (o && typeof o === 'object') {
+          Object.entries(o).forEach(([k, v]) => {
+            const p = [...path, k];
+            if (v === undefined) {
+              undefinedPaths.push(p.join('.'));
+            } else if (v && typeof v === 'object') {
+              scan(v as any, p);
+            }
+          });
+        }
+      };
+      scan(availabilityData);
+      if (undefinedPaths.length) {
+        console.warn('Undefined fields found in availability payload:', undefinedPaths);
+      }
+      console.groupEnd();
+    } catch (e) { /* no-op for logging errors */ }
 
     const docRef = firestore.doc(db, 'therapistAvailability', therapistId);
     const existingDoc = await firestore.getDoc(docRef);

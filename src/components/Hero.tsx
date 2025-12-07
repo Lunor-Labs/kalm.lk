@@ -43,9 +43,8 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* Content - Now on the left */}
             <div className="text-center lg:text-left animate-slide-up order-1 lg:order-1">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-6 lg:whitespace-nowrap">
-                For the thoughts you've{' '}
-                <span className="text-primary-500">never told</span> anyone
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight mb-6 lg:leading-snug lg:whitespace-nowrap">
+                For the thoughts you've <span className="text-primary-500">never told</span> anyone
               </h1>
 
               <p className="text-base sm:text-lg text-white/90 mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
@@ -147,7 +146,7 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
             {/* Video Section - Fixed for mobile visibility */}
             <div className="relative animate-fade-in order-2 lg:order-2">
               {/* Mobile: Full width with proper aspect ratio, Desktop: Original sizing */}
-              <div className="relative z-10 rounded-2xl shadow-2xl overflow-hidden w-full">
+              <div className="relative z-10 rounded-2xl shadow-2xl overflow-hidden w-full max-w-md mx-auto lg:max-w-none">
                 <div className="relative w-full" style={{ paddingBottom: '56.25%' /* 16:9 aspect ratio */ }}>
                   <video
                     autoPlay

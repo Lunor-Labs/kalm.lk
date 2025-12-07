@@ -22,8 +22,8 @@ const About: React.FC = () => {
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
             <div className="flex items-start space-x-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-primary-500/20 rounded-xl flex items-center justify-center">
-                <Heart className="w-5 h-5 text-primary-500" />
+              <div className="flex-shrink-0 w-10 h-10 bg-feature-care-bg rounded-xl flex items-center justify-center">
+                <Heart className="w-5 h-5 text-feature-care-icon" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-neutral-800 mb-2">
@@ -37,8 +37,8 @@ const About: React.FC = () => {
             </div>
 
             <div className="flex items-start space-x-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-accent-green/20 rounded-xl flex items-center justify-center">
-                <Shield className="w-5 h-5 text-accent-green" />
+              <div className="flex-shrink-0 w-10 h-10 bg-feature-privacy-bg rounded-xl flex items-center justify-center">
+                <Shield className="w-5 h-5 text-feature-privacy-icon" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-neutral-800 mb-2">
@@ -52,8 +52,8 @@ const About: React.FC = () => {
             </div>
 
             <div className="flex items-start space-x-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-accent-yellow/20 rounded-xl flex items-center justify-center">
-                <Users className="w-5 h-5 text-accent-yellow" />
+              <div className="flex-shrink-0 w-10 h-10 bg-feature-community-bg rounded-xl flex items-center justify-center">
+                <Users className="w-5 h-5 text-feature-community-icon" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-neutral-800 mb-2">
@@ -69,9 +69,9 @@ const About: React.FC = () => {
 
           <div className="relative">
             <img
-              src="About Calm.jpg?auto=compress&cs=tinysrgb&w=800"
+              src="About Calm.jpg"
               alt="Supportive therapy session"
-              className="w-full h-80 lg:h-96 object-cover rounded-3xl shadow-2xl"
+              className="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-3xl shadow-2xl"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-primary-500/20 to-transparent rounded-3xl"></div>
           </div>

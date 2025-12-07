@@ -3,49 +3,84 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, MessageCircle, Clock, Plus, Video, Star, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTherapists } from '../../hooks/useTherapists';
+import { getUserSessions } from '../../lib/sessions';
+import { Session } from '../../types/session';
+import { format, isFuture, formatDistanceToNow } from 'date-fns';
+import toast from 'react-hot-toast';
 
 const ClientHome: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
 
   // Fetch therapists
-  const { therapists, loading: therapistsLoading } = useTherapists({ useFirebase: false });
+  const { therapists, loading: therapistsLoading } = useTherapists({ useFirebase: true });
   const featuredTherapists = therapists.slice(0, 3);
 
-  // Mock data
-  const upcomingSessions = [
-    {
-      id: '1',
-      therapist: 'Dr. Priya Perera',
-      date: '2024-01-15',
-      time: '2:00 PM',
-      type: 'video',
-      status: 'Confirmed'
-    },
-    {
-      id: '2',
-      therapist: 'Dr. Rohan Silva',
-      date: '2024-01-18',
-      time: '10:00 AM',
-      type: 'audio',
-      status: 'Confirmed'
+  // Load real sessions from Firebase
+  useEffect(() => {
+    if (!user) {
+      setLoadingSessions(false);
+      return;
     }
-  ];
 
-  const recentActivity = [
-    {
-      id: '1',
-      type: 'session_completed',
-      message: 'Session with Dr. Priya Perera completed',
-      time: '2 hours ago'
-    },
-    {
-      id: '2',
-      type: 'booking_confirmed',
-      message: 'Booking confirmed for Jan 18',
-      time: '1 day ago'
-    }
-  ];
+    const loadSessions = async () => {
+      try {
+        setLoadingSessions(true);
+        const userSessions = await getUserSessions(user.uid, 'client');
+        setSessions(userSessions);
+      } catch (error: any) {
+        console.error('Failed to load sessions:', error);
+        toast.error('Failed to load sessions');
+      } finally {
+        setLoadingSessions(false);
+      }
+    };
+
+    loadSessions();
+  }, [user]);
+
+  // Get upcoming sessions (scheduled or active, future dates)
+  const upcomingSessions = sessions
+    .filter(session => 
+      (session.status === 'scheduled' || session.status === 'active') && 
+      isFuture(session.scheduledTime)
+    )
+    .sort((a, b) => a.scheduledTime.getTime() - b.scheduledTime.getTime())
+    .slice(0, 3)
+    .map(session => ({
+      id: session.id,
+      therapist: session.therapistName || 'Therapist',
+      date: format(session.scheduledTime, 'yyyy-MM-dd'),
+      time: format(session.scheduledTime, 'h:mm a'),
+      type: session.sessionType,
+      status: session.status === 'active' ? 'Active' : 'Confirmed'
+    }));
+
+  // Generate recent activity from sessions
+  const recentActivity = sessions
+    .filter(session => session.status === 'completed' || session.status === 'scheduled')
+    .sort((a, b) => {
+      const aTime = a.status === 'completed' && a.endTime ? a.endTime.getTime() : a.updatedAt.getTime();
+      const bTime = b.status === 'completed' && b.endTime ? b.endTime.getTime() : b.updatedAt.getTime();
+      return bTime - aTime;
+    })
+    .slice(0, 3)
+    .map(session => {
+      const timeAgo = session.status === 'completed' && session.endTime
+        ? formatDistanceToNow(session.endTime, { addSuffix: true })
+        : formatDistanceToNow(session.updatedAt, { addSuffix: true });
+      
+      return {
+        id: session.id,
+        type: session.status === 'completed' ? 'session_completed' : 'booking_confirmed',
+        message: session.status === 'completed'
+          ? `Session with ${session.therapistName || 'therapist'} completed`
+          : `Booking confirmed for ${format(session.scheduledTime, 'MMM d')}`,
+        time: timeAgo
+      };
+    });
 
   const quickActions = [
     {
@@ -318,7 +353,12 @@ const ClientHome: React.FC = () => {
             </button>
           </div>
 
-          {upcomingSessions.length > 0 ? (
+          {loadingSessions ? (
+            <div className="text-center py-6 sm:py-8">
+              <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-3 sm:mb-4"></div>
+              <p className="text-neutral-300 text-sm sm:text-base">Loading sessions...</p>
+            </div>
+          ) : upcomingSessions.length > 0 ? (
             <div className="space-y-3 sm:space-y-4">
               {upcomingSessions.map((session) => (
                 <div 
@@ -330,14 +370,20 @@ const ClientHome: React.FC = () => {
                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-500/20 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
                       {session.type === 'video' ? (
                         <Video className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" />
-                      ) : (
+                      ) : session.type === 'audio' ? (
                         <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" />
+                      ) : (
+                        <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" />
                       )}
                     </div>
                     <div className="min-w-0">
                       <p className="text-white font-medium text-sm sm:text-base truncate">{session.therapist}</p>
                       <p className="text-neutral-300 text-xs sm:text-sm">{session.date} at {session.time}</p>
-                      <span className="flex items-center justify-center bg-accent-green/20 text-accent-green px-2 py-0.5 sm:px-3 sm:py-2 rounded-full text-xs h-6 sm:h-8 mt-1 w-20">
+                      <span className={`flex items-center justify-center px-2 py-0.5 sm:px-3 sm:py-2 rounded-full text-xs h-6 sm:h-8 mt-1 w-20 ${
+                        session.status === 'Active' 
+                          ? 'bg-accent-green/20 text-accent-green'
+                          : 'bg-primary-500/20 text-primary-500'
+                      }`}>
                         {session.status}
                       </span>
                     </div>
@@ -346,10 +392,10 @@ const ClientHome: React.FC = () => {
                   {/* Right side */}
                   <div className="flex items-center ml-4">
                     <button 
-                      onClick={() => navigate('/client/sessions')}
+                      onClick={() => navigate(`/client/session/${session.id}`)}
                       className="bg-primary-500 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl hover:bg-primary-600 transition-colors duration-200 text-xs sm:text-sm"
                     >
-                      Join
+                      {session.status === 'Active' ? 'Join' : 'View'}
                     </button>
                   </div>
                 </div>
