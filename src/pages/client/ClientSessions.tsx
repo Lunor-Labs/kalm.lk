@@ -342,29 +342,11 @@ const ClientSessions: React.FC = () => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 sm:self-center">
-                  {canJoinSession(session) && isWithinInterval(new Date(), {
-                    start: subMinutes(session.scheduledTime, 15),
-                    end: session.scheduledTime
-                  }) && (
+                  {canJoinSession(session) && (
                     <button
                       onClick={() => handleJoinSession(session)}
                       className="bg-primary-500 text-white px-3 py-2 rounded-xl hover:bg-primary-600 transition-colors duration-200 flex items-center gap-1.5 min-h-[44px] text-sm"
                       aria-label={`Join ${session.sessionType} session with ${session.therapistName || 'therapist'}`}
-                    >
-                      <Play className="w-4 h-4" />
-                      <span>Join</span>
-                    </button>
-                  )}
-                  
-                  {canJoinSession(session) && !isWithinInterval(new Date(), {
-                    start: subMinutes(session.scheduledTime, 15),
-                    end: session.scheduledTime
-                  }) && (
-                    <button
-                      disabled
-                      className="bg-neutral-600 text-neutral-400 px-3 py-2 rounded-xl cursor-not-allowed flex items-center gap-1.5 min-h-[44px] text-sm"
-                      title={`Available ${format(subMinutes(session.scheduledTime, 15), 'h:mm a')}`}
-                      aria-label={`Join ${session.sessionType} session with ${session.therapistName || 'therapist'} (available at ${format(subMinutes(session.scheduledTime, 15), 'h:mm a')})`}
                     >
                       <Play className="w-4 h-4" />
                       <span>Join</span>
