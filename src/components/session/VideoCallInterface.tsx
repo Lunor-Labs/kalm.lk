@@ -23,6 +23,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
   const [isConnected, setIsConnected] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showEndCallConfirm, setShowEndCallConfirm] = useState(false);
   const isUnmountingRef = useRef(false); // Track if component is unmounting (navigation away)
 
   // 🔥 Forces iframe + Daily object to recreate
@@ -90,9 +91,9 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
         callFrameRef.current.innerHTML = '';
       }
 
-      // Create fresh frame
+      // Create fresh frame - hide Daily.co's leave button, we'll use our own with confirmation
       const call = DailyIframe.createFrame(callFrameRef.current, {
-        showLeaveButton: true,
+        showLeaveButton: false, // Hide Daily.co's leave button
         showParticipantsBar: true,
         showFullscreenButton: true,
       });
@@ -109,6 +110,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
       call.on("left-meeting", () => {
         if (cancelled) return;
         setIsConnected(false);
+        setShowEndCallConfirm(false); // Hide confirmation dialog
 
         // 🔥 force fresh Daily instance next time
         setReloadKey(Date.now());
@@ -121,7 +123,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           // Session remains active and they can rejoin
           onLeftCall?.();
         } else {
-          // User explicitly left via Daily.co UI leave button - end the session
+          // User explicitly left via our custom end call button - end the session
           onEndCall();
         }
       });
@@ -171,7 +173,29 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
     setIsConnected(false);
     setIsInitializing(false);
     setError(null);
+    setShowEndCallConfirm(false);
   }, [session.dailyRoomUrl]);
+
+  // Handle end call with confirmation
+  const handleEndCallClick = () => {
+    setShowEndCallConfirm(true);
+  };
+
+  const handleConfirmEndCall = async () => {
+    if (callObjectRef.current) {
+      try {
+        await callObjectRef.current.leave();
+      } catch (err) {
+        console.error("Error leaving call:", err);
+        setError("Failed to end call. Please try again.");
+        setShowEndCallConfirm(false);
+      }
+    }
+  };
+
+  const handleCancelEndCall = () => {
+    setShowEndCallConfirm(false);
+  };
 
   // ------------------------------------------------------------
   // UI
@@ -183,7 +207,34 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
         {/* 🔥 key={reloadKey} forces full iframe remount */}
         <div key={reloadKey} ref={callFrameRef} className="w-full h-full" />
 
-        {error && (
+        {/* End Call Confirmation Dialog */}
+        {showEndCallConfirm && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/90 z-50">
+            <div className="bg-neutral-800 rounded-2xl p-6 max-w-md mx-4 border border-neutral-700">
+              <h3 className="text-xl font-bold text-white mb-2">End Session?</h3>
+              <p className="text-neutral-300 mb-6">
+                Are you sure you want to end this session? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCancelEndCall}
+                  className="flex-1 bg-neutral-700 text-white py-3 rounded-xl hover:bg-neutral-600 transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmEndCall}
+                  className="flex-1 bg-red-500 text-white py-3 rounded-xl hover:bg-red-600 transition-colors duration-200"
+                >
+                  End Session
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Overlay */}
+        {error && !showEndCallConfirm && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
             <div className="text-center max-w-md mx-auto p-6">
               <h3 className="text-xl font-bold text-white mb-2">Connection Error</h3>
@@ -206,6 +257,21 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
                 End Session
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Custom End Call Button */}
+        {isConnected && !error && !showEndCallConfirm && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-40">
+            <button
+              onClick={handleEndCallClick}
+              className="bg-red-500 text-white px-6 py-3 rounded-full hover:bg-red-600 transition-colors duration-200 flex items-center gap-2 shadow-lg"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span className="font-medium">End Call</span>
+            </button>
           </div>
         )}
       </div>
