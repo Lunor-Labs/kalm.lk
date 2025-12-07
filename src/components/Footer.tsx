@@ -163,14 +163,14 @@ const Footer: React.FC = () => {
                   Refund Policy
                 </button>
               </li>
-              <li>
+              {/* <li>
                 <button 
                   onClick={() => navigateToPage('/terms-of-service')}
                   className="text-neutral-400 hover:text-white transition-colors duration-200 text-sm"
                 >
                   Disclaimer
                 </button>
-              </li>
+              </li> */}
             </ul>
           </div>
 
