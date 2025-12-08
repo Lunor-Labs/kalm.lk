@@ -1,0 +1,45 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Helper function to check if user is therapist
+    function isTherapist() {
+      return isAuthenticated() && 
+             firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'therapist';
+    }
+    
+    // Therapist photos - therapists can upload their own photos, admins can manage all
+    match /therapist-photos/{fileName} {
+      // Anyone authenticated can read therapist photos (for displaying profiles)
+      allow read: if isAuthenticated();
+      
+      // Only therapists and admins can upload photos
+      // Validate file size (max 5MB) and content type (images only)
+      allow write: if isAuthenticated() && 
+                     (isTherapist() || isAdmin()) &&
+                     request.resource.size < 5 * 1024 * 1024 &&
+                     request.resource.contentType.matches('image/.*');
+      
+      // Only admins can delete photos
+      allow delete: if isAdmin();
+    }
+    
+    // Default deny all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

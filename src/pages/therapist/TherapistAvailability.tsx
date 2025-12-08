@@ -275,7 +275,7 @@ const TherapistAvailability = () => {
 
       {/* Calendar View */}
       {activeView === 'calendar' && (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-6xl mx-auto">
           <div className="bg-gray-800 rounded-2xl p-4 md:p-6 shadow-lg">
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-6">
@@ -296,12 +296,12 @@ const TherapistAvailability = () => {
             </div>
 
             {/* Weekdays */}
-            <div className="grid grid-cols-7 gap-2 mb-3 text-center text-xs md:text-sm text-gray-400 font-medium">
+            <div className="grid grid-cols-7 gap-2 md:gap-4 mb-3 text-center text-xs md:text-sm text-gray-400 font-medium">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d}>{d}</div>)}
             </div>
 
             {/* Calendar Grid */}
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-2 md:gap-4">
               {(() => {
                 const year = selectedDate.getFullYear();
                 const month = selectedDate.getMonth();
@@ -333,7 +333,7 @@ const TherapistAvailability = () => {
                         setSelectedDate(item.date);
                         if (item.current) setShowDateDetailsModal(true);
                       }}
-                      className={`aspect-square rounded-lg flex items-center justify-center text-sm md:text-lg lg:text-xl font-medium relative transition-all ${
+                      className={`w-full h-16 md:h-24 lg:h-28 rounded-lg flex items-center justify-center text-sm md:text-lg lg:text-xl font-medium relative transition-all ${
                         !item.current
                           ? 'text-gray-600'
                           : isSelected
