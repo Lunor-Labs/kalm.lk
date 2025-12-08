@@ -1,18 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, X, Settings, Trash2, Edit3, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Plus, X, Trash2, Edit3, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
   saveTherapistAvailability, 
-  getTherapistAvailability, 
-  saveAvailabilitySettings,
-  getAvailabilitySettings 
+  getTherapistAvailability
 } from '../../lib/availability';
 import toast from 'react-hot-toast';
-import { 
-  saveNotificationSettings, 
-  getNotificationSettings 
-} from '../../lib/notifications';
 
 
 const TherapistAvailability = () => {
@@ -21,8 +15,7 @@ const TherapistAvailability = () => {
   const [weeklySchedule, setWeeklySchedule] = useState(getDefaultWeeklySchedule());
   const [specialDates, setSpecialDates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [activeView, setActiveView] = useState<'calendar' | 'settings'>('calendar');
+  const [activeView] = useState<'calendar' | 'settings'>('calendar');
   const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
   const [showDateDetailsModal, setShowDateDetailsModal] = useState(false);
   const [editingTimeSlot, setEditingTimeSlot] = useState<any>(null);
@@ -34,29 +27,6 @@ const TherapistAvailability = () => {
     isRecurring: false,
     sessionType: 'video' as 'video' | 'audio' | 'chat',
     price: 4500
-  });
-
-  const [availabilitySettings, setAvailabilitySettings] = useState({
-    sessionTypes: {
-      video: { enabled: true, price: 4500 },
-      audio: { enabled: true, price: 3500 },
-      chat: { enabled: true, price: 2500 }
-    }
-  });
-
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: {
-      enabled: true,
-      sessionReminders: true,
-      newBookings: true,
-      cancellations: true,
-      hoursBeforeSession: 24
-    },
-    smsNotifications: {
-      enabled: false,
-      sessionReminders: false,
-      newBookings: false
-    }
   });
 
   // Load data on mount
@@ -104,17 +74,6 @@ const TherapistAvailability = () => {
         setSpecialDates([]);
       }
 
-      const settings = await getAvailabilitySettings(user.uid);
-      if (settings) setAvailabilitySettings(settings);
-
-      const notifications = await getNotificationSettings(user.uid);
-      if (notifications) {
-        setNotificationSettings({
-          emailNotifications: notifications.emailNotifications,
-          smsNotifications: notifications.smsNotifications
-        });
-      }
-
     } catch (error: any) {
       console.error('Failed to load availability:', error);
       toast.error('Failed to load availability data');
@@ -132,35 +91,6 @@ const TherapistAvailability = () => {
       timeSlots: []
     }));
   }
-
-  const saveAvailability = async () => {
-    if (!user?.uid) return;
-
-    try {
-      setSaving(true);
-      await saveTherapistAvailability(user.uid, weeklySchedule, specialDates);
-      toast.success('Availability saved successfully saved');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to save availability');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const saveSettings = async () => {
-    if (!user?.uid) return;
-
-    try {
-      setSaving(true);
-      await saveAvailabilitySettings(user.uid, availabilitySettings);
-      await saveNotificationSettings(user.uid, notificationSettings);
-      toast.success('Settings saved successfully');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to save settings');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const getSelectedDateData = () => {
     const dateString = selectedDate.toISOString().split('T')[0];
@@ -277,35 +207,12 @@ const TherapistAvailability = () => {
 
       {/* View Toggle */}
       <div className="flex gap-2 mb-6 flex-wrap items-center">
-        {[
-          { key: 'calendar', label: 'Calendar', icon: Calendar },
-          { key: 'settings', label: 'Settings', icon: Settings }
-        ].map((view) => {
-          const Icon = view.icon;
-          return (
-            <button
-              key={view.key}
-              onClick={() => setActiveView(view.key as any)}
-              className={`flex items-center space-x-2 px-3 md:px-4 py-2 rounded-2xl text-xs md:text-sm font-medium transition-colors duration-200 ${
-                activeView === view.key
-                  ? 'bg-primary-500 text-white'
-                  : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
-              }`}
-            >
-              <Icon size={18} />
-              <span className="hidden sm:inline">{view.label}</span>
-            </button>
-          );
-        })}
-        {activeView === 'settings' && (
-          <button
-            onClick={saveSettings}
-            disabled={saving}
-            className="ml-auto bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-all text-sm font-medium"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-        )}
+        <button
+          className="flex items-center space-x-2 px-3 md:px-4 py-2 rounded-2xl text-xs md:text-sm font-medium transition-colors duration-200 bg-primary-500 text-white"
+        >
+          <Calendar size={18} />
+          <span className="hidden sm:inline">Calendar</span>
+        </button>
       </div>
 
       {/* Calendar View */}
@@ -387,104 +294,6 @@ const TherapistAvailability = () => {
                 });
               })()}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Settings View */}
-      {activeView === 'settings' && (
-        <div className="space-y-6">
-          {/* Notification Settings */}
-          <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <h3 className="text-xl font-semibold mb-4">Notification Settings</h3>
-            <div className="space-y-4">
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={notificationSettings.emailNotifications.enabled}
-                  onChange={e => setNotificationSettings(prev => ({
-                    ...prev,
-                    emailNotifications: { ...prev.emailNotifications, enabled: e.target.checked }
-                  }))}
-                  className="w-5 h-5 rounded text-green-500 bg-gray-700"
-                />
-                <span>Enable email notifications</span>
-              </label>
-
-              {notificationSettings.emailNotifications.enabled && (
-                <div className="ml-8 space-y-3">
-                  {['sessionReminders', 'newBookings'].map(key => (
-                    <label key={key} className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={notificationSettings.emailNotifications[key as keyof typeof notificationSettings.emailNotifications]}
-                        onChange={e => setNotificationSettings(prev => ({
-                          ...prev,
-                          emailNotifications: { ...prev.emailNotifications, [key]: e.target.checked }
-                        }))}
-                        className="w-4 h-4 rounded text-green-500 bg-gray-700"
-                      />
-                      <span className="capitalize">{key.replace('newBookings', 'New bookings').replace('sessionReminders', 'Session reminders')}</span>
-                    </label>
-                  ))}
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Reminder time before session</label>
-                    <select
-                      value={notificationSettings.emailNotifications.hoursBeforeSession}
-                      onChange={e => setNotificationSettings(prev => ({
-                        ...prev,
-                        emailNotifications: { ...prev.emailNotifications, hoursBeforeSession: Number(e.target.value) }
-                      }))}
-                      className="w-full p-3 bg-gray-700 rounded-lg"
-                    >
-                      <option value={0.25}>15 minutes</option>
-                      <option value={0.5}>30 minutes</option>
-                      <option value={1}>1 hour</option>
-                      <option value={24}>24 hours</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Pricing */}
-          <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <h3 className="text-xl font-semibold mb-4">Session Types & Pricing</h3>
-            {Object.entries(availabilitySettings.sessionTypes).map(([type, config]: any) => (
-              <div key={type} className="mb-6 last:mb-0">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={config.enabled}
-                      onChange={e => setAvailabilitySettings(prev => ({
-                        ...prev,
-                        sessionTypes: { ...prev.sessionTypes, [type]: { ...config, enabled: e.target.checked } }
-                      }))}
-                      className="w-5 h-5 rounded text-green-500 bg-gray-700"
-                    />
-                    <span className="capitalize font-medium">{type} Sessions</span>
-                  </label>
-                </div>
-                {config.enabled && (
-                  <div className="ml-8">
-                    <label className="block text-sm text-gray-400 mb-2">Price (LKR)</label>
-                    <input
-                      type="number"
-                      value={config.price}
-                      onChange={e => setAvailabilitySettings(prev => ({
-                        ...prev,
-                        sessionTypes: { ...prev.sessionTypes, [type]: { ...config, price: Number(e.target.value) } }
-                      }))}
-                      className="w-full p-3 bg-gray-700 rounded-lg"
-                      min="0"
-                      step="100"
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
         </div>
       )}
