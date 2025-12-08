@@ -41,10 +41,13 @@ export const saveNotificationSettings = async (
 ): Promise<void> => {
   try {
     const docRef = firestore.doc(db, 'notificationSettings', therapistId);
-    await firestore.updateDoc(docRef, {
+    
+    // Use setDoc with merge to create or update the document
+    await firestore.setDoc(docRef, {
+      therapistId,
       ...settings,
       updatedAt: firestore.serverTimestamp(),
-    });
+    }, { merge: true });
   } catch (error: any) {
     console.error('Error saving notification settings:', error);
     throw new Error(error.message || 'Failed to save notification settings');
