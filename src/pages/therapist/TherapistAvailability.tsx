@@ -49,7 +49,13 @@ const TherapistAvailability = () => {
       enabled: true,
       sessionReminders: true,
       newBookings: true,
+      cancellations: true,
       hoursBeforeSession: 24
+    },
+    smsNotifications: {
+      enabled: false,
+      sessionReminders: false,
+      newBookings: false
     }
   });
 
@@ -102,7 +108,12 @@ const TherapistAvailability = () => {
       if (settings) setAvailabilitySettings(settings);
 
       const notifications = await getNotificationSettings(user.uid);
-      if (notifications) setNotificationSettings(notifications);
+      if (notifications) {
+        setNotificationSettings({
+          emailNotifications: notifications.emailNotifications,
+          smsNotifications: notifications.smsNotifications
+        });
+      }
 
     } catch (error: any) {
       console.error('Failed to load availability:', error);
@@ -174,7 +185,7 @@ const TherapistAvailability = () => {
     };
   };
 
-  const handleAddTimeSlot = () => {
+  const handleAddTimeSlot = async () => {
     if (!newTimeSlot.startTime || !newTimeSlot.endTime) {
       toast.error('Please select start and end times');
       return;
@@ -192,35 +203,57 @@ const TherapistAvailability = () => {
 
     const dayOfWeek = selectedDate.getDay();
 
-    setWeeklySchedule(prev =>
-      prev.map(day =>
-        day.dayOfWeek === dayOfWeek
-          ? {
-            ...day,
-            timeSlots: editingTimeSlot
-              ? day.timeSlots.map((ts: any) => (ts.id === timeSlotId ? timeSlot : ts))
-              : [...day.timeSlots, timeSlot] as any
-          }
-          : day
-      )
+    const updatedSchedule = weeklySchedule.map(day =>
+      day.dayOfWeek === dayOfWeek
+        ? {
+          ...day,
+          timeSlots: editingTimeSlot
+            ? day.timeSlots.map((ts: any) => (ts.id === timeSlotId ? timeSlot : ts))
+            : [...day.timeSlots, timeSlot] as any
+        }
+        : day
     );
+
+    setWeeklySchedule(updatedSchedule);
+
+    // Auto-save to database
+    try {
+      if (user?.uid) {
+        await saveTherapistAvailability(user.uid, updatedSchedule, specialDates);
+        toast.success(editingTimeSlot ? 'Time slot updated' : 'Time slot added');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save time slot');
+      // Revert on error
+      setWeeklySchedule(weeklySchedule);
+    }
 
     // Reset modal
     setEditingTimeSlot(null);
     setShowTimeSlotModal(false);
-    toast.success(editingTimeSlot ? 'Time slot updated' : 'Time slot added');
   };
 
-  const handleDeleteTimeSlot = (timeSlotId: string) => {
+  const handleDeleteTimeSlot = async (timeSlotId: string) => {
     const dayOfWeek = selectedDate.getDay();
-    setWeeklySchedule(prev =>
-      prev.map(day =>
-        day.dayOfWeek === dayOfWeek
-          ? { ...day, timeSlots: day.timeSlots.filter((ts: any) => ts.id !== timeSlotId) }
-          : day
-      )
+    const updatedSchedule = weeklySchedule.map(day =>
+      day.dayOfWeek === dayOfWeek
+        ? { ...day, timeSlots: day.timeSlots.filter((ts: any) => ts.id !== timeSlotId) }
+        : day
     );
-    toast.success('Time slot deleted');
+
+    setWeeklySchedule(updatedSchedule);
+
+    // Auto-save to database
+    try {
+      if (user?.uid) {
+        await saveTherapistAvailability(user.uid, updatedSchedule, specialDates);
+        toast.success('Time slot deleted');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete time slot');
+      // Revert on error
+      setWeeklySchedule(weeklySchedule);
+    }
   };
 
   const selectedDateData = getSelectedDateData();
@@ -243,7 +276,7 @@ const TherapistAvailability = () => {
       </div>
 
       {/* View Toggle */}
-      <div className="flex gap-2 mb-6 flex-wrap">
+      <div className="flex gap-2 mb-6 flex-wrap items-center">
         {[
           { key: 'calendar', label: 'Calendar', icon: Calendar },
           { key: 'settings', label: 'Settings', icon: Settings }
@@ -253,10 +286,10 @@ const TherapistAvailability = () => {
             <button
               key={view.key}
               onClick={() => setActiveView(view.key as any)}
-              className={`flex items-center space-x-2 px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all ${
+              className={`flex items-center space-x-2 px-3 md:px-4 py-2 rounded-2xl text-xs md:text-sm font-medium transition-colors duration-200 ${
                 activeView === view.key
-                  ? 'bg-green-500 text-black shadow-lg'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  ? 'bg-primary-500 text-white'
+                  : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
               }`}
             >
               <Icon size={18} />
@@ -264,13 +297,15 @@ const TherapistAvailability = () => {
             </button>
           );
         })}
-        <button
-          onClick={activeView === 'settings' ? saveSettings : saveAvailability}
-          disabled={saving}
-          className="ml-auto bg-green-500 text-black px-4 py-2 rounded-lg hover:bg-green-400 transition-all text-sm font-medium"
-        >
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+        {activeView === 'settings' && (
+          <button
+            onClick={saveSettings}
+            disabled={saving}
+            className="ml-auto bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-all text-sm font-medium"
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        )}
       </div>
 
       {/* Calendar View */}
@@ -337,15 +372,15 @@ const TherapistAvailability = () => {
                         !item.current
                           ? 'text-gray-600'
                           : isSelected
-                          ? 'bg-green-500 text-black scale-110 shadow-lg'
+                          ? 'bg-primary-500 text-white scale-110 shadow-lg'
                           : isToday
-                          ? 'border-2 border-green-500 text-green-400'
+                          ? 'border-2 border-primary-500 text-primary-400'
                           : 'bg-gray-700 hover:bg-gray-600'
                       }`}
                     >
                       {item.date.getDate()}
                       {item.current && hasSlots && (
-                        <div className="absolute bottom-1 w-2 h-2 bg-green-400 rounded-full"></div>
+                        <div className="absolute bottom-1 w-2 h-2 bg-primary-400 rounded-full"></div>
                       )}
                     </button>
                   );
@@ -467,11 +502,25 @@ const TherapistAvailability = () => {
               <input
                 type="checkbox"
                 checked={selectedDateData.isAvailable}
-                onChange={e => {
+                onChange={async (e) => {
                   const dayOfWeek = selectedDate.getDay();
-                  setWeeklySchedule(prev => prev.map(d => d.dayOfWeek === dayOfWeek ? { ...d, isAvailable: e.target.checked } : d));
+                  const updatedSchedule = weeklySchedule.map(d => 
+                    d.dayOfWeek === dayOfWeek ? { ...d, isAvailable: e.target.checked } : d
+                  );
+                  setWeeklySchedule(updatedSchedule);
+                  
+                  // Auto-save to database
+                  try {
+                    if (user?.uid) {
+                      await saveTherapistAvailability(user.uid, updatedSchedule, specialDates);
+                    }
+                  } catch (error: any) {
+                    toast.error(error.message || 'Failed to save availability');
+                    // Revert on error
+                    setWeeklySchedule(weeklySchedule);
+                  }
                 }}
-                className="w-5 h-5 rounded text-green-500 bg-gray-700"
+                className="w-5 h-5 rounded text-primary-500 bg-gray-700"
               />
               <span>Available on this date</span>
             </label>
@@ -479,13 +528,13 @@ const TherapistAvailability = () => {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">Time Slots</h3>
-                <button onClick={() => { setEditingTimeSlot(null); setShowTimeSlotModal(true); }} className="bg-green-500 text-black p-2 rounded-lg p-2">
+                <button onClick={() => { setEditingTimeSlot(null); setShowTimeSlotModal(true); }} className="bg-primary-500 text-white p-2 rounded-lg p-2">
                   <Plus size={20} />
                 </button>
               </div>
 
               {selectedDateData.timeSlots.length === 0 ? (
-                <button onClick={() => setShowTimeSlotModal(true)} className="w-full py-8 border border-dashed border-gray-600 rounded-lg text-green-400 hover:text-green-300">
+                <button onClick={() => setShowTimeSlotModal(true)} className="w-full py-8 border border-dashed border-gray-600 rounded-lg text-primary-400 hover:text-primary-300">
                   + Add your first time slot
                 </button>
               ) : (
@@ -499,7 +548,7 @@ const TherapistAvailability = () => {
                         </div>
                         <div className="text-right">
                           <div className="font-bold">LKR {slot.price.toLocaleString()}</div>
-                          <div className={slot.isAvailable ? 'text-green-400' : 'text-red-400'}>
+                          <div className={slot.isAvailable ? 'text-primary-400' : 'text-red-400'}>
                             {slot.isAvailable ? 'Available' : 'Blocked'}
                           </div>
                         </div>
@@ -563,7 +612,7 @@ const TherapistAvailability = () => {
                         onChange={() => setNewTimeSlot(prev => ({ ...prev, sessionType: t }))}
                         className="hidden"
                       />
-                      <div className={`p-3 text-center rounded-lg font-medium ${newTimeSlot.sessionType === t ? 'bg-green-500 text-black' : 'bg-gray-700'}`}>
+                      <div className={`p-3 text-center rounded-lg font-medium ${newTimeSlot.sessionType === t ? 'bg-primary-500 text-white' : 'bg-gray-700'}`}>
                         {t.charAt(0).toUpperCase() + t.slice(1)}
                       </div>
                     </label>
@@ -589,7 +638,7 @@ const TherapistAvailability = () => {
                     type="checkbox"
                     checked={newTimeSlot.isAvailable}
                     onChange={e => setNewTimeSlot(prev => ({ ...prev, isAvailable: e.target.checked }))}
-                    className="w-5 h-5 rounded text-green-500 bg-gray-700"
+                    className="w-5 h-5 rounded text-primary-500 bg-gray-700"
                   />
                   <span>Available for booking</span>
                 </label>
@@ -598,7 +647,7 @@ const TherapistAvailability = () => {
                     type="checkbox"
                     checked={newTimeSlot.isRecurring}
                     onChange={e => setNewTimeSlot(prev => ({ ...prev, isRecurring: e.target.checked }))}
-                    className="w-5 h-5 rounded text-green-500 bg-gray-700"
+                    className="w-5 h-5 rounded text-primary-500 bg-gray-700"
                   />
                   <span>Recurring weekly</span>
                 </label>
@@ -613,7 +662,7 @@ const TherapistAvailability = () => {
                 </button>
                 <button
                   onClick={handleAddTimeSlot}
-                  className="flex-1 py-3 bg-green-500 text-black rounded-xl font-medium"
+                  className="flex-1 py-3 bg-primary-500 text-white rounded-xl font-medium"
                 >
                   {editingTimeSlot ? 'Update' : 'Add'} Slot
                 </button>
