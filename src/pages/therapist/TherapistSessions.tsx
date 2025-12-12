@@ -4,7 +4,7 @@ import { Calendar, Clock, Video, MessageCircle, Phone, Play, Users, ChevronLeft,
 import { useAuth } from '../../contexts/AuthContext';
 import { Session } from '../../types/session';
 import { getUserSessions } from '../../lib/sessions';
-import { format, isToday, isFuture, subMinutes } from 'date-fns';
+import { format, isToday, isFuture } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const TherapistSessions: React.FC = () => {
@@ -185,9 +185,9 @@ const TherapistSessions: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
         <span className="text-neutral-300 text-sm shrink-0">Filter:</span>
-        <div className="flex bg-neutral-800 rounded-xl p-1 gap-1 overflow-x-auto">
+        <div className="w-full sm:w-auto flex bg-neutral-800 rounded-xl p-1 gap-1 overflow-x-auto">
           {[
             { key: 'all', label: 'All' },
             { key: 'today', label: 'Today' },
@@ -197,7 +197,7 @@ const TherapistSessions: React.FC = () => {
             <button
               key={option.key}
               onClick={() => setFilter(option.key as any)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 min-w-[70px] min-h-[40px] ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors duration-200 min-h-[40px] whitespace-nowrap flex-1 sm:flex-none ${
                 filter === option.key
                   ? 'bg-primary-500 text-white'
                   : 'text-neutral-300 hover:text-white'
@@ -297,7 +297,7 @@ const TherapistSessions: React.FC = () => {
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm min-h-[44px] ${
+          className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-2 rounded-xl text-sm min-h-[44px] ${
             currentPage === 1
               ? 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
               : 'bg-primary-500 text-white hover:bg-primary-600'
@@ -305,15 +305,15 @@ const TherapistSessions: React.FC = () => {
           aria-label="Go to previous page"
         >
           <ChevronLeft className="w-5 h-5" />
-          <span>Previous</span>
+          <span className="hidden sm:inline">Previous</span>
         </button>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
             <button
               key={page}
               onClick={() => handlePageChange(page)}
-              className={`px-3 py-1.5 rounded-lg text-sm min-w-[40px] min-h-[40px] ${
+              className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm min-w-[32px] sm:min-w-[40px] min-h-[40px] ${
                 currentPage === page
                   ? 'bg-primary-500 text-white'
                   : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
@@ -328,14 +328,14 @@ const TherapistSessions: React.FC = () => {
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-sm min-h-[44px] ${
+          className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-2 rounded-xl text-sm min-h-[44px] ${
             currentPage === totalPages
               ? 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
               : 'bg-primary-500 text-white hover:bg-primary-600'
           } transition-colors duration-200`}
           aria-label="Go to next page"
         >
-          <span>Next</span>
+          <span className="hidden sm:inline">Next</span>
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
