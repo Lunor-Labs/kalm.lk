@@ -57,7 +57,7 @@ const TherapistLayout: React.FC = () => {
       }`}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-neutral-800">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
             <button
               onClick={() => {
                 if (location.pathname === '/') {
@@ -114,7 +114,7 @@ const TherapistLayout: React.FC = () => {
           </nav>
 
           {/* User Info & Sign Out */}
-          <div className="p-6 border-t border-neutral-800">
+          <div className="px-6 py-5 border-t border-neutral-800">
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-semibold">
@@ -138,9 +138,9 @@ const TherapistLayout: React.FC = () => {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-64 flex flex-col min-h-screen">
         {/* Top bar */}
-        <div className="sticky top-0 z-30 bg-neutral-900/95 backdrop-blur-sm border-b border-neutral-800">
+        <div className="sticky top-0 z-30 bg-neutral-900/95 backdrop-blur-sm">
           <div className="flex items-center justify-between px-6 py-4">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -149,7 +149,7 @@ const TherapistLayout: React.FC = () => {
               <Menu className="w-6 h-6" />
             </button>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 w-full">
               <div className="text-white">
                 <h1 className="text-xl font-semibold">
                   {(() => {
@@ -163,10 +163,11 @@ const TherapistLayout: React.FC = () => {
               </div>
             </div>
           </div>
+          <div className="border-b border-neutral-800 mt-1"></div>
         </div>
 
         {/* Page content */}
-        <main className="p-6">
+        <main className="p-6 flex-1">
           <Outlet />
         </main>
       </div>

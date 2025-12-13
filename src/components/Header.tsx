@@ -141,9 +141,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-neutral-900/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
-    }`}>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-black shadow-lg transition-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 lg:h-16">
           {/* Logo (click to go to homepage) */}
@@ -342,7 +340,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 bg-neutral-900/95 backdrop-blur-md shadow-xl rounded-b-2xl border-t border-neutral-700">
+          <div className="lg:hidden absolute top-full left-0 right-0 bg-neutral-900 shadow-xl rounded-b-2xl border-t border-neutral-700">
             <div className="px-4 py-4 space-y-3">
               <div className="text-center space-y-3">
                 {navItems.map((item) => (
