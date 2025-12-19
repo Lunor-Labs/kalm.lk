@@ -26,9 +26,9 @@ const AdminLayout: React.FC = () => {
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Users', href: '/admin/users', icon: UserCheck },
     { name: 'Therapists', href: '/admin/therapists', icon: Users },
-   /* 
+    { name: 'Payments', href: '/admin/payments', icon: CreditCard },
+   /*
    { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
-   { name: 'Payments', href: '/admin/payments', icon: CreditCard },
     { name: 'Notifications', href: '/admin/notifications', icon: Bell },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
     */

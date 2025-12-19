@@ -3,19 +3,25 @@ export interface Payment {
   bookingId: string;
   clientId: string;
   therapistId: string;
+  clientName?: string;
+  therapistName?: string;
   amount: number;
   currency: 'LKR';
   paymentMethod: 'payhere';
   paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
   paymentId?: string; // PayHere payment ID
   orderId: string;
-  merchantId: string;
-  hash: string;
+  merchantId?: string;
+  hash?: string;
   couponCode?: string;
   discountAmount?: number;
   finalAmount: number;
   createdAt: Date;
   updatedAt: Date;
+  // Admin payout tracking
+  payoutStatus: 'pending' | 'scheduled' | 'paid';
+  payoutDate?: Date;
+  therapistPayoutAmount?: number;
 }
 
 export interface PayHerePayment {

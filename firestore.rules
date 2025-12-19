@@ -181,7 +181,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Payments collection - Read-only for users
+    // Payments collection - clients create, admins manage payouts
     match /payments/{paymentId} {
       // Clients can read their own payments
       allow read: if isAuthenticated() && 
@@ -193,9 +193,19 @@ service cloud.firestore {
       
       // Admins can read all payments
       allow read: if isAdmin();
-      
-      // Only Cloud Functions can write payments
-      allow write: if false;
+
+      // Clients can create their own payment records after successful checkout
+      allow create: if isAuthenticated() &&
+                     request.resource.data.clientId == request.auth.uid &&
+                     request.resource.data.keys().hasAll(['bookingId', 'clientId', 'therapistId', 'amount', 'currency', 'paymentMethod', 'paymentStatus', 'orderId', 'finalAmount', 'payoutStatus']);
+
+      // Admins can update payout-related fields for any payment
+      allow update: if isAdmin() &&
+                     request.resource.data.diff(resource.data).affectedKeys()
+                     .hasOnly(['payoutStatus', 'payoutDate', 'therapistPayoutAmount', 'updatedAt']);
+
+      // No deletes from client side
+      allow delete: if false;
     }
 
     // Therapist availability collection

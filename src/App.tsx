@@ -32,6 +32,7 @@ import TherapistListing from './components/TherapistListing';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import TherapistManagement from './pages/admin/TherapistManagement';
+import PaymentsManagement from './pages/admin/PaymentsManagement';
 import TherapistSchedule from './pages/therapist/TherapistSchedule';
 import TherapistSessions from './pages/therapist/TherapistSessions';
 import TherapistAvailability from './pages/therapist/TherapistAvailability';
@@ -136,7 +137,7 @@ function App() {
 							<Route path="users" element={<UserManagement />} />
 							<Route path="therapists" element={<TherapistManagement />} />
 							<Route path="bookings" element={<div className="text-white">Bookings Management</div>} />
-							<Route path="payments" element={<div className="text-white">Payments Management</div>} />
+							<Route path="payments" element={<PaymentsManagement />} />
 							<Route path="notifications" element={<div className="text-white">Notifications</div>} />
 							<Route path="settings" element={<div className="text-white">Settings</div>} />
 							<Route index element={<Navigate to="dashboard" replace />} />

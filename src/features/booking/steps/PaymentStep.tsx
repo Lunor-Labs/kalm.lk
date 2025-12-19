@@ -5,6 +5,8 @@ import { createSession } from '../../../lib/sessions';
 import { useAuth } from '../../../contexts/AuthContext';
 import { initiatePayHerePayment } from '../../../lib/payhere';
 import toast from 'react-hot-toast';
+import { db } from '../../../lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 interface PaymentStepProps {
   bookingData: BookingData;
@@ -65,9 +67,11 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       const paymentResult = await initiatePayHerePayment(paymentData);
       
       if (paymentResult.success) {
+        const bookingId = paymentResult.orderId || `booking-${Date.now()}`;
+
         // Create the session in Firebase after successful payment
         const sessionId = await createSession({
-          bookingId: paymentResult.orderId || `booking-${Date.now()}`,
+          bookingId,
           therapistId: bookingData.therapistId,
           clientId: user.uid,
           sessionType: sessionType,
@@ -75,6 +79,33 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           scheduledTime: bookingData.sessionTime,
           duration: bookingData.duration || 60,
         });
+
+        // Record payment in Firestore for admin reporting & payouts
+        try {
+          const paymentsRef = collection(db, 'payments');
+          await addDoc(paymentsRef, {
+            bookingId,
+            sessionId,
+            clientId: user.uid,
+            clientName: user.displayName || user.email || 'Unknown',
+            therapistId: bookingData.therapistId,
+            amount: bookingData.amount || finalAmount,
+            currency: 'LKR',
+            paymentMethod: 'payhere',
+            paymentStatus: 'completed',
+            paymentId: paymentResult.paymentId || null,
+            orderId: bookingId,
+            couponCode: bookingData.couponCode || null,
+            discountAmount: bookingData.discountAmount || 0,
+            finalAmount,
+            payoutStatus: 'pending',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        } catch (paymentError: any) {
+          console.error('Failed to record payment document:', paymentError);
+          toast.error(paymentError?.message || 'Session booked, but failed to record payment in admin reports.');
+        }
 
         toast.success('Payment successful! Session booked.');
         console.log('Session created with ID:', sessionId);
