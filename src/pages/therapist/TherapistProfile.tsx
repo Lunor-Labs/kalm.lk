@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   User, Upload, Save, X, Video, Phone, MessageCircle,
-  ChevronDown, ChevronUp, Award, DollarSign, Clock
+  ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { 
   collection, 
@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { uploadTherapistPhoto, getStoragePathFromUrl, validateImageFile } from '../../lib/storage';
+import { uploadTherapistPhoto, validateImageFile } from '../../lib/storage';
 import toast from 'react-hot-toast';
 
 interface Therapist {
@@ -583,7 +583,7 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Specializations */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+     <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
           {isMobile ? (
             <>
               <button
@@ -602,14 +602,32 @@ const TherapistProfile: React.FC = () => {
               </button>
               {expandedSections.specializations && (
                 <div className="p-4 pt-0">
-                  <input
-                    type="text"
-                    value={customSpecialization}
-                    onChange={(e) => setCustomSpecialization(e.target.value)}
-                    onKeyPress={handleSpecializationKeyPress}
-                    className="w-full px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
-                    placeholder="Enter specialization and press Enter"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customSpecialization}
+                      onChange={(e) => setCustomSpecialization(e.target.value)}
+                      onKeyPress={handleSpecializationKeyPress}
+                      className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
+                      placeholder="Enter specialization"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (customSpecialization.trim()) {
+                          setFormData(prev => ({
+                            ...prev,
+                            specializations: [...prev.specializations, customSpecialization.trim()]
+                          }));
+                          setCustomSpecialization('');
+                        }
+                      }}
+                      className="px-3 py-2 bg-primary-500 text-white rounded-lg text-xs font-medium hover:bg-primary-600 transition-colors"
+                      disabled={!customSpecialization.trim()}
+                    >
+                      Add
+                    </button>
+                  </div>
                   {formData.specializations.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-3">
                       {formData.specializations.map((spec, index) => (

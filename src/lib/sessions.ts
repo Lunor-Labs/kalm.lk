@@ -137,15 +137,16 @@ export const startSession = async (sessionId: string): Promise<void> => {
   }
 };
 
-export const endSession = async (sessionId: string, notes?: string): Promise<void> => {
+export const endSession = async (sessionId: string, notes?: string, deleteRoom: boolean = true): Promise<void> => {
   try {
     const session = await getSession(sessionId);
     if (!session) {
       throw new Error('Session not found');
     }
 
-    // Delete Daily.co room if it exists
-    if (session.dailyRoomName) {
+    // Delete Daily.co room if it exists and deleteRoom is true
+    // Only delete room when explicitly ending session, not when just leaving
+    if (deleteRoom && session.dailyRoomName) {
       try {
         await dailyService.deleteRoom(session.dailyRoomName);
       } catch (error) {
