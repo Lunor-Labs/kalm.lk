@@ -341,6 +341,13 @@ const updateTherapistAvailabilityAfterBooking = async (
 ): Promise<void> => {
   try {
     console.log('🔍 [AVAILABILITY] Looking up availability for therapistId:', therapistId);
+    console.log('📅 [AVAILABILITY] Scheduled time received:', scheduledTime, 'Type:', typeof scheduledTime);
+
+    // Validate scheduledTime
+    if (!scheduledTime || isNaN(scheduledTime.getTime())) {
+      console.error('❌ [AVAILABILITY] Invalid scheduledTime provided:', scheduledTime);
+      return;
+    }
 
     // Get current therapist availability
     const availability = await getTherapistAvailability(therapistId);
@@ -351,10 +358,19 @@ const updateTherapistAvailabilityAfterBooking = async (
       return;
     }
 
-    const dateString = format(scheduledTime, 'yyyy-MM-dd');
-    const timeString = format(scheduledTime, 'HH:mm');
-    console.log('📅 [AVAILABILITY] Processing booking for date:', dateString, 'time:', timeString);
-    console.log('📊 [AVAILABILITY] Scheduled time object:', scheduledTime);
+    let dateString: string;
+    let timeString: string;
+
+    try {
+      dateString = format(scheduledTime, 'yyyy-MM-dd');
+      timeString = format(scheduledTime, 'HH:mm');
+      console.log('📅 [AVAILABILITY] Processing booking for date:', dateString, 'time:', timeString);
+      console.log('📊 [AVAILABILITY] Scheduled time object:', scheduledTime);
+    } catch (formatError) {
+      console.error('❌ [AVAILABILITY] Error formatting scheduledTime:', formatError);
+      console.error('❌ [AVAILABILITY] scheduledTime value:', scheduledTime);
+      return;
+    }
 
     // Check if this is a special date booking
     const specialDateIndex = availability.specialDates?.findIndex(
@@ -365,11 +381,27 @@ const updateTherapistAvailabilityAfterBooking = async (
       // Update special date time slot
       const specialDate = availability.specialDates[specialDateIndex];
       const updatedTimeSlots = specialDate.timeSlots.map((slot: any) => {
-        const slotTime = format(slot.startTime.toDate ? slot.startTime.toDate() : slot.startTime, 'HH:mm');
-        if (slotTime === timeString) {
-          return { ...slot, isAvailable: false, isBooked: true };
+        try {
+          const slotStartTime = slot.startTime.toDate ? slot.startTime.toDate() : slot.startTime;
+          console.log('⏰ [AVAILABILITY] Processing special date slot:', slot, 'startTime:', slotStartTime);
+
+          if (!slotStartTime || isNaN(new Date(slotStartTime).getTime())) {
+            console.warn('⚠️ [AVAILABILITY] Invalid slot startTime, skipping:', slotStartTime);
+            return slot;
+          }
+
+          const slotTime = format(new Date(slotStartTime), 'HH:mm');
+          console.log('⏰ [AVAILABILITY] Formatted slot time:', slotTime, 'vs booking time:', timeString);
+
+          if (slotTime === timeString) {
+            console.log('✅ [AVAILABILITY] Found matching slot to mark as booked');
+            return { ...slot, isAvailable: false, isBooked: true };
+          }
+          return slot;
+        } catch (slotError) {
+          console.error('❌ [AVAILABILITY] Error processing special date slot:', slotError, 'slot:', slot);
+          return slot;
         }
-        return slot;
       });
 
       availability.specialDates[specialDateIndex] = {
@@ -383,11 +415,27 @@ const updateTherapistAvailabilityAfterBooking = async (
 
       if (daySchedule) {
         const updatedTimeSlots = daySchedule.timeSlots.map((slot: any) => {
-          const slotTime = format(slot.startTime.toDate ? slot.startTime.toDate() : slot.startTime, 'HH:mm');
-          if (slotTime === timeString) {
-            return { ...slot, isAvailable: false, isBooked: true };
+          try {
+            const slotStartTime = slot.startTime.toDate ? slot.startTime.toDate() : slot.startTime;
+            console.log('⏰ [AVAILABILITY] Processing weekly slot:', slot, 'startTime:', slotStartTime);
+
+            if (!slotStartTime || isNaN(new Date(slotStartTime).getTime())) {
+              console.warn('⚠️ [AVAILABILITY] Invalid weekly slot startTime, skipping:', slotStartTime);
+              return slot;
+            }
+
+            const slotTime = format(new Date(slotStartTime), 'HH:mm');
+            console.log('⏰ [AVAILABILITY] Formatted weekly slot time:', slotTime, 'vs booking time:', timeString);
+
+            if (slotTime === timeString) {
+              console.log('✅ [AVAILABILITY] Found matching weekly slot to mark as booked');
+              return { ...slot, isAvailable: false, isBooked: true };
+            }
+            return slot;
+          } catch (slotError) {
+            console.error('❌ [AVAILABILITY] Error processing weekly slot:', slotError, 'slot:', slot);
+            return slot;
           }
-          return slot;
         });
 
         const dayIndex = availability.weeklySchedule.findIndex((day: any) => day.dayOfWeek === dayOfWeek);
