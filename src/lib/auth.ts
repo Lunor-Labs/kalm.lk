@@ -86,9 +86,15 @@ export const signIn = async (credentials: LoginCredentials): Promise<User> => {
           clientIdInt,
           updatedAt: serverTimestamp(),
         });
-        console.log(`✅ Backfilled clientIdInt (${clientIdInt}) for user ${firebaseUser.uid}`);
+        // Log backfill operation only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Backfilled clientIdInt (${clientIdInt}) for user ${firebaseUser.uid}`);
+        }
       } catch (error) {
-        console.warn('⚠️ Failed to backfill clientIdInt for existing user:', error);
+        // Log backfill failure only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Failed to backfill clientIdInt for existing user:', error);
+        }
         // Don't block login if backfill fails
       }
     }
@@ -101,9 +107,15 @@ export const signIn = async (credentials: LoginCredentials): Promise<User> => {
           therapistIdInt,
           updatedAt: serverTimestamp(),
         });
-        console.log(`✅ Backfilled therapistIdInt (${therapistIdInt}) for user ${firebaseUser.uid}`);
+        // Log backfill operation only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Backfilled therapistIdInt (${therapistIdInt}) for user ${firebaseUser.uid}`);
+        }
       } catch (error) {
-        console.warn('⚠️ Failed to backfill therapistIdInt for existing therapist:', error);
+        // Log backfill failure only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Failed to backfill therapistIdInt for existing therapist:', error);
+        }
         // Don't block login if backfill fails
       }
     }
@@ -279,8 +291,11 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
     };
     
     await setDoc(doc(db, 'users', firebaseUser.uid), userData);
-    
-    console.log('✅ User document created successfully');
+
+    // Log success only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('User document created successfully');
+    }
     
     return {
       uid: firebaseUser.uid,
@@ -321,14 +336,23 @@ export const signOut = async (): Promise<void> => {
 export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User | null> => {
   try {
     if (!firebaseUser) {
-      console.log('❌ No Firebase user provided');
+      // Log missing user only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('No Firebase user provided');
+      }
       return null;}
-    
-    console.log('🔍 Getting user document for:', firebaseUser.uid);
+
+    // Log user lookup only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Getting user document for:', firebaseUser.uid);
+    }
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-    
+
     if (!userDoc.exists()) {
-      console.log('❌ User document does not exist in Firestore');
+      // Log missing document only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('User document does not exist in Firestore');
+      }
          // Return default user object when Firebase user exists but Firestore doc doesn't
       return {
         uid: firebaseUser.uid,
@@ -342,8 +366,11 @@ export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User |
     }
     
     const userData = userDoc.data();
-    console.log('📄 Raw Firestore data:', userData);
-    
+    // Log raw data only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Raw Firestore data:', userData);
+    }
+
     // Backfill clientIdInt for existing users who don't have it yet
     if (userData.role === 'client' && !userData.clientIdInt) {
       try {
@@ -352,9 +379,15 @@ export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User |
           clientIdInt,
           updatedAt: serverTimestamp(),
         });
-        console.log(`✅ Backfilled clientIdInt (${clientIdInt}) for user ${firebaseUser.uid}`);
+        // Log backfill operation only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Backfilled clientIdInt (${clientIdInt}) for user ${firebaseUser.uid}`);
+        }
       } catch (error) {
-        console.warn('⚠️ Failed to backfill clientIdInt for existing user:', error);
+        // Log backfill failure only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Failed to backfill clientIdInt for existing user:', error);
+        }
         // Don't block user access if backfill fails
       }
     }
@@ -367,9 +400,15 @@ export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User |
           therapistIdInt,
           updatedAt: serverTimestamp(),
         });
-        console.log(`✅ Backfilled therapistIdInt (${therapistIdInt}) for user ${firebaseUser.uid}`);
+        // Log backfill operation only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Backfilled therapistIdInt (${therapistIdInt}) for user ${firebaseUser.uid}`);
+        }
       } catch (error) {
-        console.warn('⚠️ Failed to backfill therapistIdInt for existing therapist:', error);
+        // Log backfill failure only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Failed to backfill therapistIdInt for existing therapist:', error);
+        }
         // Don't block user access if backfill fails
       }
     }

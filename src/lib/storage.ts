@@ -41,13 +41,22 @@ export const uploadTherapistPhoto = async (file: File, therapistId?: string): Pr
       }
     };
 
-    console.log('Uploading file:', fileName);
+    // Log upload start only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Uploading file:', fileName);
+    }
     const snapshot = await uploadBytes(storageRef, file, metadata);
-    console.log('Upload successful:', snapshot);
-    
+    // Log success only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Upload successful');
+    }
+
     // Get download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
-    console.log('Download URL:', downloadURL);
+    // Log URL only in development (sensitive information)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Download URL:', downloadURL);
+    }
     
     return {
       url: downloadURL,
@@ -77,13 +86,18 @@ export const deleteTherapistPhoto = async (photoPath: string): Promise<void> => 
   try {
     const storageRef = ref(storage, photoPath);
     await deleteObject(storageRef);
-    console.log('Photo deleted successfully:', photoPath);
+    // Log success only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Photo deleted successfully:', photoPath);
+    }
   } catch (error: any) {
     console.error('Delete error:', error);
-    
+
     if (error.code === 'storage/object-not-found') {
-      // File doesn't exist, which is fine
-      console.log('File not found, already deleted:', photoPath);
+      // File doesn't exist, which is fine - log only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('File not found, already deleted:', photoPath);
+      }
     } else {
       throw new Error(error.message || 'Failed to delete image');
     }

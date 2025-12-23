@@ -24,7 +24,10 @@ const TherapistSessions: React.FC = () => {
       try {
         setLoading(true);
         const userSessions = await getUserSessions(user.uid, 'therapist');
-        console.log('Fetched sessions:', userSessions); // Debug log
+        // Log session count only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Fetched sessions:', userSessions.length, 'sessions');
+        }
         setSessions(userSessions);
       } catch (error: any) {
         console.error('Failed to load sessions:', error);
@@ -62,7 +65,10 @@ const TherapistSessions: React.FC = () => {
 
   useEffect(() => {
     // Debug pagination
-    console.log('Filtered sessions:', filteredSessions.length, 'Total pages:', totalPages, 'Current page:', currentPage);
+    // Log pagination info only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Filtered sessions:', filteredSessions.length, 'Total pages:', totalPages, 'Current page:', currentPage);
+    }
   }, [filteredSessions, currentPage]);
 
   const getSessionIcon = (sessionType:  string) => {
