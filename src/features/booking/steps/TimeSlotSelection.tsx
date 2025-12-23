@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import { format, addDays, startOfDay, isSameDay } from 'date-fns';
 import { getTherapistAvailability, getAvailableTimeSlots } from '../../../lib/availability';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
 interface TimeSlotSelectionProps {
@@ -46,7 +47,17 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
   useEffect(() => {
     const loadTherapistAvailability = async () => {
       try {
-        const availability = await getTherapistAvailability(therapistId);
+        // First, get the therapist document to find the userId
+        const therapistDoc = await getDoc(doc(db, 'therapists', therapistId));
+        if (!therapistDoc.exists()) {
+          throw new Error('Therapist not found');
+        }
+
+        const therapistData = therapistDoc.data();
+        const therapistUserId = therapistData?.userId || therapistId; // Fallback to document ID if userId not found
+
+        // Now get availability using the correct userId
+        const availability = await getTherapistAvailability(therapistUserId);
         setTherapistAvailability(availability);
       } catch (error: any) {
         console.error('Failed to load therapist availability:', error);
