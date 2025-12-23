@@ -57,19 +57,28 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
 
     // Update therapist availability to mark the time slot as booked
     try {
+      console.log('🔄 [AVAILABILITY] Starting availability update for therapistId:', sessionData.therapistId);
+
       // Resolve the correct therapist user ID from the therapist document
       const therapistDoc = await getDoc(doc(db, 'therapists', sessionData.therapistId));
+      console.log('📄 [AVAILABILITY] Therapist document exists:', therapistDoc.exists());
+
       if (therapistDoc.exists()) {
         const therapistData = therapistDoc.data();
+        console.log('👤 [AVAILABILITY] Therapist data:', therapistData);
+        console.log('🆔 [AVAILABILITY] userId from therapist doc:', therapistData?.userId);
+
         const therapistUserId = therapistData?.userId || sessionData.therapistId; // Fallback to document ID
+        console.log('🎯 [AVAILABILITY] Final therapistUserId to use:', therapistUserId);
 
         await updateTherapistAvailabilityAfterBooking(therapistUserId, sessionData.scheduledTime);
+        console.log('✅ [AVAILABILITY] Availability update completed successfully');
       } else {
-        console.warn('Therapist document not found, skipping availability update');
+        console.warn('⚠️ [AVAILABILITY] Therapist document not found, skipping availability update');
       }
     } catch (availabilityError) {
       // Log error but don't fail the session creation
-      console.error('Failed to update therapist availability after booking:', availabilityError);
+      console.error('❌ [AVAILABILITY] Failed to update therapist availability after booking:', availabilityError);
     }
 
     return sessionId;
@@ -331,15 +340,21 @@ const updateTherapistAvailabilityAfterBooking = async (
   scheduledTime: Date
 ): Promise<void> => {
   try {
+    console.log('🔍 [AVAILABILITY] Looking up availability for therapistId:', therapistId);
+
     // Get current therapist availability
     const availability = await getTherapistAvailability(therapistId);
+    console.log('📅 [AVAILABILITY] Availability data retrieved:', availability);
+
     if (!availability) {
-      console.warn('No availability found for therapist, skipping update');
+      console.warn('⚠️ [AVAILABILITY] No availability found for therapist, skipping update');
       return;
     }
 
     const dateString = format(scheduledTime, 'yyyy-MM-dd');
     const timeString = format(scheduledTime, 'HH:mm');
+    console.log('📅 [AVAILABILITY] Processing booking for date:', dateString, 'time:', timeString);
+    console.log('📊 [AVAILABILITY] Scheduled time object:', scheduledTime);
 
     // Check if this is a special date booking
     const specialDateIndex = availability.specialDates?.findIndex(
@@ -386,9 +401,10 @@ const updateTherapistAvailabilityAfterBooking = async (
     }
 
     // Save updated availability
+    console.log('💾 [AVAILABILITY] Saving updated availability...');
     await saveTherapistAvailability(therapistId, availability.weeklySchedule, availability.specialDates);
 
-    console.log(`Updated therapist availability for ${therapistId} - marked ${timeString} as booked`);
+    console.log(`✅ [AVAILABILITY] Updated therapist availability for ${therapistId} - marked ${timeString} as booked`);
   } catch (error) {
     console.error('Error updating therapist availability after booking:', error);
     // Don't throw error - booking should still succeed even if availability update fails
