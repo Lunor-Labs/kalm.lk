@@ -31,3 +31,7 @@ dist-ssr
 package-lock.json
 .vercel
 prod.env
+
+# Firebase service account keys (NEVER commit these!)
+*serviceAccountKey*.json
+firebase-service-account*.json
