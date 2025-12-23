@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Plus, X, Trash2, Edit3, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  saveTherapistAvailability, 
+import {
+  saveTherapistAvailability,
   getTherapistAvailability
 } from '../../lib/availability';
+import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 
@@ -89,7 +90,7 @@ const TherapistAvailability = () => {
   }
 
   const getSelectedDateData = () => {
-    const dateString = selectedDate.toISOString().split('T')[0];
+    const dateString = format(selectedDate, 'yyyy-MM-dd');
     const specialDate = specialDates.find((sd: any) => sd.date === dateString);
 
     const dayOfWeek = selectedDate.getDay();
@@ -129,7 +130,7 @@ const TherapistAvailability = () => {
       ...newTimeSlot
     };
 
-    const dateString = selectedDate.toISOString().split('T')[0];
+    const dateString = format(selectedDate, 'yyyy-MM-dd');
 
     let updatedSchedule = weeklySchedule;
     let updatedSpecialDates = [...specialDates];
@@ -194,7 +195,7 @@ const TherapistAvailability = () => {
   };
 
   const handleDeleteTimeSlot = async (timeSlotId: string) => {
-    const dateString = selectedDate.toISOString().split('T')[0];
+    const dateString = format(selectedDate, 'yyyy-MM-dd');
     const dayOfWeek = selectedDate.getDay();
 
     let updatedSchedule = weeklySchedule;
@@ -331,7 +332,7 @@ const TherapistAvailability = () => {
 
                   // Check both weekly schedule and special dates for slots
                   const weeklySlots = weeklySchedule[item.date.getDay()]?.timeSlots.length > 0;
-                  const dateString = item.date.toISOString().split('T')[0];
+                  const dateString = format(item.date, 'yyyy-MM-dd');
                   const specialDateSlots = specialDates.some(sd => sd.date === dateString && sd.timeSlots.length > 0);
                   const hasSlots = weeklySlots || specialDateSlots;
 

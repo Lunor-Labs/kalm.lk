@@ -76,23 +76,35 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
 
     const dateString = format(date, 'yyyy-MM-dd');
     const dayOfWeek = date.getDay();
-    
+
     // Check for special dates first
     const specialDate = therapistAvailability.specialDates?.find((sd: any) => sd.date === dateString);
     let availableTimeSlots: any[] = [];
 
     if (specialDate) {
-      if (!specialDate.isAvailable) {
-        return []; // No slots available on this special date
-      }
+      // Special dates don't have isAvailable flag in the new system, so always use them if they exist
       availableTimeSlots = specialDate.timeSlots || [];
     } else {
       // Use weekly schedule
       const daySchedule = therapistAvailability.weeklySchedule?.find((day: any) => day.dayOfWeek === dayOfWeek);
-      if (!daySchedule || !daySchedule.isAvailable) {
+
+      if (!daySchedule) {
+        return []; // No schedule available on this day
+      }
+
+      // Check availability (support both old and new data structures)
+      const isAvailable = daySchedule.isAvailable !== false; // Default to true if not set
+
+      if (!isAvailable) {
         return []; // No slots available on this day
       }
+
+      // Check if the day has time slots configured
       availableTimeSlots = daySchedule.timeSlots || [];
+
+      if (availableTimeSlots.length === 0) {
+        return []; // No slots available on this day
+      }
     }
 
     // Check for existing bookings to mark slots as booked
@@ -131,7 +143,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
         });
       }
     }
-    
+
     return slots.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   };
 
