@@ -14,6 +14,7 @@ import { doc, setDoc, getDoc, updateDoc, serverTimestamp, collection, query, whe
 import { auth, db } from './firebase';
 import { User, UserRole, LoginCredentials, SignupData, AnonymousSignupData } from '../types/auth';
 import { getNextId } from './counters';
+import { logAuthError } from './errorLogger';
 
 // Enhanced login function that supports both email and username
 export const signIn = async (credentials: LoginCredentials): Promise<User> => {
@@ -133,9 +134,12 @@ export const signIn = async (credentials: LoginCredentials): Promise<User> => {
     if (tempAuthUser) {
       await firebaseSignOut(auth);
     }
-    
+
+    // Log authentication errors for monitoring
+    await logAuthError(error, firebaseUser?.uid);
+
     console.error('Sign in error:', error);
-    
+
     // Provide more specific error messages (unchanged)
     if (error.code === 'auth/user-not-found') {
       throw new Error('No account found with this email or username. Please check your input or sign up.');
@@ -192,8 +196,11 @@ export const signUp = async (signupData: SignupData): Promise<User> => {
       updatedAt: new Date(),
     };
   } catch (error: any) {
+    // Log signup errors for monitoring
+    await logAuthError(error);
+
     console.error('Sign up error:', error);
-    
+
     if (error.code === 'auth/email-already-in-use') {
       throw new Error('An account with this email already exists. Please sign in instead.');
     } else if (error.code === 'auth/weak-password') {
@@ -256,6 +263,9 @@ export const signInWithGoogle = async (): Promise<User> => {
       };
     }
   } catch (error: any) {
+    // Log Google sign in errors for monitoring
+    await logAuthError(error);
+
     console.error('Google sign in error:', error);
     throw new Error(error.message || 'Failed to sign in with Google');
   }
@@ -307,10 +317,11 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
       updatedAt: new Date(),
     };
   } catch (error: any) {
-    console.error('❌ Anonymous sign up error:', error);
-    console.error('Error code:', error.code);
-    console.error('Error message:', error.message);
-    
+    // Log anonymous signup errors for monitoring
+    await logAuthError(error);
+
+    console.error('Anonymous sign up error:', error);
+
     if (error.code === 'auth/operation-not-allowed') {
       throw new Error('Anonymous authentication is not enabled. Please contact support.');
     } else if (error.code === 'auth/network-request-failed') {
@@ -450,19 +461,28 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
       throw new Error('User document not found. Cannot update role.');
     }
     
-    // Update the user role
-    await updateDoc(userDocRef, {
+    // If promoting to therapist, generate ID first
+    let therapistIdInt: number | undefined;
+    if (newRole === 'therapist') {
+      therapistIdInt = await getNextId('therapist');
+    }
+
+    // Update the user role (and add therapistIdInt if applicable)
+    const userUpdateData: any = {
       role: newRole,
       updatedAt: serverTimestamp(),
-    });
+    };
+
+    if (therapistIdInt) {
+      userUpdateData.therapistIdInt = therapistIdInt;
+    }
+
+    await updateDoc(userDocRef, userUpdateData);
 
     // If promoting to therapist, create therapist profile
     if (newRole === 'therapist') {
       const userData = userDoc.data();
-      
-      // Generate sequential therapist ID for new therapist
-      const therapistIdInt = await getNextId('therapist');
-      
+
       // Create therapist document with placeholder values
       const therapistData = {
         id: uid,

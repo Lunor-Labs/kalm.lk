@@ -2,6 +2,7 @@ import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
@@ -33,6 +34,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import TherapistManagement from './pages/admin/TherapistManagement';
 import PaymentsManagement from './pages/admin/PaymentsManagement';
+import ErrorLogsDashboard from './pages/admin/ErrorLogsDashboard';
 import TherapistSchedule from './pages/therapist/TherapistSchedule';
 import TherapistSessions from './pages/therapist/TherapistSessions';
 import TherapistAvailability from './pages/therapist/TherapistAvailability';
@@ -107,9 +109,10 @@ const LandingPage: React.FC = () => {
 
 function App() {
 	return (
-		<AuthProvider>
-			<Router>
-				<div className="App">
+		<ErrorBoundary>
+			<AuthProvider>
+				<Router>
+					<div className="App">
 					<Routes>
 						{/* Landing Page - unchanged */}
 						<Route path="/" element={<LandingPage />} />
@@ -138,6 +141,7 @@ function App() {
 							<Route path="therapists" element={<TherapistManagement />} />
 							<Route path="bookings" element={<div className="text-white">Bookings Management</div>} />
 							<Route path="payments" element={<PaymentsManagement />} />
+							<Route path="error-logs" element={<ErrorLogsDashboard />} />
 							<Route path="notifications" element={<div className="text-white">Notifications</div>} />
 							<Route path="settings" element={<div className="text-white">Settings</div>} />
 							<Route index element={<Navigate to="dashboard" replace />} />
@@ -199,6 +203,7 @@ function App() {
 				</div>
 			</Router>
 		</AuthProvider>
+		</ErrorBoundary>
 	);
 }
 

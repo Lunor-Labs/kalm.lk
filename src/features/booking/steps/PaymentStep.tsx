@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { db } from '../../../lib/firebase';
 import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from 'firebase/firestore';
 import { getNextId } from '../../../lib/counters';
+import { logPaymentError, logUserError } from '../../../lib/errorLogger';
 
 interface PaymentStepProps {
   bookingData: BookingData;
@@ -166,6 +167,14 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       }
     } catch (error: any) {
       console.error('Payment failed:', error);
+
+      // Log payment error for monitoring
+      await logPaymentError(
+        error,
+        user?.uid || 'unknown',
+        finalAmount,
+        'payhere'
+      );
 
       // Provide user-friendly error messages
       let userMessage = 'Payment failed. Please try again.';

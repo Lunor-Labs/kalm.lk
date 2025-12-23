@@ -268,12 +268,21 @@ service cloud.firestore {
     match /counters/{counterType} {
       // Anyone authenticated can read counters (for getting current count)
       allow read: if isAuthenticated();
-      
+
       // Only allow creating/updating counters through transactions
       // This is handled by the getNextId function which uses transactions
       // For safety, we allow authenticated users to update counters
       // (The transaction logic ensures atomicity)
       allow write: if isAuthenticated();
+    }
+
+    // Error logs collection - Admin only access for monitoring
+    match /error_logs/{logId} {
+      // Only admins can read error logs
+      allow read: if isAdmin();
+
+      // Allow system/server-side writes only (no client writes)
+      allow write: if false;
     }
 
     // Default deny all other collections and documents

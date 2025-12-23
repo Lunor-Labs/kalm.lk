@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  CreditCard, 
-  Bell, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  CreditCard,
+  Bell,
+  Settings,
   LogOut,
   Menu,
   X,
-  UserCheck
+  UserCheck,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '../lib/auth';
@@ -27,7 +28,8 @@ const AdminLayout: React.FC = () => {
     { name: 'Users', href: '/admin/users', icon: UserCheck },
     { name: 'Therapists', href: '/admin/therapists', icon: Users },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
-   /* 
+    { name: 'Error Logs', href: '/admin/error-logs', icon: AlertTriangle },
+   /*
    { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
     { name: 'Notifications', href: '/admin/notifications', icon: Bell },
     { name: 'Settings', href: '/admin/settings', icon: Settings },

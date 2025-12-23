@@ -315,19 +315,20 @@ const TherapistManagement: React.FC = () => {
           displayName: `${formData.firstName} ${formData.lastName}`
         });
         
-        // Create user document in Firestore
+        // Generate sequential therapist ID for new therapist first
+        const therapistIdInt = await getNextId('therapist');
+
+        // Create user document in Firestore (include therapistIdInt)
         await setDoc(doc(db, 'users', user.uid), {
           uid: user.uid,
           email: user.email,
           displayName: `${formData.firstName} ${formData.lastName}`,
           role: 'therapist',
+          therapistIdInt, // Add therapist ID to user document
           isAnonymous: false,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
-        
-        // Generate sequential therapist ID for new therapist
-        const therapistIdInt = await getNextId('therapist');
         
         // Create therapist document
         const therapistData = {

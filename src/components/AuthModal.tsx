@@ -11,6 +11,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { auth } from '../lib/firebase';
+import { logUserError } from '../lib/errorLogger';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -335,6 +336,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
         toast.error('Failed to create account. Please try again.');
       }
     } catch (error: any) {
+      // Log the error for monitoring
+      await logUserError(error, {
+        action: 'authentication',
+        component: 'AuthModal',
+      });
+
       // Provide user-friendly error messages instead of technical Firebase errors
       let userMessage = 'Authentication failed. Please try again.';
 
