@@ -6,7 +6,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { initiatePayHerePayment } from '../../../lib/payhere';
 import toast from 'react-hot-toast';
 import { db } from '../../../lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from 'firebase/firestore';
+import { getNextId } from '../../../lib/counters';
 
 interface PaymentStepProps {
   bookingData: BookingData;
@@ -82,6 +83,50 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
         // Record payment in Firestore for admin reporting & payouts
         try {
+          // Get sequential integer IDs
+          const [clientIdInt, therapistIdInt, bookingIdInt, paymentIdInt] = await Promise.all([
+            // Get client integer ID from user document (should exist from signup, but fallback if missing)
+            (async () => {
+              const userDoc = await getDoc(doc(db, 'users', user.uid));
+              if (userDoc.exists() && userDoc.data().clientIdInt) {
+                return userDoc.data().clientIdInt;
+              }
+              // Fallback: Generate new client ID if somehow missing (shouldn't happen for new signups)
+              console.warn('User missing clientIdInt, generating fallback ID');
+              const newClientIdInt = await getNextId('client');
+              // Try to save it to user document (may fail if not allowed, that's ok)
+              try {
+                await updateDoc(doc(db, 'users', user.uid), { clientIdInt: newClientIdInt });
+              } catch (e) {
+                // Ignore if we can't update user doc
+              }
+              return newClientIdInt;
+            })(),
+            // Get therapist integer ID from therapist document
+            (async () => {
+              try {
+                const therapistDoc = await getDoc(doc(db, 'therapists', bookingData.therapistId));
+                if (therapistDoc.exists() && therapistDoc.data().therapistIdInt) {
+                  return therapistDoc.data().therapistIdInt;
+                }
+                // Generate new therapist ID if not exists
+                const newTherapistId = await getNextId('therapist');
+                // Try to save it to therapist document
+                try {
+                  await updateDoc(doc(db, 'therapists', bookingData.therapistId), { therapistIdInt: newTherapistId });
+                } catch (e) {
+                  // Ignore if we can't update therapist doc
+                }
+                return newTherapistId;
+              } catch (e) {
+                console.warn('Could not get therapist integer ID:', e);
+                return undefined;
+              }
+            })(),
+            getNextId('booking'),
+            getNextId('payment'),
+          ]);
+
           const paymentsRef = collection(db, 'payments');
           await addDoc(paymentsRef, {
             bookingId,
@@ -89,6 +134,11 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             clientId: user.uid,
             clientName: user.displayName || user.email || 'Unknown',
             therapistId: bookingData.therapistId,
+            // Sequential integer IDs
+            clientIdInt,
+            therapistIdInt,
+            bookingIdInt,
+            paymentIdInt,
             amount: bookingData.amount || finalAmount,
             currency: 'LKR',
             paymentMethod: 'payhere',

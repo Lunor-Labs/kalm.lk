@@ -48,7 +48,7 @@ service cloud.firestore {
                       request.resource.data.uid == uid &&
                       request.resource.data.role == 'client';
       
-      // Users can update their own profile (excluding role)
+      // Users can update their own profile (excluding role, but allowing patientId for sequential tracking)
       allow update: if isOwner(uid) && 
                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'uid']);
       
@@ -63,10 +63,11 @@ service cloud.firestore {
 
     // Therapists collection - Public read, restricted write
     match /therapists/{therapistId} {
-      // Anyone authenticated can read therapist profiles (for browsing/booking)
-      allow read: if isAuthenticated();
+      // Anyone can read therapist profiles (public for browsing/booking, even without auth)
+      allow read: if true;
       
       // Therapists can update their own profile (matching userId field, not document ID)
+      // therapistIdInt can be added for sequential tracking
       allow update: if isAuthenticated() && 
                       resource.data.userId == request.auth.uid &&
                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'userId', 'createdAt']);
@@ -261,6 +262,18 @@ service cloud.firestore {
       
       // Admins can read all
       allow read: if isAdmin();
+    }
+
+    // Counters collection - for sequential integer IDs
+    match /counters/{counterType} {
+      // Anyone authenticated can read counters (for getting current count)
+      allow read: if isAuthenticated();
+      
+      // Only allow creating/updating counters through transactions
+      // This is handled by the getNextId function which uses transactions
+      // For safety, we allow authenticated users to update counters
+      // (The transaction logic ensures atomicity)
+      allow write: if isAuthenticated();
     }
 
     // Default deny all other collections and documents

@@ -44,6 +44,11 @@ const PaymentsManagement: React.FC = () => {
           bookingId: data.bookingId,
           clientId: data.clientId,
           therapistId: data.therapistId,
+          // Sequential integer IDs
+          clientIdInt: data.clientIdInt as number | undefined,
+          therapistIdInt: data.therapistIdInt as number | undefined,
+          bookingIdInt: data.bookingIdInt as number | undefined,
+          paymentIdInt: data.paymentIdInt as number | undefined,
           clientName: data.clientName as string | undefined,
           therapistName: data.therapistName as string | undefined,
           amount: data.amount as number | undefined,
@@ -142,12 +147,17 @@ const PaymentsManagement: React.FC = () => {
   const filteredPayments = payments.filter((p) => {
     // Only show sessions that have actually received a completed payment
     const matchesStatus = p.paymentStatus === 'completed';
+    const searchLower = searchQuery.toLowerCase();
     const matchesSearch =
-      p.clientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.therapistName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.clientId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.therapistId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.orderId.toLowerCase().includes(searchQuery.toLowerCase());
+      p.clientName?.toLowerCase().includes(searchLower) ||
+      p.therapistName?.toLowerCase().includes(searchLower) ||
+      p.clientId.toLowerCase().includes(searchLower) ||
+      p.therapistId.toLowerCase().includes(searchLower) ||
+      p.orderId.toLowerCase().includes(searchLower) ||
+      (p.clientIdInt && p.clientIdInt.toString().includes(searchQuery)) ||
+      (p.therapistIdInt && p.therapistIdInt.toString().includes(searchQuery)) ||
+      (p.bookingIdInt && p.bookingIdInt.toString().includes(searchQuery)) ||
+      (p.paymentIdInt && p.paymentIdInt.toString().includes(searchQuery));
 
     const matchesPayout = payoutFilter === 'all' || p.payoutStatus === payoutFilter;
 
@@ -257,7 +267,7 @@ const PaymentsManagement: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
             <input
               type="text"
-              placeholder="Search by client, therapist, or order ID..."
+              placeholder="Search by name, ID, or integer ID (Client #, Therapist #, Booking #, Payment #)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
@@ -289,7 +299,12 @@ const PaymentsManagement: React.FC = () => {
       {/* Payments Table */}
       <div className="bg-black/50 backdrop-blur-sm rounded-2xl border border-primary-500/30 overflow-hidden">
         <div className="p-4 border-b border-neutral-800">
-          <h2 className="text-lg font-semibold text-white">Payment Records</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white">Payment Records</h2>
+            <div className="text-xs text-neutral-400">
+              Showing integer IDs: Payment #, Booking #, Client #, Therapist #
+            </div>
+          </div>
         </div>
 
         {paginatedPayments.length === 0 ? (
@@ -307,6 +322,7 @@ const PaymentsManagement: React.FC = () => {
             <table className="w-full text-sm">
               <thead className="bg-neutral-800/60">
                 <tr>
+                  <th className="text-left p-3 text-neutral-300 font-medium">ID</th>
                   <th className="text-left p-3 text-neutral-300 font-medium">Date</th>
                   <th className="text-left p-3 text-neutral-300 font-medium">Client</th>
                   <th className="text-left p-3 text-neutral-300 font-medium">Therapist</th>
@@ -321,6 +337,17 @@ const PaymentsManagement: React.FC = () => {
                 {paginatedPayments.map((p) => (
                   <tr key={p.id} className="border-t border-neutral-800 hover:bg-neutral-800/40">
                     <td className="p-3 text-neutral-200">
+                      <div className="flex flex-col gap-1">
+                        {p.paymentIdInt && (
+                          <span className="font-semibold text-primary-500">Payment #{p.paymentIdInt}</span>
+                        )}
+                        {p.bookingIdInt && (
+                          <span className="text-xs text-neutral-300">Booking #{p.bookingIdInt}</span>
+                        )}
+                        <span className="text-[10px] text-neutral-500 font-mono">Doc: {p.id.slice(0, 8)}...</span>
+                      </div>
+                    </td>
+                    <td className="p-3 text-neutral-200">
                       <div className="flex flex-col">
                         <span>{format(p.createdAt, 'yyyy-MM-dd')}</span>
                         <span className="text-xs text-neutral-400">{format(p.createdAt, 'HH:mm')}</span>
@@ -328,17 +355,20 @@ const PaymentsManagement: React.FC = () => {
                     </td>
                     <td className="p-3 text-neutral-200">
                       <div className="flex flex-col">
-                        <span className="font-medium">
-                          {p.clientName} <span className="text-xs text-neutral-400">({p.clientId})</span>
-                        </span>
+                        <span className="font-medium">{p.clientName || p.clientId}</span>
+                        <div className="flex items-center gap-2 text-xs text-neutral-400">
+                          {p.clientIdInt && <span className="text-primary-400">Client #{p.clientIdInt}</span>}
+                          <span>UID: {p.clientId.slice(0, 8)}...</span>
+                        </div>
                       </div>
                     </td>
                     <td className="p-3 text-neutral-200">
                       <div className="flex flex-col">
-                        <span className="font-medium">
-                          {p.therapistName}{' '}
-                          <span className="text-xs text-neutral-400">({p.therapistId})</span>
-                        </span>
+                        <span className="font-medium">{p.therapistName || p.therapistId}</span>
+                        <div className="flex items-center gap-2 text-xs text-neutral-400">
+                          {p.therapistIdInt && <span className="text-accent-green">Therapist #{p.therapistIdInt}</span>}
+                          <span>UID: {p.therapistId.slice(0, 8)}...</span>
+                        </div>
                       </div>
                     </td>
                     <td className="p-3 text-neutral-200">
@@ -383,7 +413,7 @@ const PaymentsManagement: React.FC = () => {
                       )}
                     </td>
                     <td className="p-3 text-neutral-200">
-                      <span className="text-xs text-neutral-300 break-all">{p.orderId}</span>
+                      <span className="text-xs text-neutral-300 break-all font-mono">{p.orderId}</span>
                     </td>
                   </tr>
                 ))}

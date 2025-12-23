@@ -1,5 +1,11 @@
 export interface Payment {
-  id: string;
+  id: string; // Firestore document ID
+  // Sequential integer IDs for easy tracking
+  clientIdInt?: number; // Sequential client ID
+  therapistIdInt?: number; // Sequential therapist ID
+  bookingIdInt?: number; // Sequential booking ID
+  paymentIdInt?: number; // Sequential payment ID
+  // Original string IDs (for backward compatibility)
   bookingId: string;
   clientId: string;
   therapistId: string;

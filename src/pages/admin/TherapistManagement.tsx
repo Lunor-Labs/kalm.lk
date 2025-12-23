@@ -20,6 +20,7 @@ import {
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { db, secondaryAuth } from '../../lib/firebase'; // Import secondaryAuth
 import { uploadTherapistPhoto, deleteTherapistPhoto, getStoragePathFromUrl, validateImageFile } from '../../lib/storage';
+import { getNextId } from '../../lib/counters';
 import toast from 'react-hot-toast';
 
 interface Therapist {
@@ -325,9 +326,13 @@ const TherapistManagement: React.FC = () => {
           updatedAt: serverTimestamp()
         });
         
+        // Generate sequential therapist ID for new therapist
+        const therapistIdInt = await getNextId('therapist');
+        
         // Create therapist document
         const therapistData = {
           userId: user.uid,
+          therapistIdInt, // Sequential integer ID for easy tracking
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
