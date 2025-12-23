@@ -166,7 +166,22 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       }
     } catch (error: any) {
       console.error('Payment failed:', error);
-      toast.error(error.message || 'Payment failed. Please try again.');
+
+      // Provide user-friendly error messages
+      let userMessage = 'Payment failed. Please try again.';
+
+      if (error.message?.includes('network') || error.message?.includes('connection')) {
+        userMessage = 'Payment failed due to network issues. Please check your connection and try again.';
+      } else if (error.message?.includes('card') || error.message?.includes('payment')) {
+        userMessage = 'Payment processing failed. Please check your card details and try again.';
+      } else if (error.message?.includes('cancelled') || error.message?.includes('declined')) {
+        userMessage = 'Payment was declined. Please try a different payment method.';
+      } else if (error.message && error.message.length < 80 && !error.message.includes('firebase') && !error.message.includes('firestore')) {
+        // Use the error message if it's short and not technical
+        userMessage = error.message;
+      }
+
+      toast.error(userMessage);
       setProcessing(false);
     }
   };

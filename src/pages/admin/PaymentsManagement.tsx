@@ -140,7 +140,7 @@ const PaymentsManagement: React.FC = () => {
       toast.success(`Payout status updated to ${newStatus}`);
     } catch (error: any) {
       console.error('Error updating payout status:', error);
-      toast.error(error.message || 'Failed to update payout status');
+      toast.error('Failed to update payout status. Please try again.');
     }
   };
 

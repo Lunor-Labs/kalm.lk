@@ -129,6 +129,8 @@ export const signIn = async (credentials: LoginCredentials): Promise<User> => {
       throw new Error('No account found with this email or username. Please check your input or sign up.');
     } else if (error.code === 'auth/wrong-password') {
       throw new Error('Incorrect password. Please try again.');
+    } else if (error.code === 'auth/invalid-credential') {
+      throw new Error('Invalid email or password. Please check your credentials and try again.');
     }
     else if (error.code === 'auth/user-disabled') {
       throw new Error('This account has been disabled. Please contact support.');

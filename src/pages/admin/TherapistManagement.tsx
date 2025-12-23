@@ -197,7 +197,7 @@ const TherapistManagement: React.FC = () => {
       toast.success('Image uploaded successfully');
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error(error.message || 'Failed to upload image');
+      toast.error('Failed to upload image. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -376,7 +376,7 @@ const TherapistManagement: React.FC = () => {
       } else if (error.code === 'auth/invalid-email') {
         toast.error('Invalid email address');
       } else {
-        toast.error(error.message || 'Failed to save therapist');
+        toast.error('Failed to save therapist. Please check all fields and try again.');
       }
     } finally {
       setLoading(false);
@@ -401,7 +401,7 @@ const TherapistManagement: React.FC = () => {
       loadTherapists();
     } catch (error: any) {
       console.error('Error deleting therapist:', error);
-      toast.error(error.message || 'Failed to delete therapist');
+      toast.error('Failed to delete therapist. Please try again.');
     }
   };
 

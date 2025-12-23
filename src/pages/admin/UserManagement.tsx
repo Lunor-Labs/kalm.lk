@@ -286,7 +286,7 @@ const UserManagementPage: React.FC = () => {
       toast.success(`User role updated to ${newRole}`);
       setSelectedUser(null);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update user role');
+      toast.error('Failed to update user role. Please try again.');
     }
   };
 

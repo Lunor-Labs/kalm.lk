@@ -42,7 +42,7 @@ const ClientLayout: React.FC = () => {
       // toast.success('Signed out successfully');
       navigate('/');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to sign out');
+      toast.error('Failed to sign out. Please try refreshing the page.');
     }
   };
 

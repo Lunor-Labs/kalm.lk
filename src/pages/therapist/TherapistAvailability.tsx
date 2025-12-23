@@ -153,7 +153,7 @@ const TherapistAvailability = () => {
         toast.success(editingTimeSlot ? 'Time slot updated' : 'Time slot added');
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save time slot');
+      toast.error('Failed to save time slot. Please try again.');
       // Revert on error
       setWeeklySchedule(weeklySchedule);
     }
@@ -180,7 +180,7 @@ const TherapistAvailability = () => {
         toast.success('Time slot deleted');
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete time slot');
+      toast.error('Failed to delete time slot. Please try again.');
       // Revert on error
       setWeeklySchedule(weeklySchedule);
     }
@@ -324,7 +324,7 @@ const TherapistAvailability = () => {
                       await saveTherapistAvailability(user.uid, updatedSchedule, specialDates);
                     }
                   } catch (error: any) {
-                    toast.error(error.message || 'Failed to save availability');
+                    toast.error('Failed to save availability. Please try again.');
                     // Revert on error
                     setWeeklySchedule(weeklySchedule);
                   }
