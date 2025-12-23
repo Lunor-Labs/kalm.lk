@@ -57,7 +57,16 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
 
     // Update therapist availability to mark the time slot as booked
     try {
-      await updateTherapistAvailabilityAfterBooking(sessionData.therapistId, sessionData.scheduledTime);
+      // Resolve the correct therapist user ID from the therapist document
+      const therapistDoc = await getDoc(doc(db, 'therapists', sessionData.therapistId));
+      if (therapistDoc.exists()) {
+        const therapistData = therapistDoc.data();
+        const therapistUserId = therapistData?.userId || sessionData.therapistId; // Fallback to document ID
+
+        await updateTherapistAvailabilityAfterBooking(therapistUserId, sessionData.scheduledTime);
+      } else {
+        console.warn('Therapist document not found, skipping availability update');
+      }
     } catch (availabilityError) {
       // Log error but don't fail the session creation
       console.error('Failed to update therapist availability after booking:', availabilityError);
