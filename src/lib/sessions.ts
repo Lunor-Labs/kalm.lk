@@ -15,6 +15,8 @@ import {
 import { db } from './firebase';
 import { Session, ChatMessage, SessionParticipant } from '../types/session';
 import { dailyService } from './daily';
+import { saveTherapistAvailability, getTherapistAvailability } from './availability';
+import { format } from 'date-fns';
 
 export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
   try {
@@ -51,7 +53,17 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
     };
 
     const docRef = await addDoc(collection(db, 'sessions'), sessionDoc);
-    return docRef.id;
+    const sessionId = docRef.id;
+
+    // Update therapist availability to mark the time slot as booked
+    try {
+      await updateTherapistAvailabilityAfterBooking(sessionData.therapistId, sessionData.scheduledTime);
+    } catch (availabilityError) {
+      // Log error but don't fail the session creation
+      console.error('Failed to update therapist availability after booking:', availabilityError);
+    }
+
+    return sessionId;
   } catch (error: any) {
     console.error('Error creating session:', error);
     throw new Error(error.message || 'Failed to create session');
@@ -299,5 +311,77 @@ export const updateParticipantStatus = async (sessionId: string, userId: string,
   } catch (error: any) {
     console.error('Error updating participant status:', error);
     throw new Error(error.message || 'Failed to update participant status');
+  }
+};
+
+/**
+ * Update therapist availability to mark a time slot as booked
+ */
+const updateTherapistAvailabilityAfterBooking = async (
+  therapistId: string,
+  scheduledTime: Date
+): Promise<void> => {
+  try {
+    // Get current therapist availability
+    const availability = await getTherapistAvailability(therapistId);
+    if (!availability) {
+      console.warn('No availability found for therapist, skipping update');
+      return;
+    }
+
+    const dateString = format(scheduledTime, 'yyyy-MM-dd');
+    const timeString = format(scheduledTime, 'HH:mm');
+
+    // Check if this is a special date booking
+    const specialDateIndex = availability.specialDates?.findIndex(
+      (sd: any) => sd.date === dateString
+    );
+
+    if (specialDateIndex !== undefined && specialDateIndex >= 0) {
+      // Update special date time slot
+      const specialDate = availability.specialDates[specialDateIndex];
+      const updatedTimeSlots = specialDate.timeSlots.map((slot: any) => {
+        const slotTime = format(slot.startTime.toDate ? slot.startTime.toDate() : slot.startTime, 'HH:mm');
+        if (slotTime === timeString) {
+          return { ...slot, isAvailable: false, isBooked: true };
+        }
+        return slot;
+      });
+
+      availability.specialDates[specialDateIndex] = {
+        ...specialDate,
+        timeSlots: updatedTimeSlots
+      };
+    } else {
+      // Update weekly schedule
+      const dayOfWeek = scheduledTime.getDay();
+      const daySchedule = availability.weeklySchedule?.find((day: any) => day.dayOfWeek === dayOfWeek);
+
+      if (daySchedule) {
+        const updatedTimeSlots = daySchedule.timeSlots.map((slot: any) => {
+          const slotTime = format(slot.startTime.toDate ? slot.startTime.toDate() : slot.startTime, 'HH:mm');
+          if (slotTime === timeString) {
+            return { ...slot, isAvailable: false, isBooked: true };
+          }
+          return slot;
+        });
+
+        const dayIndex = availability.weeklySchedule.findIndex((day: any) => day.dayOfWeek === dayOfWeek);
+        if (dayIndex >= 0) {
+          availability.weeklySchedule[dayIndex] = {
+            ...daySchedule,
+            timeSlots: updatedTimeSlots
+          };
+        }
+      }
+    }
+
+    // Save updated availability
+    await saveTherapistAvailability(therapistId, availability.weeklySchedule, availability.specialDates);
+
+    console.log(`Updated therapist availability for ${therapistId} - marked ${timeString} as booked`);
+  } catch (error) {
+    console.error('Error updating therapist availability after booking:', error);
+    // Don't throw error - booking should still succeed even if availability update fails
   }
 };
