@@ -23,7 +23,6 @@ const TherapistAvailability = () => {
   const [newTimeSlot, setNewTimeSlot] = useState({
     startTime: '09:00',
     endTime: '10:00',
-    isAvailable: true,
     isRecurring: false,
     sessionType: 'video' as 'video' | 'audio' | 'chat',
     price: 4500
@@ -42,7 +41,6 @@ const TherapistAvailability = () => {
       setNewTimeSlot({
         startTime: editingTimeSlot.startTime,
         endTime: editingTimeSlot.endTime,
-        isAvailable: editingTimeSlot.isAvailable ?? true,
         isRecurring: editingTimeSlot.isRecurring ?? false,
         sessionType: editingTimeSlot.sessionType || 'video',
         price: editingTimeSlot.price || 4500
@@ -51,7 +49,6 @@ const TherapistAvailability = () => {
       setNewTimeSlot({
         startTime: '09:00',
         endTime: '10:00',
-        isAvailable: true,
         isRecurring: false,
         sessionType: 'video',
         price: 4500
@@ -87,7 +84,6 @@ const TherapistAvailability = () => {
     return days.map((dayName, index) => ({
       dayOfWeek: index,
       dayName,
-      isAvailable: false,
       timeSlots: []
     }));
   }
@@ -96,22 +92,23 @@ const TherapistAvailability = () => {
     const dateString = selectedDate.toISOString().split('T')[0];
     const specialDate = specialDates.find((sd: any) => sd.date === dateString);
 
-    if (specialDate) {
-      return {
-        isSpecialDate: true,
-        isAvailable: (specialDate as any)?.isAvailable ?? false,
-        timeSlots: (specialDate as any)?.timeSlots || [],
-        reason: (specialDate as any)?.reason
-      };
-    }
-
     const dayOfWeek = selectedDate.getDay();
     const weeklyDay = weeklySchedule.find((day: any) => day.dayOfWeek === dayOfWeek);
+
+    // Combine time slots from both weekly schedule and special dates
+    const weeklySlots = weeklyDay?.timeSlots || [];
+    const specialSlots = specialDate?.timeSlots || [];
+
+    // Mark slots with their source for potential future differentiation
+    const allSlots = [
+      ...weeklySlots.map(slot => ({ ...slot, source: 'weekly' })),
+      ...specialSlots.map(slot => ({ ...slot, source: 'special' }))
+    ];
+
     return {
-      isSpecialDate: false,
-      isAvailable: weeklyDay?.isAvailable || false,
-      timeSlots: weeklyDay?.timeSlots || [],
-      reason: undefined
+      isSpecialDate: !!specialDate,
+      timeSlots: allSlots,
+      reason: specialDate?.reason
     };
   };
 
@@ -128,34 +125,67 @@ const TherapistAvailability = () => {
     const timeSlotId = editingTimeSlot?.id || `slot-${Date.now()}`;
     const timeSlot = {
       id: timeSlotId,
+      isAvailable: true, // All time slots are available for booking
       ...newTimeSlot
     };
 
-    const dayOfWeek = selectedDate.getDay();
+    const dateString = selectedDate.toISOString().split('T')[0];
 
-    const updatedSchedule = weeklySchedule.map(day =>
-      day.dayOfWeek === dayOfWeek
-        ? {
-          ...day,
+    let updatedSchedule = weeklySchedule;
+    let updatedSpecialDates = [...specialDates];
+
+    if (newTimeSlot.isRecurring) {
+      // Add to weekly schedule - repeats every week
+      const dayOfWeek = selectedDate.getDay();
+      updatedSchedule = weeklySchedule.map(day =>
+        day.dayOfWeek === dayOfWeek
+          ? {
+            ...day,
+            timeSlots: editingTimeSlot
+              ? day.timeSlots.map((ts: any) => (ts.id === timeSlotId ? timeSlot : ts))
+              : [...day.timeSlots, timeSlot] as any
+          }
+          : day
+      );
+    } else {
+      // Add to special dates - applies only to this specific date
+      const existingSpecialDateIndex = updatedSpecialDates.findIndex(
+        (sd: any) => sd.date === dateString
+      );
+
+      if (existingSpecialDateIndex >= 0) {
+        // Update existing special date
+        const existingSpecialDate = updatedSpecialDates[existingSpecialDateIndex];
+        updatedSpecialDates[existingSpecialDateIndex] = {
+          ...existingSpecialDate,
           timeSlots: editingTimeSlot
-            ? day.timeSlots.map((ts: any) => (ts.id === timeSlotId ? timeSlot : ts))
-            : [...day.timeSlots, timeSlot] as any
-        }
-        : day
-    );
+            ? existingSpecialDate.timeSlots.map((ts: any) => ts.id === timeSlotId ? timeSlot : ts)
+            : [...existingSpecialDate.timeSlots, timeSlot]
+        };
+      } else {
+        // Create new special date
+        updatedSpecialDates.push({
+          date: dateString,
+          timeSlots: [timeSlot],
+          reason: 'One-time availability'
+        });
+      }
+    }
 
     setWeeklySchedule(updatedSchedule);
+    setSpecialDates(updatedSpecialDates);
 
     // Auto-save to database
     try {
       if (user?.uid) {
-        await saveTherapistAvailability(user.uid, updatedSchedule, specialDates);
+        await saveTherapistAvailability(user.uid, updatedSchedule, updatedSpecialDates);
         toast.success(editingTimeSlot ? 'Time slot updated' : 'Time slot added');
       }
     } catch (error: any) {
       toast.error('Failed to save time slot. Please try again.');
       // Revert on error
       setWeeklySchedule(weeklySchedule);
+      setSpecialDates(specialDates);
     }
 
     // Reset modal
@@ -164,25 +194,58 @@ const TherapistAvailability = () => {
   };
 
   const handleDeleteTimeSlot = async (timeSlotId: string) => {
+    const dateString = selectedDate.toISOString().split('T')[0];
     const dayOfWeek = selectedDate.getDay();
-    const updatedSchedule = weeklySchedule.map(day =>
-      day.dayOfWeek === dayOfWeek
-        ? { ...day, timeSlots: day.timeSlots.filter((ts: any) => ts.id !== timeSlotId) }
-        : day
+
+    let updatedSchedule = weeklySchedule;
+    let updatedSpecialDates = [...specialDates];
+    let slotFound = false;
+
+    // Check if slot is in weekly schedule
+    const weeklyDay = weeklySchedule.find((day: any) => day.dayOfWeek === dayOfWeek);
+    if (weeklyDay?.timeSlots.some((ts: any) => ts.id === timeSlotId)) {
+      updatedSchedule = weeklySchedule.map(day =>
+        day.dayOfWeek === dayOfWeek
+          ? { ...day, timeSlots: day.timeSlots.filter((ts: any) => ts.id !== timeSlotId) }
+          : day
+      );
+      slotFound = true;
+    }
+
+    // Check if slot is in special dates
+    const specialDateIndex = updatedSpecialDates.findIndex(
+      (sd: any) => sd.date === dateString
     );
+    if (specialDateIndex >= 0) {
+      const specialDate = updatedSpecialDates[specialDateIndex];
+      if (specialDate.timeSlots.some((ts: any) => ts.id === timeSlotId)) {
+        updatedSpecialDates[specialDateIndex] = {
+          ...specialDate,
+          timeSlots: specialDate.timeSlots.filter((ts: any) => ts.id !== timeSlotId)
+        };
+        slotFound = true;
+      }
+    }
+
+    if (!slotFound) {
+      toast.error('Time slot not found');
+      return;
+    }
 
     setWeeklySchedule(updatedSchedule);
+    setSpecialDates(updatedSpecialDates);
 
     // Auto-save to database
     try {
       if (user?.uid) {
-        await saveTherapistAvailability(user.uid, updatedSchedule, specialDates);
+        await saveTherapistAvailability(user.uid, updatedSchedule, updatedSpecialDates);
         toast.success('Time slot deleted');
       }
     } catch (error: any) {
       toast.error('Failed to delete time slot. Please try again.');
       // Revert on error
       setWeeklySchedule(weeklySchedule);
+      setSpecialDates(specialDates);
     }
   };
 
@@ -265,7 +328,12 @@ const TherapistAvailability = () => {
                 return days.map((item, i) => {
                   const isToday = item.date.toDateString() === new Date().toDateString();
                   const isSelected = item.date.toDateString() === selectedDate.toDateString();
-                  const hasSlots = weeklySchedule[item.date.getDay()]?.timeSlots.length > 0;
+
+                  // Check both weekly schedule and special dates for slots
+                  const weeklySlots = weeklySchedule[item.date.getDay()]?.timeSlots.length > 0;
+                  const dateString = item.date.toISOString().split('T')[0];
+                  const specialDateSlots = specialDates.some(sd => sd.date === dateString && sd.timeSlots.length > 0);
+                  const hasSlots = weeklySlots || specialDateSlots;
 
                   return (
                     <button
@@ -307,32 +375,6 @@ const TherapistAvailability = () => {
               <button onClick={() => setShowDateDetailsModal(false)}><X size={28} /></button>
             </div>
 
-            <label className="flex items-center gap-3 mb-6">
-              <input
-                type="checkbox"
-                checked={selectedDateData.isAvailable}
-                onChange={async (e) => {
-                  const dayOfWeek = selectedDate.getDay();
-                  const updatedSchedule = weeklySchedule.map(d => 
-                    d.dayOfWeek === dayOfWeek ? { ...d, isAvailable: e.target.checked } : d
-                  );
-                  setWeeklySchedule(updatedSchedule);
-                  
-                  // Auto-save to database
-                  try {
-                    if (user?.uid) {
-                      await saveTherapistAvailability(user.uid, updatedSchedule, specialDates);
-                    }
-                  } catch (error: any) {
-                    toast.error('Failed to save availability. Please try again.');
-                    // Revert on error
-                    setWeeklySchedule(weeklySchedule);
-                  }
-                }}
-                className="w-5 h-5 rounded text-primary-500 bg-gray-700"
-              />
-              <span>Available on this date</span>
-            </label>
 
             <div>
               <div className="flex justify-between items-center mb-4">
@@ -357,8 +399,8 @@ const TherapistAvailability = () => {
                         </div>
                         <div className="text-right">
                           <div className="font-bold">LKR {slot.price.toLocaleString()}</div>
-                          <div className={slot.isAvailable ? 'text-primary-400' : 'text-red-400'}>
-                            {slot.isAvailable ? 'Available' : 'Blocked'}
+                          <div className="text-primary-400">
+                            Available
                           </div>
                         </div>
                       </div>
@@ -408,7 +450,7 @@ const TherapistAvailability = () => {
                   <input type="time" value={newTimeSlot.endTime} onChange={e => setNewTimeSlot(prev => ({ ...prev, endTime: e.target.value }))} className="w-full p-3 bg-gray-700 rounded-lg" />
                 </div>
               </div>
-
+{/* 
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Session Type</label>
                 <div className="grid grid-cols-3 gap-3">
@@ -427,9 +469,9 @@ const TherapistAvailability = () => {
                     </label>
                   ))}
                 </div>
-              </div>
+              </div> */}
 
-              <div>
+              {/* <div>
                 <label className="block text-sm text-gray-400 mb-1">Price (LKR)</label>
                 <input
                   type="number"
@@ -439,18 +481,9 @@ const TherapistAvailability = () => {
                   min="0"
                   step="100"
                 />
-              </div>
+              </div> */}
 
               <div className="space-y-3">
-                <label className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={newTimeSlot.isAvailable}
-                    onChange={e => setNewTimeSlot(prev => ({ ...prev, isAvailable: e.target.checked }))}
-                    className="w-5 h-5 rounded text-primary-500 bg-gray-700"
-                  />
-                  <span>Available for booking</span>
-                </label>
                 <label className="flex items-center gap-3">
                   <input
                     type="checkbox"
