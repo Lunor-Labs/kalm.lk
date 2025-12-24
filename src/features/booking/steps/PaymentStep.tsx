@@ -87,7 +87,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         // Create the session in Firebase after successful payment
         const sessionId = await createSession({
           bookingId,
-          therapistId: therapistUserId, // Use therapist's userId, not document ID
+          therapistId: bookingData.therapistId, // Use therapist's userId, not document ID
           clientId: user.uid,
           sessionType: bookingData.sessionType || 'video', // Use sessionType from bookingData
           status: 'scheduled',
