@@ -131,7 +131,14 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
         // Check if this slot is already booked
         const slotKey = `${hour}:00`;
         const isBooked = bookedSlots.includes(slotKey);
-        
+
+        // Only show slots that start in the future (with 15-minute buffer)
+        const now = new Date();
+        const bufferTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
+        if (startTime <= bufferTime) {
+          continue; // Skip past and imminent time slots
+        }
+
         slots.push({
           id: `${therapistId}-${dateString}-${hour}`,
           startTime,
