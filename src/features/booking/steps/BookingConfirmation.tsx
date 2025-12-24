@@ -7,7 +7,7 @@ import { useTherapists } from '../../../hooks/useTherapists';
 
 interface BookingConfirmationProps {
   bookingData: BookingData;
-  onConfirm: () => void;
+  onConfirm: (sessionType: 'video' | 'audio' | 'chat') => void;
   onBack: () => void;
   onEdit: (step: number) => void;
 }
@@ -60,6 +60,20 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
 
   const therapist = getTherapistDetails();
   const therapistName = therapist?.name || 'Unknown Therapist';
+
+  // Get available session types for this therapist
+  const availableSessionTypes = [
+    { type: 'video' as const, label: 'Video Session', price: 0 },
+    { type: 'audio' as const, label: 'Audio Session', price: -500 },
+    { type: 'chat' as const, label: 'Chat Session', price: -1000 }
+  ].filter(option => therapist?.sessionFormats?.includes(option.type) ?? true); // Default to all if not specified
+
+  // Set default session type to first available option
+  useEffect(() => {
+    if (availableSessionTypes.length > 0 && !availableSessionTypes.some(opt => opt.type === sessionType)) {
+      setSessionType(availableSessionTypes[0].type);
+    }
+  }, [therapist, availableSessionTypes]);
 
   /* const applyCoupon = () => {
     // Mock coupon validation
@@ -255,47 +269,55 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           {/* Session Type Selection */}
           <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
             <h3 className="text-lg font-semibold text-white mb-4">Session Type</h3>
-            <div className="space-y-3">
-              {[
-                { type: 'video' as const, label: 'Video Session', price: 0 },
-                { type: 'audio' as const, label: 'Audio Session', price: -500 },
-                { type: 'chat' as const, label: 'Chat Session', price: -1000 }
-              ].map((option) => (
-                <label
-                  key={option.type}
-                  className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                    sessionType === option.type
-                      ? 'border-primary-500 bg-primary-500/10'
-                      : 'border-neutral-700 hover:border-neutral-600'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      name="sessionType"
-                      value={option.type}
-                      checked={sessionType === option.type}
-                      onChange={(e) => setSessionType(e.target.value as any)}
-                      className="sr-only"
-                    />
-                    {getSessionTypeIcon(option.type)}
-                    <div>
-                      <p className="text-white font-medium">{option.label}</p>
-                      <p className="text-neutral-400 text-sm">{getSessionTypeDescription(option.type)}</p>
+            {availableSessionTypes.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageCircle className="w-8 h-8 text-red-500" />
+                </div>
+                <h4 className="text-lg font-medium text-white mb-2">No Session Types Available</h4>
+                <p className="text-neutral-400 text-sm">
+                  This therapist doesn't have any session types configured. Please contact support.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {availableSessionTypes.map((option) => (
+                  <label
+                    key={option.type}
+                    className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                      sessionType === option.type
+                        ? 'border-primary-500 bg-primary-500/10'
+                        : 'border-neutral-700 hover:border-neutral-600'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="radio"
+                        name="sessionType"
+                        value={option.type}
+                        checked={sessionType === option.type}
+                        onChange={(e) => setSessionType(e.target.value as any)}
+                        className="sr-only"
+                      />
+                      {getSessionTypeIcon(option.type)}
+                      <div>
+                        <p className="text-white font-medium">{option.label}</p>
+                        <p className="text-neutral-400 text-sm">{getSessionTypeDescription(option.type)}</p>
+                      </div>
                     </div>
-                  </div>
-                  {/*<div className="text-right">
-                    {option.price === 0 ? (
-                      <span className="text-neutral-300">Included</span>
-                    ) : (
-                      <span className="text-accent-green">
-                        {option.price > 0 ? '+' : ''}LKR {option.price.toLocaleString()}
-                      </span>
-                    )}
-                  </div>*/}
-                </label>
-              ))}
-            </div>
+                    {/*<div className="text-right">
+                      {option.price === 0 ? (
+                        <span className="text-neutral-300">Included</span>
+                      ) : (
+                        <span className="text-accent-green">
+                          {option.price > 0 ? '+' : ''}LKR {option.price.toLocaleString()}
+                        </span>
+                      )}
+                    </div>*/}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Payment Summary */}
@@ -405,10 +427,11 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           */}
 
           <button
-            onClick={onConfirm}
-            className="w-full bg-primary-500 text-white py-4 rounded-2xl hover:bg-primary-600 transition-colors duration-200 font-semibold text-lg"
+            onClick={() => onConfirm(sessionType)}
+            disabled={availableSessionTypes.length === 0}
+            className="w-full bg-primary-500 text-white py-4 rounded-2xl hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-semibold text-lg"
           >
-            Proceed to Payment
+            {availableSessionTypes.length === 0 ? 'No Session Types Available' : 'Proceed to Payment'}
           </button>
 
         </div>
