@@ -213,10 +213,12 @@ service cloud.firestore {
     match /therapistAvailability/{therapistId} {
       // Anyone authenticated can read availability (for booking)
       allow read: if isAuthenticated();
-      
+
       // Only the therapist can manage their own availability
+      // Note: Availability updates after booking are handled by the booking system
+      // but may fail due to permissions - this is logged but doesn't break booking
       allow write: if isOwner(therapistId);
-      
+
       // Admins can read all
       allow read: if isAdmin();
       

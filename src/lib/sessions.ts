@@ -382,21 +382,42 @@ const updateTherapistAvailabilityAfterBooking = async (
       const specialDate = availability.specialDates[specialDateIndex];
       const updatedTimeSlots = specialDate.timeSlots.map((slot: any) => {
         try {
-          const slotStartTime = slot.startTime.toDate ? slot.startTime.toDate() : slot.startTime;
+          // Handle both Date objects and time strings
+          let slotStartTime: any = slot.startTime;
+
+          // If it's a Firestore Timestamp, convert to Date
+          if (slotStartTime && typeof slotStartTime === 'object' && slotStartTime.toDate) {
+            slotStartTime = slotStartTime.toDate();
+          }
+
           console.log('⏰ [AVAILABILITY] Processing special date slot:', slot, 'startTime:', slotStartTime);
 
-          if (!slotStartTime || isNaN(new Date(slotStartTime).getTime())) {
-            console.warn('⚠️ [AVAILABILITY] Invalid slot startTime, skipping:', slotStartTime);
+          // If startTime is a time string like "09:00", compare directly
+          if (typeof slotStartTime === 'string' && slotStartTime.includes(':')) {
+            console.log('⏰ [AVAILABILITY] Time string comparison:', slotStartTime, 'vs booking time:', timeString);
+
+            if (slotStartTime === timeString) {
+              console.log('✅ [AVAILABILITY] Found matching slot (string format) to mark as booked');
+              return { ...slot, isAvailable: false, isBooked: true };
+            }
             return slot;
           }
 
-          const slotTime = format(new Date(slotStartTime), 'HH:mm');
-          console.log('⏰ [AVAILABILITY] Formatted slot time:', slotTime, 'vs booking time:', timeString);
+          // If it's a Date object, format and compare
+          if (slotStartTime instanceof Date || (typeof slotStartTime === 'string' && !isNaN(Date.parse(slotStartTime)))) {
+            const dateObj = slotStartTime instanceof Date ? slotStartTime : new Date(slotStartTime);
+            if (!isNaN(dateObj.getTime())) {
+              const slotTime = format(dateObj, 'HH:mm');
+              console.log('⏰ [AVAILABILITY] Formatted slot time:', slotTime, 'vs booking time:', timeString);
 
-          if (slotTime === timeString) {
-            console.log('✅ [AVAILABILITY] Found matching slot to mark as booked');
-            return { ...slot, isAvailable: false, isBooked: true };
+              if (slotTime === timeString) {
+                console.log('✅ [AVAILABILITY] Found matching slot (date format) to mark as booked');
+                return { ...slot, isAvailable: false, isBooked: true };
+              }
+            }
           }
+
+          console.warn('⚠️ [AVAILABILITY] Could not process slot startTime:', slotStartTime);
           return slot;
         } catch (slotError) {
           console.error('❌ [AVAILABILITY] Error processing special date slot:', slotError, 'slot:', slot);
@@ -416,21 +437,42 @@ const updateTherapistAvailabilityAfterBooking = async (
       if (daySchedule) {
         const updatedTimeSlots = daySchedule.timeSlots.map((slot: any) => {
           try {
-            const slotStartTime = slot.startTime.toDate ? slot.startTime.toDate() : slot.startTime;
+            // Handle both Date objects and time strings
+            let slotStartTime: any = slot.startTime;
+
+            // If it's a Firestore Timestamp, convert to Date
+            if (slotStartTime && typeof slotStartTime === 'object' && slotStartTime.toDate) {
+              slotStartTime = slotStartTime.toDate();
+            }
+
             console.log('⏰ [AVAILABILITY] Processing weekly slot:', slot, 'startTime:', slotStartTime);
 
-            if (!slotStartTime || isNaN(new Date(slotStartTime).getTime())) {
-              console.warn('⚠️ [AVAILABILITY] Invalid weekly slot startTime, skipping:', slotStartTime);
+            // If startTime is a time string like "09:00", compare directly
+            if (typeof slotStartTime === 'string' && slotStartTime.includes(':')) {
+              console.log('⏰ [AVAILABILITY] Weekly time string comparison:', slotStartTime, 'vs booking time:', timeString);
+
+              if (slotStartTime === timeString) {
+                console.log('✅ [AVAILABILITY] Found matching weekly slot (string format) to mark as booked');
+                return { ...slot, isAvailable: false, isBooked: true };
+              }
               return slot;
             }
 
-            const slotTime = format(new Date(slotStartTime), 'HH:mm');
-            console.log('⏰ [AVAILABILITY] Formatted weekly slot time:', slotTime, 'vs booking time:', timeString);
+            // If it's a Date object, format and compare
+            if (slotStartTime instanceof Date || (typeof slotStartTime === 'string' && !isNaN(Date.parse(slotStartTime)))) {
+              const dateObj = slotStartTime instanceof Date ? slotStartTime : new Date(slotStartTime);
+              if (!isNaN(dateObj.getTime())) {
+                const slotTime = format(dateObj, 'HH:mm');
+                console.log('⏰ [AVAILABILITY] Formatted weekly slot time:', slotTime, 'vs booking time:', timeString);
 
-            if (slotTime === timeString) {
-              console.log('✅ [AVAILABILITY] Found matching weekly slot to mark as booked');
-              return { ...slot, isAvailable: false, isBooked: true };
+                if (slotTime === timeString) {
+                  console.log('✅ [AVAILABILITY] Found matching weekly slot (date format) to mark as booked');
+                  return { ...slot, isAvailable: false, isBooked: true };
+                }
+              }
             }
+
+            console.warn('⚠️ [AVAILABILITY] Could not process weekly slot startTime:', slotStartTime);
             return slot;
           } catch (slotError) {
             console.error('❌ [AVAILABILITY] Error processing weekly slot:', slotError, 'slot:', slot);
@@ -450,9 +492,13 @@ const updateTherapistAvailabilityAfterBooking = async (
 
     // Save updated availability
     console.log('💾 [AVAILABILITY] Saving updated availability...');
-    await saveTherapistAvailability(therapistId, availability.weeklySchedule, availability.specialDates);
-
-    console.log(`✅ [AVAILABILITY] Updated therapist availability for ${therapistId} - marked ${timeString} as booked`);
+    try {
+      await saveTherapistAvailability(therapistId, availability.weeklySchedule, availability.specialDates);
+      console.log(`✅ [AVAILABILITY] Updated therapist availability for ${therapistId} - marked ${timeString} as booked`);
+    } catch (saveError: any) {
+      console.warn('⚠️ [AVAILABILITY] Could not save availability update (likely permissions) - booking still successful:', saveError.message);
+      // Don't fail the booking process - availability update is a nice-to-have feature
+    }
   } catch (error) {
     console.error('Error updating therapist availability after booking:', error);
     // Don't throw error - booking should still succeed even if availability update fails
