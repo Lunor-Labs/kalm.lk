@@ -63,7 +63,8 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
       if (therapistDoc.exists()) {
         const therapistData = therapistDoc.data();
         const therapistUserId = therapistData?.userId || sessionData.therapistId; // Fallback to document ID
-
+        console.log('therapistUserId', therapistUserId);
+        console.log(therapistData?.userId);
         await updateTherapistAvailabilityAfterBooking(therapistUserId, sessionData.scheduledTime);
       } else {
         console.warn('Therapist document not found, skipping availability update');
