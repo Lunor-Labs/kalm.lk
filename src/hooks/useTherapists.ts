@@ -14,6 +14,7 @@ export interface FirebaseTherapist {
   languages: string[];
   services: string[];
   isAvailable: boolean;
+  isActive: boolean;
   sessionFormats: string[];
   bio: string;
   experience: number;
@@ -70,12 +71,19 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
               bio: data.bio,
               isAvailable: data.isAvailable
             } as TherapistData;
+          }).filter(t => t); // Filter out any null entries
+          
+          // Only include active therapists
+          const activeTherapists = firebaseTherapists.filter(t => {
+            const originalDoc = snapshot.docs.find(doc => doc.id === t.id);
+            const isActive = originalDoc?.data().isActive !== false; // Default to true if not set
+            return isActive;
           });
 
           // Filter by service category if specified
           const filteredTherapists = serviceCategory 
-            ? firebaseTherapists.filter(t => t.serviceCategory === serviceCategory)
-            : firebaseTherapists;
+            ? activeTherapists.filter(t => t.serviceCategory === serviceCategory)
+            : activeTherapists;
 
           setTherapists(filteredTherapists);
         } else {

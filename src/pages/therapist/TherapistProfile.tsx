@@ -147,6 +147,13 @@ const TherapistProfile: React.FC = () => {
         updatedAt: snapshot.docs[0].data().updatedAt?.toDate()
       } as Therapist;
 
+      // Check if therapist is active
+      if (!therapistData.isActive) {
+        toast.error('Your account has been deactivated');
+        setLoading(false);
+        return;
+      }
+
       setTherapist(therapistData);
       setFormData({
         firstName: therapistData.firstName,

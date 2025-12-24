@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, Search, Plus, Edit, Trash2, Upload, X, Save,
+  Users, Search, Plus, Edit, Upload, X, Save,
   Star, Clock, Award, Video, Phone, MessageCircle,
   Eye, EyeOff, ArrowLeft, Calendar, DollarSign, ChevronLeft, ChevronRight, ChevronDown, ChevronUp
 } from 'lucide-react';
@@ -34,6 +34,7 @@ interface Therapist {
   languages: string[];
   services: string[];
   isAvailable: boolean;
+  isActive: boolean;
   sessionFormats: string[];
   bio: string;
   experience: number;
@@ -342,6 +343,7 @@ const TherapistManagement: React.FC = () => {
           languages: formData.languages,
           services: formData.services,
           isAvailable: false,
+          isActive: true,
           sessionFormats: formData.sessionFormats,
           bio: formData.bio,
           experience: formData.experience,
@@ -381,6 +383,21 @@ const TherapistManagement: React.FC = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleActive = async (therapist: Therapist) => {
+    try {
+      const therapistRef = doc(db, 'therapists', therapist.id);
+      await updateDoc(therapistRef, {
+        isActive: !therapist.isActive,
+        updatedAt: serverTimestamp()
+      });
+      toast.success(`Therapist ${!therapist.isActive ? 'activated' : 'deactivated'} successfully`);
+      loadTherapists();
+    } catch (error: any) {
+      console.error('Error toggling therapist status:', error);
+      toast.error('Failed to update therapist status. Please try again.');
     }
   };
 
@@ -449,6 +466,7 @@ const TherapistManagement: React.FC = () => {
   };
 
   // Defensive filtering: guard against missing fields (email, specializations, names)
+  // Admin sees ALL therapists regardless of isActive status
   const _q = searchQuery.toLowerCase();
   const filteredTherapists = therapists.filter((therapist) => {
     const name = `${therapist.firstName ?? ''} ${therapist.lastName ?? ''}`.toLowerCase();
@@ -593,7 +611,7 @@ const TherapistManagement: React.FC = () => {
           <div className="md:text-left text-center">
             <h3 className="text-2xl font-bold text-white mb-1">{therapists.length}</h3>
             <p className="text-neutral-400 text-sm mb-2">Total Therapists</p>
-            <p className="text-accent-green text-sm">Licensed professionals</p>
+            <p className="text-accent-green text-sm">{therapists.filter(t => t.isActive).length} active</p>
           </div>
         </div>
 
@@ -635,26 +653,40 @@ const TherapistManagement: React.FC = () => {
           {paginatedTherapists.map((therapist) => (
             <div
               key={therapist.id}
-              className="bg-black/50 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-primary-500/30 overflow-hidden hover:border-primary-500/50 transition-all duration-300"
+              className={`bg-black/50 backdrop-blur-sm rounded-xl sm:rounded-2xl border overflow-hidden hover:border-primary-500/50 transition-all duration-300 relative ${
+                therapist.isActive ? 'border-primary-500/30' : 'border-red-500/30'
+              }`}
             >
-              <div className="relative p-4 sm:p-6 pb-0">
+              {!therapist.isActive && (
+                <div className="absolute inset-0 bg-red-500/5 pointer-events-none rounded-xl sm:rounded-2xl z-0"></div>
+              )}
+              <div className="relative p-4 sm:p-6 pb-0 z-10">
                 <div className="flex justify-center">
                   <div className="relative">
                     <img
                       src={therapist.profilePhoto}
                       alt={`${therapist.firstName} ${therapist.lastName}`}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 sm:border-4 border-neutral-700"
+                      className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 sm:border-4 border-neutral-700 ${
+                        !therapist.isActive ? 'opacity-60' : ''
+                      }`}
                     />
                     <div className={`absolute bottom-0 right-0
  w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-neutral-800 ${
                       therapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-500'
                     }`}></div>
+                    {!therapist.isActive && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full">
+                        <span className="text-xs font-semibold text-white">INACTIVE</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 sm:p-6 pt-2 sm:pt-4 text-center">
-                <h3 className="text-base sm:text-lg font-semibold text-white mb-1">
+              <div className="p-4 sm:p-6 pt-2 sm:pt-4 text-center relative z-10">
+                <h3 className={`text-base sm:text-lg font-semibold mb-1 ${
+                  therapist.isActive ? 'text-white' : 'text-neutral-400'
+                }`}>
                   {therapist.firstName} {therapist.lastName}
                 </h3>
                 <p className="text-neutral-400 text-xs sm:text-sm mb-2 line-clamp-1">{therapist.email}</p>
@@ -712,11 +744,23 @@ const TherapistManagement: React.FC = () => {
                     <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(therapist)}
-                    className="p-1 sm:p-2 bg-neutral-800 text-neutral-300 hover:text-red-500 rounded-lg sm:rounded-xl transition-colors duration-200"
-                    title="Delete therapist"
+                    onClick={() => handleToggleActive(therapist)}
+                    className={`p-1 sm:p-2 rounded-lg sm:rounded-xl transition-colors duration-200 ${
+                      therapist.isActive
+                        ? 'bg-accent-green/20 text-accent-green hover:bg-accent-green/30'
+                        : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'
+                    }`}
+                    title={therapist.isActive ? 'Deactivate therapist' : 'Activate therapist'}
                   >
-                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <div className="flex items-center justify-center">
+                      {therapist.isActive ? (
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-current flex items-center justify-center">
+                          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-current"></div>
+                        </div>
+                      ) : (
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-current"></div>
+                      )}
+                    </div>
                   </button>
                 </div>
               </div>
@@ -749,9 +793,8 @@ const TherapistManagement: React.FC = () => {
                 <tr>
                   <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Therapist</th>
                   <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Specializations</th>
-                  {/* <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Experience</th> */}
                   <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Rate</th>
-                  {/* <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Status</th> */}
+                  <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Status</th>
                   <th className="text-left p-4 text-neutral-300 font-medium text-sm sm:text-base">Actions</th>
                 </tr>
               </thead>
@@ -796,6 +839,18 @@ const TherapistManagement: React.FC = () => {
                     <td className="p-4">
                       <p className="text-neutral-300 text-sm sm:text-base">LKR {therapist.hourlyRate.toLocaleString()}</p>
                     </td>
+                    <td className="p-4">
+                      <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs sm:text-sm ${
+                        therapist.isActive
+                          ? 'bg-accent-green/20 text-accent-green' 
+                          : 'bg-red-500/20 text-red-500'
+                      }`}>
+                        <div className={`w-2 h-2 rounded-full ${
+                          therapist.isActive ? 'bg-accent-green' : 'bg-red-500'
+                        }`}></div>
+                        <span>{therapist.isActive ? 'Active' : 'Inactive'}</span>
+                      </span>
+                    </td>
                     {/* <td className="p-4">
                       <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs sm:text-sm ${
                         therapist.isAvailable 
@@ -825,11 +880,23 @@ const TherapistManagement: React.FC = () => {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(therapist)}
-                          className="p-2 text-neutral-400 hover:text-red-500 transition-colors duration-200"
-                          title="Delete therapist"
+                          onClick={() => handleToggleActive(therapist)}
+                          className={`p-2 transition-colors duration-200 ${
+                            therapist.isActive
+                              ? 'text-accent-green hover:text-accent-green/80'
+                              : 'text-red-500 hover:text-red-600'
+                          }`}
+                          title={therapist.isActive ? 'Deactivate therapist' : 'Activate therapist'}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <div className="flex items-center justify-center">
+                            {therapist.isActive ? (
+                              <div className="w-5 h-5 rounded-full border-2 border-current flex items-center justify-center">
+                                <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                              </div>
+                            ) : (
+                              <div className="w-5 h-5 rounded-full border-2 border-current"></div>
+                            )}
+                          </div>
                         </button>
                       </div>
                     </td>
@@ -1058,10 +1125,10 @@ const TherapistManagement: React.FC = () => {
               </button>
             </div>
             <div className="p-4 space-y-2">
-              {therapists.filter(t => t.isAvailable).length === 0 && (
-                <p className="text-neutral-400 text-sm">No therapists are available right now.</p>
+              {therapists.filter(t => t.isAvailable && t.isActive).length === 0 && (
+                <p className="text-neutral-400 text-sm">No active therapists are available right now.</p>
               )}
-              {therapists.filter(t => t.isAvailable).map((t) => (
+              {therapists.filter(t => t.isAvailable && t.isActive).map((t) => (
                 <div key={t.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-neutral-800/50">
                   <div className="flex items-center gap-3">
                     <img src={t.profilePhoto} alt={`${t.firstName} ${t.lastName}`} className="w-10 h-10 rounded-full object-cover" />
