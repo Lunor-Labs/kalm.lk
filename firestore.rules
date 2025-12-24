@@ -287,6 +287,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // System configuration collection
+    match /systemConfig/{configId} {
+      // Only admins can read/write system configuration
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+
+      // No deletes
+      allow delete: if false;
+    }
+
     // Default deny all other collections and documents
     match /{document=**} {
       allow read, write: if false;

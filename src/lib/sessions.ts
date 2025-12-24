@@ -1,13 +1,14 @@
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  updateDoc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  setDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
   serverTimestamp,
   onSnapshot,
   Timestamp
@@ -16,7 +17,7 @@ import { db } from './firebase';
 import { Session, ChatMessage, SessionParticipant } from '../types/session';
 import { dailyService } from './daily';
 import { saveTherapistAvailability, getTherapistAvailability } from './availability';
-import { format } from 'date-fns';
+import { format, subMinutes, addMinutes, isBefore, isAfter } from 'date-fns';
 
 export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
   try {
@@ -466,5 +467,142 @@ const updateTherapistAvailabilityAfterBooking = async (
   } catch (error) {
     console.error('Error updating therapist availability after booking:', error);
     // Don't throw error - booking should still succeed even if availability update fails
+  }
+};
+
+// Session configuration types and functions
+export interface SessionConfig {
+  joinEarlyMinutes: number; // Minutes before session start when join button becomes available
+  joinLateMinutes: number; // Minutes after session end when join button remains available
+  updatedAt: Date;
+  updatedBy: string;
+}
+
+// Default session configuration
+const DEFAULT_SESSION_CONFIG: Omit<SessionConfig, 'updatedAt' | 'updatedBy'> = {
+  joinEarlyMinutes: 15, // 15 minutes before session start
+  joinLateMinutes: 30,  // 30 minutes after session end
+};
+
+// Get session configuration from database
+export const getSessionConfig = async (): Promise<SessionConfig> => {
+  try {
+    const configRef = doc(db, 'systemConfig', 'sessionTiming');
+    const configSnap = await getDoc(configRef);
+
+    if (configSnap.exists()) {
+      const data = configSnap.data();
+      return {
+        joinEarlyMinutes: data.joinEarlyMinutes ?? DEFAULT_SESSION_CONFIG.joinEarlyMinutes,
+        joinLateMinutes: data.joinLateMinutes ?? DEFAULT_SESSION_CONFIG.joinLateMinutes,
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        updatedBy: data.updatedBy || 'system',
+      };
+    }
+
+    // Return default config if not found
+    return {
+      ...DEFAULT_SESSION_CONFIG,
+      updatedAt: new Date(),
+      updatedBy: 'system',
+    };
+  } catch (error) {
+    console.error('Failed to get session config:', error);
+    // Return default config on error
+    return {
+      ...DEFAULT_SESSION_CONFIG,
+      updatedAt: new Date(),
+      updatedBy: 'system',
+    };
+  }
+};
+
+// Update session configuration (admin only)
+export const updateSessionConfig = async (
+  config: Partial<Pick<SessionConfig, 'joinEarlyMinutes' | 'joinLateMinutes'>>,
+  updatedBy: string
+): Promise<void> => {
+  try {
+    const configRef = doc(db, 'systemConfig', 'sessionTiming');
+    await setDoc(configRef, {
+      ...config,
+      updatedAt: serverTimestamp(),
+      updatedBy,
+    }, { merge: true });
+  } catch (error) {
+    console.error('Failed to update session config:', error);
+    throw new Error('Failed to update session configuration');
+  }
+};
+
+// Check if session can be joined based on timing rules
+export const canJoinSessionByTime = async (session: Session): Promise<boolean> => {
+  try {
+    const config = await getSessionConfig();
+    const now = new Date();
+
+    // If session is active, always allow joining
+    if (session.status === 'active') {
+      return true;
+    }
+
+    // If session is not scheduled, don't allow joining
+    if (session.status !== 'scheduled') {
+      return false;
+    }
+
+    const sessionStart = session.scheduledTime;
+    const sessionEnd = addMinutes(sessionStart, session.duration || 60); // Default 60 minutes
+
+    // Can join from X minutes before start
+    const earliestJoinTime = subMinutes(sessionStart, config.joinEarlyMinutes);
+
+    // Can join until Y minutes after end
+    const latestJoinTime = addMinutes(sessionEnd, config.joinLateMinutes);
+
+    return isAfter(now, earliestJoinTime) && isBefore(now, latestJoinTime);
+  } catch (error) {
+    console.error('Failed to check session join timing:', error);
+    // On error, fall back to basic status check
+    return session.status === 'scheduled' || session.status === 'active';
+  }
+};
+
+// Check if a scheduled session should be marked as missed
+export const shouldMarkSessionAsMissed = async (session: Session): Promise<boolean> => {
+  try {
+    // Only check scheduled sessions
+    if (session.status !== 'scheduled') {
+      return false;
+    }
+
+    const config = await getSessionConfig();
+    const now = new Date();
+    const sessionStart = session.scheduledTime;
+    const sessionEnd = addMinutes(sessionStart, session.duration || 60);
+
+    // Latest time when session could still be joined
+    const latestJoinTime = addMinutes(sessionEnd, config.joinLateMinutes);
+
+    // If current time is past the latest join time, session should be marked as missed
+    return isAfter(now, latestJoinTime);
+  } catch (error) {
+    console.error('Failed to check if session should be marked as missed:', error);
+    // On error, don't mark as missed
+    return false;
+  }
+};
+
+// Mark a session as missed
+export const markSessionAsMissed = async (sessionId: string): Promise<void> => {
+  try {
+    const sessionRef = doc(db, 'sessions', sessionId);
+    await updateDoc(sessionRef, {
+      status: 'missed',
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Failed to mark session as missed:', error);
+    throw new Error('Failed to update session status');
   }
 };

@@ -35,6 +35,7 @@ import UserManagement from './pages/admin/UserManagement';
 import TherapistManagement from './pages/admin/TherapistManagement';
 import PaymentsManagement from './pages/admin/PaymentsManagement';
 import ErrorLogsDashboard from './pages/admin/ErrorLogsDashboard';
+import SessionConfigManagement from './pages/admin/SessionConfigManagement';
 import TherapistSchedule from './pages/therapist/TherapistSchedule';
 import TherapistSessions from './pages/therapist/TherapistSessions';
 import TherapistAvailability from './pages/therapist/TherapistAvailability';
@@ -141,6 +142,7 @@ function App() {
 							<Route path="therapists" element={<TherapistManagement />} />
 							<Route path="bookings" element={<div className="text-white">Bookings Management</div>} />
 							<Route path="payments" element={<PaymentsManagement />} />
+							<Route path="session-config" element={<SessionConfigManagement />} />
 							<Route path="error-logs" element={<ErrorLogsDashboard />} />
 							<Route path="notifications" element={<div className="text-white">Notifications</div>} />
 							<Route path="settings" element={<div className="text-white">Settings</div>} />

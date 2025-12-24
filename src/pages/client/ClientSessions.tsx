@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Video, MessageCircle, Phone, Play, Plus, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Session } from '../../types/session';
-import { getUserSessions } from '../../lib/sessions';
+import { getUserSessions, canJoinSessionByTime, shouldMarkSessionAsMissed, markSessionAsMissed } from '../../lib/sessions';
 import { format, isToday, isFuture, isWithinInterval, subMinutes } from 'date-fns';
 import toast from 'react-hot-toast';
 
@@ -12,7 +12,7 @@ const ClientSessions: React.FC = () => {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
+  const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed' | 'missed'>('all');
   const [expandedNotes, setExpandedNotes] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const sessionsPerPage = 5;
@@ -28,6 +28,25 @@ const ClientSessions: React.FC = () => {
       if (process.env.NODE_ENV === 'development') {
         console.log('Fetched sessions:', userSessions.length, 'sessions');
       }
+        // Check for sessions that should be marked as missed
+        const checkAndMarkMissedSessions = async () => {
+          for (const session of userSessions) {
+            try {
+              if (session.status === 'scheduled') {
+                const shouldMarkAsMissed = await shouldMarkSessionAsMissed(session);
+                if (shouldMarkAsMissed) {
+                  await markSessionAsMissed(session.id);
+                  // Update the session in the local state
+                  session.status = 'missed';
+                }
+              }
+            } catch (error) {
+              console.error(`Failed to check missed status for session ${session.id}:`, error);
+            }
+          }
+        };
+
+        await checkAndMarkMissedSessions();
         setSessions(userSessions);
       } catch (error: any) {
         console.error('Failed to load sessions:', error);
@@ -51,6 +70,8 @@ const ClientSessions: React.FC = () => {
         return session.status === 'scheduled' || (session.status === 'active' && isFuture(session.scheduledTime));
       case 'completed':
         return session.status === 'completed';
+      case 'missed':
+        return session.status === 'missed';
       default:
         return true;
     }
@@ -82,6 +103,7 @@ const ClientSessions: React.FC = () => {
     if (session.status === 'active') return 'bg-accent-green/20 text-accent-green border-accent-green/30';
     if (session.status === 'completed') return 'bg-neutral-600/20 text-neutral-400 border-neutral-600/30';
     if (session.status === 'cancelled') return 'bg-red-500/20 text-red-400 border-red-500/30';
+    if (session.status === 'missed') return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
     if (isToday(session.scheduledTime)) return 'bg-accent-yellow/20 text-accent-yellow border-accent-yellow/30';
     return 'bg-primary-500/20 text-primary-500 border-primary-500/30';
   };
@@ -90,13 +112,39 @@ const ClientSessions: React.FC = () => {
     if (session.status === 'active') return 'Active';
     if (session.status === 'completed') return 'Completed';
     if (session.status === 'cancelled') return 'Cancelled';
+    if (session.status === 'missed') return 'Missed';
     if (isToday(session.scheduledTime)) return 'Today';
     if (isFuture(session.scheduledTime)) return 'Scheduled';
     return 'Past';
   };
 
+  const [joinableSessions, setJoinableSessions] = useState<Set<string>>(new Set());
+
+  // Update joinable sessions when sessions change
+  useEffect(() => {
+    const updateJoinableSessions = async () => {
+      const joinable = new Set<string>();
+      for (const session of sessions) {
+        try {
+          const canJoin = await canJoinSessionByTime(session);
+          if (canJoin) {
+            joinable.add(session.id);
+          }
+        } catch (error) {
+          // On error, fall back to basic status check
+          if (session.status === 'scheduled' || session.status === 'active') {
+            joinable.add(session.id);
+          }
+        }
+      }
+      setJoinableSessions(joinable);
+    };
+
+    updateJoinableSessions();
+  }, [sessions]);
+
   const canJoinSession = (session: Session) => {
-    return session.status === 'scheduled' || session.status === 'active';
+    return joinableSessions.has(session.id);
   };
 
   const handleJoinSession = (session: Session) => {
@@ -164,7 +212,7 @@ const ClientSessions: React.FC = () => {
       <div className="hidden md:block">
       <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20 flex flex-col sm:flex-row items-center sm:items-stretch gap-3">
         {/* Stats Sections */}
-        <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-0 sm:divide-x sm:divide-neutral-700">
+        <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-0 sm:divide-x sm:divide-neutral-700">
           <div className="flex flex-col items-center px-2">
             <div className="flex items-center gap-2 mb-1">
               <Calendar className="w-5 h-5 text-primary-500" />
@@ -190,6 +238,15 @@ const ClientSessions: React.FC = () => {
               {sessions.filter(s => s.status === 'completed').length}
             </p>
           </div>
+          <div className="flex flex-col items-center px-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="w-5 h-5 text-orange-400" />
+              <span className="text-neutral-300 text-sm">Missed</span>
+            </div>
+            <p className="text-lg font-bold text-white">
+              {sessions.filter(s => s.status === 'missed').length}
+            </p>
+          </div>
         </div>
         
         {/* Book Session Button */}
@@ -206,7 +263,7 @@ const ClientSessions: React.FC = () => {
 
     {/* Stats Movile View*/}
     <div className="md:hidden">
-  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
     
     <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20 text-center">
       <div className="flex justify-center items-center gap-2 mb-1">
@@ -236,6 +293,16 @@ const ClientSessions: React.FC = () => {
       </p>
     </div>
 
+    <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20 text-center">
+      <div className="flex justify-center items-center gap-2 mb-1">
+        <Clock className="w-5 h-5 text-orange-400" />
+        <span className="text-neutral-300 text-sm">Missed</span>
+      </div>
+      <p className="text-lg font-bold text-white">
+        {sessions.filter(s => s.status === "missed").length}
+      </p>
+    </div>
+
   </div>
 </div>
 {/* Book Session Button */}
@@ -249,14 +316,15 @@ const ClientSessions: React.FC = () => {
         </button>
       
       {/* Filters Desktop*/}
-      <div className="hidden md:flex items-center"> 
+      <div className="hidden md:flex items-center">
       <div className="flex items-center gap-2">
         <span className="text-neutral-300 text-sm shrink-0">Filter:</span>
         <div className="flex bg-neutral-800 rounded-xl p-1 gap-1 overflow-x-auto">
           {[
             { key: 'all', label: 'All' },
             { key: 'upcoming', label: 'Upcoming' },
-            { key: 'completed', label: 'Completed' }
+            { key: 'completed', label: 'Completed' },
+            { key: 'missed', label: 'Missed' }
           ].map((option) => (
             <button
               key={option.key}
@@ -282,7 +350,8 @@ const ClientSessions: React.FC = () => {
           {[
             { key: 'all', label: 'All' },
             { key: 'upcoming', label: 'Upcoming' },
-            { key: 'completed', label: 'Completed' }
+            { key: 'completed', label: 'Completed' },
+            { key: 'missed', label: 'Missed' }
           ].map((option) => (
             <button
               key={option.key}
@@ -374,8 +443,9 @@ const ClientSessions: React.FC = () => {
               <Calendar className="w-5 h-5 text-neutral-400" />
             </div>
             <h3 className="text-base font-semibold text-white mb-2">
-              {filter === 'upcoming' ? 'No upcoming sessions' : 
-               filter === 'completed' ? 'No completed sessions' : 'No sessions found'}
+              {filter === 'upcoming' ? 'No upcoming sessions' :
+               filter === 'completed' ? 'No completed sessions' :
+               filter === 'missed' ? 'No missed sessions' : 'No sessions found'}
             </h3>
             <p className="text-neutral-300 text-sm mb-4">
               {filter === 'upcoming' ? 'Book your first session to get started' : 

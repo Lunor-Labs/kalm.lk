@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   UserCheck,
-  AlertTriangle
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '../lib/auth';
@@ -28,6 +29,7 @@ const AdminLayout: React.FC = () => {
     { name: 'Users', href: '/admin/users', icon: UserCheck },
     { name: 'Therapists', href: '/admin/therapists', icon: Users },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
+    { name: 'Session Config', href: '/admin/session-config', icon: Clock },
     { name: 'Error Logs', href: '/admin/error-logs', icon: AlertTriangle },
    /*
    { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
