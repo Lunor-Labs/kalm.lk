@@ -28,9 +28,16 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   const { user } = useAuth();
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
-  const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>('video');
+  const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>(bookingData.sessionType || 'video');
   const [showTerms, setShowTerms] = useState(false);
   const [showCancellation, setShowCancellation] = useState(false);
+
+  // Update sessionType when bookingData changes
+  useEffect(() => {
+    if (bookingData.sessionType) {
+      setSessionType(bookingData.sessionType);
+    }
+  }, [bookingData.sessionType]);
 
   const handlePayment = async () => {
     if (!user || !bookingData.therapistId || !bookingData.sessionTime) {
@@ -76,7 +83,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           bookingId,
           therapistId: bookingData.therapistId,
           clientId: user.uid,
-          sessionType: sessionType,
+          sessionType: bookingData.sessionType || 'video', // Use sessionType from bookingData
           status: 'scheduled',
           scheduledTime: bookingData.sessionTime,
           duration: bookingData.duration || 60,
