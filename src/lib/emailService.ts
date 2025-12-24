@@ -29,11 +29,14 @@ export class EmailService {
   async sendEmail(emailData: EmailData): Promise<boolean> {
     try {
       // In a real implementation, this would use nodemailer or similar
-      console.log('Sending email:', {
-        to: emailData.to,
-        subject: emailData.subject,
-        from: `${this.config.fromName} <${this.config.fromEmail}>`,
-      });
+      // Log email sending only in development (protects sensitive email addresses)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Sending email:', {
+          to: emailData.to,
+          subject: emailData.subject,
+          from: `${this.config.fromName} <${this.config.fromEmail}>`,
+        });
+      }
 
       // Simulate email sending delay
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -42,7 +45,10 @@ export class EmailService {
       const success = Math.random() > 0.1;
       
       if (success) {
+        // Log email success only in development
+      if (process.env.NODE_ENV === 'development') {
         console.log('Email sent successfully');
+      }
         return true;
       } else {
         throw new Error('Failed to send email');
@@ -90,7 +96,10 @@ export const processEmailNotifications = async () => {
     // This would be implemented as a scheduled Cloud Function
     // that runs every few minutes to process pending notifications
     
-    console.log('Processing email notifications...');
+    // Log email processing only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Processing email notifications...');
+    }
     
     // In a real implementation:
     // 1. Query pending notifications from Firestore

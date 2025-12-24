@@ -96,6 +96,8 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
         showLeaveButton: false, // Hide Daily.co's leave button
         showParticipantsBar: true,
         showFullscreenButton: true,
+          // 🔥 Audio-only enforcement
+        videoSource: session.sessionType === "audio" ? false : true
       });
 
       callObjectRef.current = call;
@@ -128,10 +130,13 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
         }
       });
 
-      call.on("error", (event: any) => {
+      call.on("error", (event: unknown) => {
         if (cancelled) return;
         console.error("Daily error:", event);
-        setError(event.errorMsg || "Unknown error");
+        const errorMessage = event && typeof event === 'object' && 'errorMsg' in event
+          ? String((event as { errorMsg?: unknown }).errorMsg || "Unknown error")
+          : "Unknown error";
+        setError(errorMessage);
         setIsInitializing(false);
       });
 
@@ -144,9 +149,10 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           startVideoOff: session.sessionType === "audio",
           startAudioOff: false,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (cancelled) return;
-        setError(err.message || "Failed to join session");
+        const errorMessage = err instanceof Error ? err.message : "Failed to join session";
+        setError(errorMessage);
         setIsInitializing(false);
       }
     };

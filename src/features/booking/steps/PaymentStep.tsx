@@ -5,6 +5,10 @@ import { createSession } from '../../../lib/sessions';
 import { useAuth } from '../../../contexts/AuthContext';
 import { initiatePayHerePayment } from '../../../lib/payhere';
 import toast from 'react-hot-toast';
+import { db } from '../../../lib/firebase';
+import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from 'firebase/firestore';
+import { getNextId } from '../../../lib/counters';
+import { logPaymentError, logUserError } from '../../../lib/errorLogger';
 
 interface PaymentStepProps {
   bookingData: BookingData;
@@ -24,9 +28,16 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   const { user } = useAuth();
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
-  const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>('video');
+  const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>(bookingData.sessionType || 'video');
   const [showTerms, setShowTerms] = useState(false);
   const [showCancellation, setShowCancellation] = useState(false);
+
+  // Update sessionType when bookingData changes
+  useEffect(() => {
+    if (bookingData.sessionType) {
+      setSessionType(bookingData.sessionType);
+    }
+  }, [bookingData.sessionType]);
 
   const handlePayment = async () => {
     if (!user || !bookingData.therapistId || !bookingData.sessionTime) {
@@ -65,16 +76,100 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       const paymentResult = await initiatePayHerePayment(paymentData);
       
       if (paymentResult.success) {
+        const bookingId = paymentResult.orderId || `booking-${Date.now()}`;
+        console.log('bookingData.therapistId', bookingData.therapistId);
+        // Get the therapist's userId from the therapist document
+        const therapistDoc = await getDoc(doc(db, 'therapists', bookingData.therapistId));
+        const therapistUserId = therapistDoc.exists()
+          ? therapistDoc.data()?.userId || bookingData.therapistId
+          : bookingData.therapistId;
+
         // Create the session in Firebase after successful payment
         const sessionId = await createSession({
-          bookingId: paymentResult.orderId || `booking-${Date.now()}`,
-          therapistId: bookingData.therapistId,
+          bookingId,
+          therapistId: therapistUserId, // Use therapist's userId, not document ID
           clientId: user.uid,
-          sessionType: sessionType,
+          sessionType: bookingData.sessionType || 'video', // Use sessionType from bookingData
           status: 'scheduled',
           scheduledTime: bookingData.sessionTime,
           duration: bookingData.duration || 60,
         });
+
+        // Record payment in Firestore for admin reporting & payouts
+        try {
+          // Get sequential integer IDs
+          const [clientIdInt, therapistIdInt, bookingIdInt, paymentIdInt] = await Promise.all([
+            // Get client integer ID from user document (should exist from signup, but fallback if missing)
+            (async () => {
+              const userDoc = await getDoc(doc(db, 'users', user.uid));
+              if (userDoc.exists() && userDoc.data().clientIdInt) {
+                return userDoc.data().clientIdInt;
+              }
+              // Fallback: Generate new client ID if somehow missing (shouldn't happen for new signups)
+              console.warn('User missing clientIdInt, generating fallback ID');
+              const newClientIdInt = await getNextId('client');
+              // Try to save it to user document (may fail if not allowed, that's ok)
+              try {
+                await updateDoc(doc(db, 'users', user.uid), { clientIdInt: newClientIdInt });
+              } catch (e) {
+                // Ignore if we can't update user doc
+              }
+              return newClientIdInt;
+            })(),
+            // Get therapist integer ID from therapist document
+            (async () => {
+              try {
+                const therapistDoc = await getDoc(doc(db, 'therapists', bookingData.therapistId));
+                if (therapistDoc.exists() && therapistDoc.data().therapistIdInt) {
+                  return therapistDoc.data().therapistIdInt;
+                }
+                // Generate new therapist ID if not exists
+                const newTherapistId = await getNextId('therapist');
+                // Try to save it to therapist document
+                try {
+                  await updateDoc(doc(db, 'therapists', bookingData.therapistId), { therapistIdInt: newTherapistId });
+                } catch (e) {
+                  // Ignore if we can't update therapist doc
+                }
+                return newTherapistId;
+              } catch (e) {
+                console.warn('Could not get therapist integer ID:', e);
+                return undefined;
+              }
+            })(),
+            getNextId('booking'),
+            getNextId('payment'),
+          ]);
+
+          const paymentsRef = collection(db, 'payments');
+          await addDoc(paymentsRef, {
+            bookingId,
+            sessionId,
+            clientId: user.uid,
+            clientName: user.displayName || user.email || 'Unknown',
+            therapistId: bookingData.therapistId,
+            // Sequential integer IDs
+            clientIdInt,
+            therapistIdInt,
+            bookingIdInt,
+            paymentIdInt,
+            amount: bookingData.amount || finalAmount,
+            currency: 'LKR',
+            paymentMethod: 'payhere',
+            paymentStatus: 'completed',
+            paymentId: paymentResult.paymentId || null,
+            orderId: bookingId,
+            couponCode: bookingData.couponCode || null,
+            discountAmount: bookingData.discountAmount || 0,
+            finalAmount,
+            payoutStatus: 'pending',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        } catch (paymentError: any) {
+          console.error('Failed to record payment document:', paymentError);
+          toast.error(paymentError?.message || 'Session booked, but failed to record payment in admin reports.');
+        }
 
         toast.success('Payment successful! Session booked.');
         console.log('Session created with ID:', sessionId);
@@ -85,7 +180,30 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       }
     } catch (error: any) {
       console.error('Payment failed:', error);
-      toast.error(error.message || 'Payment failed. Please try again.');
+
+      // Log payment error for monitoring
+      await logPaymentError(
+        error,
+        user?.uid || 'unknown',
+        finalAmount,
+        'payhere'
+      );
+
+      // Provide user-friendly error messages
+      let userMessage = 'Payment failed. Please try again.';
+
+      if (error.message?.includes('network') || error.message?.includes('connection')) {
+        userMessage = 'Payment failed due to network issues. Please check your connection and try again.';
+      } else if (error.message?.includes('card') || error.message?.includes('payment')) {
+        userMessage = 'Payment processing failed. Please check your card details and try again.';
+      } else if (error.message?.includes('cancelled') || error.message?.includes('declined')) {
+        userMessage = 'Payment was declined. Please try a different payment method.';
+      } else if (error.message && error.message.length < 80 && !error.message.includes('firebase') && !error.message.includes('firestore')) {
+        // Use the error message if it's short and not technical
+        userMessage = error.message;
+      }
+
+      toast.error(userMessage);
       setProcessing(false);
     }
   };

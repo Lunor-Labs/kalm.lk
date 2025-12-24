@@ -32,13 +32,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('🔔 Auth state changed:', !!firebaseUser);
+      // Log auth state changes only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Auth state changed:', !!firebaseUser);
+      }
       try {
         setError(null);
         if (firebaseUser) {
-          console.log('📊 Fetching user data...');
+          // Log user data fetching only in development
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Fetching user data...');
+          }
           const userData = await getCurrentUser(firebaseUser);
-          console.log('✅ User data loaded:', userData?.role);
+          // Log successful data load only in development
+          if (process.env.NODE_ENV === 'development') {
+            console.log('User data loaded:', userData?.role);
+          }
           setUser(userData);
           
           // Check for pending booking after successful auth
@@ -78,7 +87,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(null);
       } finally {
         setLoading(false);
-        console.log('🏁 Auth context updated');
+        // Log context update only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Auth context updated');
+        }
       }
     });
 

@@ -265,7 +265,10 @@ const UserManagementPage: React.FC = () => {
         updatedAt: doc.data().updatedAt?.toDate() || new Date(),
       })) as UserManagement[];
       
-      console.log('Fetched users:', usersData); // Debug log
+      // Log user data only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetched users:', usersData.length, 'users');
+      }
       setUsers(usersData);
     } catch (error) {
       console.error('Error loading users:', error);
@@ -286,7 +289,7 @@ const UserManagementPage: React.FC = () => {
       toast.success(`User role updated to ${newRole}`);
       setSelectedUser(null);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update user role');
+      toast.error('Failed to update user role. Please try again.');
     }
   };
 
@@ -343,7 +346,10 @@ const UserManagementPage: React.FC = () => {
 
   useEffect(() => {
     // Debug pagination
-    console.log('Filtered users:', filteredUsers.length, 'Total pages:', totalPages, 'Current page:', currentPage);
+    // Log filtering info only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Filtered users:', filteredUsers.length, 'Total pages:', totalPages, 'Current page:', currentPage);
+    }
   }, [filteredUsers, currentPage]);
 
   const getRoleIcon = (role: UserRole) => {

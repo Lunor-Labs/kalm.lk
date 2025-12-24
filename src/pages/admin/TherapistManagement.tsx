@@ -20,6 +20,7 @@ import {
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { db, secondaryAuth } from '../../lib/firebase'; // Import secondaryAuth
 import { uploadTherapistPhoto, deleteTherapistPhoto, getStoragePathFromUrl, validateImageFile } from '../../lib/storage';
+import { getNextId } from '../../lib/counters';
 import toast from 'react-hot-toast';
 
 interface Therapist {
@@ -196,7 +197,7 @@ const TherapistManagement: React.FC = () => {
       toast.success('Image uploaded successfully');
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error(error.message || 'Failed to upload image');
+      toast.error('Failed to upload image. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -314,12 +315,16 @@ const TherapistManagement: React.FC = () => {
           displayName: `${formData.firstName} ${formData.lastName}`
         });
         
-        // Create user document in Firestore
+        // Generate sequential therapist ID for new therapist first
+        const therapistIdInt = await getNextId('therapist');
+
+        // Create user document in Firestore (include therapistIdInt)
         await setDoc(doc(db, 'users', user.uid), {
           uid: user.uid,
           email: user.email,
           displayName: `${formData.firstName} ${formData.lastName}`,
           role: 'therapist',
+          therapistIdInt, // Add therapist ID to user document
           isAnonymous: false,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
@@ -328,6 +333,7 @@ const TherapistManagement: React.FC = () => {
         // Create therapist document
         const therapistData = {
           userId: user.uid,
+          therapistIdInt, // Sequential integer ID for easy tracking
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
@@ -371,7 +377,7 @@ const TherapistManagement: React.FC = () => {
       } else if (error.code === 'auth/invalid-email') {
         toast.error('Invalid email address');
       } else {
-        toast.error(error.message || 'Failed to save therapist');
+        toast.error('Failed to save therapist. Please check all fields and try again.');
       }
     } finally {
       setLoading(false);
@@ -396,7 +402,7 @@ const TherapistManagement: React.FC = () => {
       loadTherapists();
     } catch (error: any) {
       console.error('Error deleting therapist:', error);
-      toast.error(error.message || 'Failed to delete therapist');
+      toast.error('Failed to delete therapist. Please try again.');
     }
   };
 

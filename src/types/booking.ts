@@ -27,6 +27,7 @@ export interface BookingStep {
 export interface BookingData {
   serviceType?: string;
   therapistId?: string;
+  sessionType?: 'video' | 'audio' | 'chat';
   sessionTime?: Date;
   duration?: number;
   amount?: number;

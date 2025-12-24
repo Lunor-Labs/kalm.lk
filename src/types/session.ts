@@ -6,7 +6,7 @@ export interface Session {
   therapistName?: string;
   clientName?: string;
   sessionType: 'video' | 'audio' | 'chat';
-  status: 'scheduled' | 'active' | 'completed' | 'cancelled';
+  status: 'scheduled' | 'active' | 'completed' | 'cancelled' | 'missed';
   scheduledTime: Date;
   startTime?: Date;
   endTime?: Date;
