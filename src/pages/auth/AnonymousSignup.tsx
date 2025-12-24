@@ -47,10 +47,10 @@ const AnonymousSignup: React.FC = () => {
           <div className="flex items-center mb-4">
             <button
               onClick={() => navigate('/')}
-              className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors"
+              className="flex items-center space-x-2 text-fixes-accent-blue hover:text-fixes-accent-purple transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm font-medium text-primary-500">Back to Home</span>
+              <span className="text-sm font-medium text-fixes-accent-blue">Back to Home</span>
             </button>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-neutral-800">Join Anonymously</h1>
@@ -70,7 +70,7 @@ const AnonymousSignup: React.FC = () => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full pl-9 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="Choose a unique username"
                 required
               />
@@ -84,7 +84,7 @@ const AnonymousSignup: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-11 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-11 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="Create a password"
                 required
               />
@@ -101,7 +101,7 @@ const AnonymousSignup: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-9 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="Confirm your password"
                 required
               />
@@ -109,22 +109,22 @@ const AnonymousSignup: React.FC = () => {
           </div>
 
           <label className="flex items-start space-x-3">
-            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1 rounded border-cream-200 text-primary-500 focus:ring-primary-500" />
-            <span className="text-sm text-neutral-600">I understand password recovery is not available for anonymous accounts. I agree to the <button type="button" onClick={() => setShowTermsModal(true)} className="text-primary-500 hover:text-primary-600 underline">Terms</button> and <button type="button" onClick={() => setShowPrivacyModal(true)} className="text-primary-500 hover:text-primary-600 underline">Privacy Policy</button>.</span>
+            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1 rounded border-cream-200 text-fixes-accent-blue focus:ring-fixes-accent-blue" />
+            <span className="text-sm text-neutral-600">I understand password recovery is not available for anonymous accounts. I agree to the <button type="button" onClick={() => setShowTermsModal(true)} className="text-fixes-accent-blue hover:text-fixes-accent-purple underline">Terms</button> and <button type="button" onClick={() => setShowPrivacyModal(true)} className="text-fixes-accent-blue hover:text-fixes-accent-purple underline">Privacy Policy</button>.</span>
           </label>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-accent-green text-white hover:bg-accent-green/90 py-3 font-semibold transition-colors disabled:opacity-60"
+            className="w-full rounded-2xl bg-fixes-accent-blue text-white hover:bg-fixes-accent-blue/90 py-3 font-semibold transition-colors disabled:opacity-60"
           >
             {loading ? 'Creating account...' : 'Create anonymous account'}
           </button>
         </form>
 
         <div className="px-4 sm:px-6 pb-6 text-sm text-neutral-600 text-center space-y-2">
-          <p>Want a regular account? <Link to="/signup" className="text-primary-500 hover:text-primary-600 font-medium">Sign up with email</Link></p>
-          <p>Already have an account? <Link to="/login" className="text-primary-500 hover:text-primary-600 font-medium">Sign in</Link></p>
+          <p>Want a regular account? <Link to="/signup" className="text-fixes-accent-blue hover:text-fixes-accent-purple font-medium">Sign up with email</Link></p>
+          <p>Already have an account? <Link to="/login" className="text-fixes-accent-blue hover:text-fixes-accent-purple font-medium">Sign in</Link></p>
         </div>
       </div>
 

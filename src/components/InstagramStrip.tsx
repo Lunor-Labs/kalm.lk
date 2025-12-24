@@ -1,51 +1,53 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 // store only filenames (public/ is served at the app base URL)
 const images = [
-  'About Calm.jpg',
-  'Family.jpg',
-  'Individual.jpg',
-  'LGBTQ.jpg',
-  'Teen.jpg',
-  'logo.jpg',
+  'ig.png',
 ];
 
 const InstagramStrip: React.FC = () => {
-  return (
-    <section className="bg-white py-8 sm:py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-6">
-          <p className="text-sm uppercase tracking-widest text-neutral-500">Instagram</p>
-          <a
-            href="https://www.instagram.com/kalm_lk"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block text-lg font-serif text-neutral-900 mt-1 hover:underline"
-          >
-            Follow Us @kalm_lk
-          </a>
-        </div>
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-          {images.map((src, idx) => (
-            <a
-              key={idx}
-              href="https://www.instagram.com/kalm_lk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block rounded-lg overflow-hidden shadow-sm transform hover:scale-105 transition-transform duration-200"
-            >
-              <img
-                src={`${import.meta.env.BASE_URL}${encodeURIComponent(src)}`}
-                alt={`kalm-instagram-${idx}`}
-                className="w-full h-24 sm:h-28 md:h-32 object-cover block"
-                loading="lazy"
-              />
-            </a>
-          ))}
-        </div>
+  // Slide change every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <section className="relative w-full h-[250px] sm:h-[200px] lg:h-[250px] overflow-hidden">
+      {/* Background Slideshow */}
+      {images.map((src, idx) => (
+        <img
+          key={idx}
+          src={`${import.meta.env.BASE_URL}${encodeURIComponent(src)}`}
+          alt={`kalm-instagram-${idx}`}
+          className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 ${
+            idx === currentIndex ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      ))}
+
+      {/* Overlay */}
+      <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex flex-col justify-center items-center text-center px-4">
+        <p className="text-white font-poppins font-semibold text-[20px] mb-2">
+          @kalm_lk
+        </p>
+        <p className="text-white font-poppins font-light text-[16px] mb-4">
+          Follow Us On Instagram
+        </p>
+        <a
+          href="https://www.instagram.com/kalm_lk"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-black text-white font-poppins font-normal text-sm px-6 py-2 rounded-full shadow hover:opacity-80 transition-opacity duration-200"
+        >
+          Follow Now
+        </a>
       </div>
-    </section>
+    </section> 
   );
 };
 
