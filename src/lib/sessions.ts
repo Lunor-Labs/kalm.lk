@@ -58,6 +58,7 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
 
     // Update therapist availability to mark the time slot as booked
     try {
+      console.log('sessionData.therapistId', sessionData.therapistId);
       // Resolve the correct therapist user ID from the therapist document
       const therapistDoc = await getDoc(doc(db, 'therapists', sessionData.therapistId));
       if (therapistDoc.exists()) {
