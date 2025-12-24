@@ -212,7 +212,7 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
             </div>
           </div>
 
-          {/* ===== COLUMN 2 : IMAGE ===== */}
+          {/* image */}
           <div className="relative flex justify-center items-end min-h-[200px] z-0 order-4 lg:order-2">
             <img
               src="hero_bg.png"
@@ -224,7 +224,7 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
             />
           </div>
 
-          {/* ===== COLUMN 3 : DESCRIPTION + STATS ===== */}
+          {/* Stats */}
           <div className='relative z-10 pb-[80px] flex flex-col justify-end order-2 lg:order-3'>
             <p
               className="text-center lg:text-right mb-10"
