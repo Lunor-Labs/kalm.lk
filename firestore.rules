@@ -289,8 +289,9 @@ service cloud.firestore {
 
     // System configuration collection
     match /systemConfig/{configId} {
-      // Only admins can read/write system configuration
-      allow read: if isAdmin();
+      // Authenticated users can read system configuration (for session timing, etc.)
+      allow read: if isAuthenticated();
+      // Only admins can write system configuration
       allow write: if isAdmin();
 
       // No deletes

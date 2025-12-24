@@ -559,6 +559,8 @@ export const canJoinSessionByTime = async (session: Session): Promise<boolean> =
 
     // Can join until Y minutes after end
     const latestJoinTime = addMinutes(sessionEnd, config.joinLateMinutes);
+    console.log('earliestJoinTime', earliestJoinTime);
+    console.log('latestJoinTime', latestJoinTime);
 
     return isAfter(now, earliestJoinTime) && isBefore(now, latestJoinTime);
   } catch (error) {
