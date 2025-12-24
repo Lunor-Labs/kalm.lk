@@ -77,11 +77,17 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       
       if (paymentResult.success) {
         const bookingId = paymentResult.orderId || `booking-${Date.now()}`;
+        console.log('bookingData.therapistId', bookingData.therapistId);
+        // Get the therapist's userId from the therapist document
+        const therapistDoc = await getDoc(doc(db, 'therapists', bookingData.therapistId));
+        const therapistUserId = therapistDoc.exists()
+          ? therapistDoc.data()?.userId || bookingData.therapistId
+          : bookingData.therapistId;
 
         // Create the session in Firebase after successful payment
         const sessionId = await createSession({
           bookingId,
-          therapistId: bookingData.therapistId,
+          therapistId: therapistUserId, // Use therapist's userId, not document ID
           clientId: user.uid,
           sessionType: bookingData.sessionType || 'video', // Use sessionType from bookingData
           status: 'scheduled',
