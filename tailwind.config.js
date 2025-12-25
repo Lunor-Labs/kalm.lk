@@ -48,6 +48,29 @@ export default {
           800: 'var(--neutral-800)',
           900: 'var(--neutral-900)',
         },
+        // UI Fixes - new colors
+        fixes: {
+          heading: {
+            dark: 'var(--fixes-heading-dark)',
+          },
+          bg: {
+            purple: 'var(--fixes-bg-purple)',
+            white: 'var(--fixes-bg-white)',
+          },
+          accent: {
+            purple: 'var(--fixes-accent-purple)',
+            black: 'var(--fixes-accent-black)',
+            blue: 'var(--fixes-accent-blue)',
+          },
+          box: {
+            blue: 'var(--fixes-box-blue)',
+            purple: 'var(--fixes-box-purple)',
+            green: 'var(--fixes-box-green)',
+            pink: 'var(--fixes-box-pink)',
+            yellow: 'var(--fixes-box-yellow)',
+            aqua: 'var(--fixes-box-aqua)'
+          },
+        },
         // Semantic feature colors
         feature: {
           care: {

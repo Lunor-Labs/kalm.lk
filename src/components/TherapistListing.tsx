@@ -52,16 +52,16 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, options, p
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-neutral-800 text-white text-left flex items-center justify-between hover:border-neutral-600"
+        className="w-full p-3 border-0 border-b border-black text-left flex items-center justify-between text-sm focus:outline-none"
       >
-        <span className={value ? 'text-white' : 'text-neutral-400'}>
+        <span className={value ? 'text-fixes-heading-dark' : 'text-black'}>
           {displayText}
         </span>
         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-800 border border-neutral-700 rounded-2xl shadow-lg z-50 overflow-hidden max-h-60 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border-b border-black shadow-lg z-50">
           {options.map((option) => (
             <button
               key={option.value}
@@ -69,8 +69,8 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ value, onChange, options, p
                 onChange(option.value);
                 setIsOpen(false);
               }}
-              className={`w-full px-4 py-3 text-left text-sm hover:bg-neutral-700 transition-colors duration-150 ${
-                value === option.value ? 'bg-neutral-700 text-white' : 'text-neutral-300'
+              className={`w-full px-4 py-3 text-left text-sm hover:bg-neutral-100 ${
+                value === option.value ? 'bg-neutral-100 text-black' : 'text-black'
               }`}
             >
               {option.label}
@@ -257,16 +257,16 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
   };
 
   return (
-    <div className="min-h-screen bg-neutral-900 relative">
+    <div className="min-h-screen bg-fixes-bg-white relative">
       {/* Grain texture overlay */}
       <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg width=%2760%27 height=%2760%27 viewBox=%270 0 60 60%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cg fill=%27none%27 fill-rule=%27evenodd%27%3E%3Cg fill=%27%23ffffff%27 fill-opacity=%270.1%27%3E%3Ccircle cx=%277%27 cy=%277%27 r=%271%27/%3E%3Ccircle cx=%2727%27 cy=%277%27 r=%271%27/%3E%3Ccircle cx=%2747%27 cy=%277%27 r=%271%27/%3E%3Ccircle cx=%277%27 cy=%2727%27 r=%271%27/%3E%3Ccircle cx=%2727%27 cy=%2727%27 r=%271%27/%3E%3Ccircle cx=%2747%27 cy=%2727%27 r=%271%27/%3E%3Ccircle cx=%277%27 cy=%2747%27 r=%271%27/%3E%3Ccircle cx=%2727%27 cy=%2747%27 r=%271%27/%3E%3Ccircle cx=%2747%27 cy=%2747%27 r=%271%27/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 font-body">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={onBack}
-            className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200 mb-6"
+            className="flex items-center space-x-2  text-fixes-heading-dark hover:text-black transition-colors duration-200 mb-6"
           >
             <ArrowLeft className="w-5 h-5" />
             <span className="font-medium">Back to Home</span>
@@ -274,14 +274,14 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
           
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-primary-500 rounded-2xl flex items-center justify-center hidden md:flex">
+              <div className="w-12 h-12 bg-fixes-accent-purple rounded-2xl flex items-center justify-center hidden md:flex">
                 <Users className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white">Find Your Therapist</h1>
-                <p className="text-neutral-300">Connect with licensed mental health professionals</p>
+                <h1 className="text-3xl font-bold text-fixes-heading-dark">Find Your Therapist</h1>
+                <p className="text-fixes-heading-dark">Connect with licensed mental health professionals</p>
                 {initialFilter && (
-                  <p className="text-primary-500 text-sm mt-1">
+                  <p className="text-fixes-accent-purple text-sm mt-1">
                     Showing therapists for: {getServiceCategoryDisplayName(initialFilter)}
                   </p>
                 )}
@@ -304,7 +304,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="w-full bg-black/50 border border-neutral-700 rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent text-white overflow-hidden text-ellipsis"
+            className="w-full bg-fixes-bg-white px-4 py-3 text-sm text-fixes-accent-black overflow-hidden text-ellipsis"
           >
             <option value="name">Sort by Name</option>
             <option value="specialty">Sort by Specialty</option>
@@ -313,19 +313,19 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
         </div>
 
         {/* Simplified Filters */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-3xl shadow-lg border border-neutral-800 p-6 mb-8 relative"
+        <div className="bg-white border border-black shadow-lg p-6 mb-8 relative rounded-xl"
              style={{ zIndex: 10 }}>
           <div className="grid md:grid-cols-5 gap-4 mb-4">
             {/* Search */}
             <div className="md:col-span-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-fixes-heading-dark" />
                 <input
                   type="text"
                   placeholder="Search therapists..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-neutral-700 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-neutral-800 text-white placeholder-neutral-400"
+                  className="w-full pl-10 pr-4 py-3 bg-white text-black placeholder-fixes-heading-dark border-0 border-b border-black focus:outline-none text-sm"
                 />
               </div>
             </div>
@@ -362,10 +362,10 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
                   ...filters, 
                   availability: filters.availability === 'available' ? undefined : 'available' 
                 })}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-full border transition-all duration-200 text-sm font-medium ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-full border transition-all duration-200 text-sm font-normal ${
                   filters.availability === 'available'
-                    ? 'bg-accent-green/20 text-accent-green border-accent-green/30'
-                    : 'bg-neutral-800 text-neutral-300 border-neutral-700 hover:border-neutral-600'
+                    ? 'bg-fixes-accent-black text-white border-fixes-accent-black'
+                    : 'bg-fixes-bg-white text-fixes-accent-black border-fixes-accent-black hover:border-fixes-accent-black hover:bg-fixes-accent-black hover:text-fixes-bg-white'
                 }`}
               >
                 <Clock className="w-4 h-4" />
@@ -376,7 +376,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="text-sm text-neutral-400 hover:text-neutral-200 transition-colors duration-200"
+                className="text-sm text-fixes-accent-black hover:text-semibold transition-colors duration-200"
               >
                 Clear all
               </button>
@@ -388,7 +388,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
         {loading && (
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
-              <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="w-16 h-16 border-4 border-fixes-box-purple border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-white">Loading therapists...</p>
               <p className="text-neutral-400 text-sm mt-2">
                 {'Fetching from Firebase...'}
@@ -404,7 +404,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
         <div className="hidden sm:block">
           <button
             type="button"
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-fixes-box-purple text-white rounded-full p-2 shadow-lg transition-all duration-200"
             style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
             onClick={() => scrollSlider('left')}
           >
@@ -413,7 +413,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
 
           <button
             type="button"
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-fixes-box-purple text-white rounded-full p-2 shadow-lg transition-all duration-200"
             style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
             onClick={() => scrollSlider('right')}
           >
@@ -445,14 +445,14 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
             <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
               <Users className="w-8 h-8 text-neutral-400" />
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">No therapists found</h3>
-            <p className="text-neutral-300 mb-6">
+            <h3 className="text-xl font-semibold text-fixes-heading-dark mb-2">No therapists found</h3>
+            <p className="text-fixes-heading-dark mb-6">
               {'No therapists have been added to Firebase yet. Add therapists through the admin panel.'}
             </p>
             <div className="flex items-center justify-center space-x-4">
               <button
                 onClick={clearFilters}
-                className="bg-primary-500 text-white px-6 py-3 rounded-2xl hover:bg-primary-600 transition-colors duration-200 font-medium"
+                className="bg-fixes-box-purple text-white px-6 py-3 rounded-2xl hover:bg-primary-600 transition-colors duration-200 font-medium"
               >
                 Clear All Filters
               </button>
@@ -463,7 +463,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
         <div className="flex justify-center gap-6 mt-4 sm:hidden">
           <button
             type="button"
-            className="bg-black/60 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+            className="bg-black/60 hover:bg-fixes-box-purple text-white rounded-full p-2 shadow-lg transition-all duration-200"
             style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
             onClick={() => scrollSlider('left')}
           >
@@ -472,7 +472,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
 
           <button
             type="button"
-            className="bg-black/60 hover:bg-primary-500 text-white rounded-full p-2 shadow-lg transition-all duration-200"
+            className="bg-black/60 hover:bg-fixes-box-purple text-white rounded-full p-2 shadow-lg transition-all duration-200"
             style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
             onClick={() => scrollSlider('right')}
           >

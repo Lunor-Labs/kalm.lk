@@ -4,12 +4,13 @@ import {
   User, Upload, Save, X, Video, Phone, MessageCircle,
   ChevronDown, ChevronUp,
 } from 'lucide-react';
-import { 
-  collection, 
-  getDocs, 
-  updateDoc, 
-  doc, 
-  query, 
+import {
+  collection,
+  getDocs,
+  getDoc,
+  updateDoc,
+  doc,
+  query,
   where,
   serverTimestamp
 } from 'firebase/firestore';
@@ -130,21 +131,27 @@ const TherapistProfile: React.FC = () => {
 
     try {
       setLoading(true);
-      const therapistsRef = collection(db, 'therapists');
-      const q = query(therapistsRef, where('userId', '==', user.uid));
-      const snapshot = await getDocs(q);
-      
-      if (snapshot.empty) {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+
+      if (!userDoc.exists()) {
+        toast.error('User profile not found');
+        setLoading(false);
+        return;
+      }
+
+      const userData = userDoc.data();
+      if (!userData.therapistProfile) {
         toast.error('Therapist profile not found');
         setLoading(false);
         return;
       }
 
       const therapistData = {
-        id: snapshot.docs[0].id,
-        ...snapshot.docs[0].data(),
-        createdAt: snapshot.docs[0].data().createdAt?.toDate(),
-        updatedAt: snapshot.docs[0].data().updatedAt?.toDate()
+        id: userDoc.id,
+        ...userData.therapistProfile,
+        email: userData.email,
+        createdAt: userData.createdAt?.toDate(),
+        updatedAt: userData.updatedAt?.toDate()
       } as Therapist;
 
       setTherapist(therapistData);
@@ -282,20 +289,23 @@ const TherapistProfile: React.FC = () => {
 
     setSaving(true);
     try {
-      const therapistRef = doc(db, 'therapists', therapist.id);
-      await updateDoc(therapistRef, {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+      const userRef = doc(db, 'users', therapist.id);
+      await updateDoc(userRef, {
         email: formData.email,
-        credentials: formData.credentials.filter(c => c !== 'Other'),
-        specializations: formData.specializations,
-        languages: formData.languages,
-        services: formData.services,
-        sessionFormats: formData.sessionFormats,
-        bio: formData.bio,
-        experience: formData.experience,
-        hourlyRate: formData.hourlyRate,
-        profilePhoto: formData.profilePhoto,
+        therapistProfile: {
+          ...therapist.therapistProfile,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          credentials: formData.credentials.filter(c => c !== 'Other'),
+          specializations: formData.specializations,
+          languages: formData.languages,
+          services: formData.services,
+          sessionFormats: formData.sessionFormats,
+          bio: formData.bio,
+          experience: formData.experience,
+          hourlyRate: formData.hourlyRate,
+          profilePhoto: formData.profilePhoto,
+        },
         updatedAt: serverTimestamp()
       });
       

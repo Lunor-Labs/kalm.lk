@@ -5,14 +5,15 @@ import {
   Star, Clock, Award, Video, Phone, MessageCircle,
   Eye, EyeOff, ArrowLeft, Calendar, DollarSign, ChevronLeft, ChevronRight, ChevronDown, ChevronUp
 } from 'lucide-react';
-import { 
-  collection, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
   orderBy,
   serverTimestamp,
   setDoc
@@ -20,7 +21,6 @@ import {
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { db, secondaryAuth } from '../../lib/firebase'; // Import secondaryAuth
 import { uploadTherapistPhoto, deleteTherapistPhoto, getStoragePathFromUrl, validateImageFile } from '../../lib/storage';
-import { getNextId } from '../../lib/counters';
 import toast from 'react-hot-toast';
 
 interface Therapist {
@@ -156,17 +156,23 @@ const TherapistManagement: React.FC = () => {
   const loadTherapists = async () => {
     try {
       setLoading(true);
-      const therapistsRef = collection(db, 'therapists');
-      const q = query(therapistsRef, orderBy('createdAt', 'desc'));
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('role', '==', 'therapist'), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
-      
-      const therapistsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate()
-      } as Therapist));
-      
+
+      const therapistsData = snapshot.docs.map(doc => {
+        const userData = doc.data();
+        if (!userData.therapistProfile) return null;
+
+        return {
+          id: doc.id,
+          ...userData.therapistProfile,
+          email: userData.email,
+          createdAt: userData.createdAt?.toDate(),
+          updatedAt: userData.updatedAt?.toDate()
+        } as Therapist;
+      }).filter(Boolean) as Therapist[];
+
       setTherapists(therapistsData);
     } catch (error) {
       console.error('Error loading therapists:', error);
@@ -286,21 +292,25 @@ const TherapistManagement: React.FC = () => {
     setLoading(true);
     try {
       if (editingTherapist) {
-        const therapistRef = doc(db, 'therapists', editingTherapist.id);
-        await updateDoc(therapistRef, {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
+        const userRef = doc(db, 'users', editingTherapist.id);
+        await updateDoc(userRef, {
           email: formData.email,
-          credentials: formData.credentials.filter(c => c !== 'Other'),
-          specializations: formData.specializations,
-          languages: formData.languages,
-          services: formData.services,
-          sessionFormats: formData.sessionFormats,
-          bio: formData.bio,
-          experience: formData.experience,
-          hourlyRate: formData.hourlyRate,
-          nextAvailableSlot: formData.nextAvailableSlot,
-          profilePhoto: formData.profilePhoto,
+          displayName: `${formData.firstName} ${formData.lastName}`,
+          therapistProfile: {
+            ...editingTherapist.therapistProfile,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            credentials: formData.credentials.filter(c => c !== 'Other'),
+            specializations: formData.specializations,
+            languages: formData.languages,
+            services: formData.services,
+            sessionFormats: formData.sessionFormats,
+            bio: formData.bio,
+            experience: formData.experience,
+            hourlyRate: formData.hourlyRate,
+            nextAvailableSlot: formData.nextAvailableSlot,
+            profilePhoto: formData.profilePhoto,
+          },
           updatedAt: serverTimestamp()
         });
         
@@ -315,46 +325,34 @@ const TherapistManagement: React.FC = () => {
           displayName: `${formData.firstName} ${formData.lastName}`
         });
         
-        // Generate sequential therapist ID for new therapist first
-        const therapistIdInt = await getNextId('therapist');
 
-        // Create user document in Firestore (include therapistIdInt)
+        // Create user document in Firestore with therapist profile
         await setDoc(doc(db, 'users', user.uid), {
           uid: user.uid,
           email: user.email,
           displayName: `${formData.firstName} ${formData.lastName}`,
           role: 'therapist',
-          therapistIdInt, // Add therapist ID to user document
           isAnonymous: false,
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
+          therapistProfile: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            credentials: formData.credentials.filter(c => c !== 'Other'),
+            specializations: formData.specializations,
+            languages: formData.languages,
+            services: formData.services,
+            isAvailable: false,
+            sessionFormats: formData.sessionFormats,
+            bio: formData.bio,
+            experience: formData.experience,
+            rating: 5.0,
+            reviewCount: 0,
+            hourlyRate: formData.hourlyRate,
+            profilePhoto: formData.profilePhoto || 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
+            nextAvailableSlot: formData.nextAvailableSlot,
+          }
         });
-        
-        // Create therapist document
-        const therapistData = {
-          userId: user.uid,
-          therapistIdInt, // Sequential integer ID for easy tracking
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          credentials: formData.credentials.filter(c => c !== 'Other'),
-          specializations: formData.specializations,
-          languages: formData.languages,
-          services: formData.services,
-          isAvailable: false,
-          sessionFormats: formData.sessionFormats,
-          bio: formData.bio,
-          experience: formData.experience,
-          rating: 5.0,
-          reviewCount: 0,
-          hourlyRate: formData.hourlyRate,
-          profilePhoto: formData.profilePhoto || 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
-          nextAvailableSlot: formData.nextAvailableSlot,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        };
-        
-        await addDoc(collection(db, 'therapists'), therapistData);
         
         // Sign out the therapist from secondaryAuth to ensure admin stays logged in
         await secondaryAuth.signOut();
@@ -385,7 +383,7 @@ const TherapistManagement: React.FC = () => {
   };
 
   const handleDelete = async (therapist: Therapist) => {
-    if (!window.confirm(`Are you sure you want to delete ${therapist.firstName} ${therapist.lastName}?`)) {
+    if (!window.confirm(`Are you sure you want to remove therapist privileges from ${therapist.firstName} ${therapist.lastName}? This will change their role to client.`)) {
       return;
     }
 
@@ -396,13 +394,20 @@ const TherapistManagement: React.FC = () => {
           await deleteTherapistPhoto(photoPath);
         }
       }
-      
-      await deleteDoc(doc(db, 'therapists', therapist.id));
-      toast.success('Therapist deleted successfully');
+
+      // Change role back to client and remove therapist profile
+      const userRef = doc(db, 'users', therapist.id);
+      await updateDoc(userRef, {
+        role: 'client',
+        therapistProfile: null,
+        updatedAt: serverTimestamp()
+      });
+
+      toast.success('Therapist privileges removed successfully');
       loadTherapists();
     } catch (error: any) {
-      console.error('Error deleting therapist:', error);
-      toast.error('Failed to delete therapist. Please try again.');
+      console.error('Error removing therapist privileges:', error);
+      toast.error('Failed to remove therapist privileges. Please try again.');
     }
   };
 

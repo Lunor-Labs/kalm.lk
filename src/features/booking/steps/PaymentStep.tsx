@@ -7,7 +7,6 @@ import { initiatePayHerePayment } from '../../../lib/payhere';
 import toast from 'react-hot-toast';
 import { db } from '../../../lib/firebase';
 import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from 'firebase/firestore';
-import { getNextId } from '../../../lib/counters';
 import { logPaymentError, logUserError } from '../../../lib/errorLogger';
 
 interface PaymentStepProps {
@@ -78,16 +77,13 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       if (paymentResult.success) {
         const bookingId = paymentResult.orderId || `booking-${Date.now()}`;
         console.log('bookingData.therapistId', bookingData.therapistId);
-        // Get the therapist's userId from the therapist document
-        const therapistDoc = await getDoc(doc(db, 'therapists', bookingData.therapistId));
-        const therapistUserId = therapistDoc.exists()
-          ? therapistDoc.data()?.userId || bookingData.therapistId
-          : bookingData.therapistId;
+        // Therapist ID is now directly the user ID
+        const therapistUserId = bookingData.therapistId;
 
         // Create the session in Firebase after successful payment
         const sessionId = await createSession({
           bookingId,
-          therapistId: therapistUserId, // Use therapist's userId, not document ID
+          therapistId: bookingData.therapistId, // Use therapist's userId, not document ID
           clientId: user.uid,
           sessionType: bookingData.sessionType || 'video', // Use sessionType from bookingData
           status: 'scheduled',
@@ -97,75 +93,28 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
         // Record payment in Firestore for admin reporting & payouts
         try {
-          // Get sequential integer IDs
-          const [clientIdInt, therapistIdInt, bookingIdInt, paymentIdInt] = await Promise.all([
-            // Get client integer ID from user document (should exist from signup, but fallback if missing)
-            (async () => {
-              const userDoc = await getDoc(doc(db, 'users', user.uid));
-              if (userDoc.exists() && userDoc.data().clientIdInt) {
-                return userDoc.data().clientIdInt;
-              }
-              // Fallback: Generate new client ID if somehow missing (shouldn't happen for new signups)
-              console.warn('User missing clientIdInt, generating fallback ID');
-              const newClientIdInt = await getNextId('client');
-              // Try to save it to user document (may fail if not allowed, that's ok)
-              try {
-                await updateDoc(doc(db, 'users', user.uid), { clientIdInt: newClientIdInt });
-              } catch (e) {
-                // Ignore if we can't update user doc
-              }
-              return newClientIdInt;
-            })(),
-            // Get therapist integer ID from therapist document
-            (async () => {
-              try {
-                const therapistDoc = await getDoc(doc(db, 'therapists', bookingData.therapistId));
-                if (therapistDoc.exists() && therapistDoc.data().therapistIdInt) {
-                  return therapistDoc.data().therapistIdInt;
-                }
-                // Generate new therapist ID if not exists
-                const newTherapistId = await getNextId('therapist');
-                // Try to save it to therapist document
-                try {
-                  await updateDoc(doc(db, 'therapists', bookingData.therapistId), { therapistIdInt: newTherapistId });
-                } catch (e) {
-                  // Ignore if we can't update therapist doc
-                }
-                return newTherapistId;
-              } catch (e) {
-                console.warn('Could not get therapist integer ID:', e);
-                return undefined;
-              }
-            })(),
-            getNextId('booking'),
-            getNextId('payment'),
-          ]);
-
-          const paymentsRef = collection(db, 'payments');
-          await addDoc(paymentsRef, {
+          const paymentData = {
             bookingId,
             sessionId,
             clientId: user.uid,
             clientName: user.displayName || user.email || 'Unknown',
             therapistId: bookingData.therapistId,
-            // Sequential integer IDs
-            clientIdInt,
-            therapistIdInt,
-            bookingIdInt,
-            paymentIdInt,
             amount: bookingData.amount || finalAmount,
-            currency: 'LKR',
-            paymentMethod: 'payhere',
-            paymentStatus: 'completed',
+            currency: 'LKR' as const,
+            paymentMethod: 'payhere' as const,
+            paymentStatus: 'completed' as const,
             paymentId: paymentResult.paymentId || null,
             orderId: bookingId,
             couponCode: bookingData.couponCode || null,
             discountAmount: bookingData.discountAmount || 0,
             finalAmount,
-            payoutStatus: 'pending',
+            payoutStatus: 'pending' as const,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
-          });
+          };
+
+          const paymentsRef = collection(db, 'payments');
+          await addDoc(paymentsRef, paymentData);
         } catch (paymentError: any) {
           console.error('Failed to record payment document:', paymentError);
           toast.error(paymentError?.message || 'Session booked, but failed to record payment in admin reports.');
