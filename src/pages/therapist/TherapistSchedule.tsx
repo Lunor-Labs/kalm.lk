@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon, Clock, Video, Users, Plus, X, Dot } from 'lucide-react';
-import { format, addDays, startOfWeek, isSameDay, startOfDay, endOfDay, startOfWeek as startOfWeekDate, endOfWeek } from 'date-fns';
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  Video,
+  Users,
+  Plus,
+  X,
+  Dot,
+} from 'lucide-react';
+import {
+  format,
+  addDays,
+  startOfWeek,
+  isSameDay,
+  startOfDay,
+  endOfDay,
+  endOfWeek,
+} from 'date-fns';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -21,7 +37,6 @@ interface Session {
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
-  // Computed fields for display
   time: string;
   date: Date;
   type: string;
@@ -30,6 +45,7 @@ interface Session {
 const TherapistSchedule: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'week' | 'day'>('week');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -38,14 +54,14 @@ const TherapistSchedule: React.FC = () => {
   const [showDayModal, setShowDayModal] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [stats, setStats] = useState({
     todaysSessions: 0,
     thisWeekSessions: 0,
     totalClients: 0,
-    nextSessionTime: ''
+    nextSessionTime: '',
   });
 
-  // Load sessions from database
   useEffect(() => {
     if (user) {
       loadSessions();
@@ -54,11 +70,9 @@ const TherapistSchedule: React.FC = () => {
 
   const loadSessions = async () => {
     if (!user) return;
+    setLoading(true);
 
     try {
-      setLoading(true);
-      
-      // Get sessions for the current therapist
       const sessionsRef = collection(db, 'sessions');
       const q = query(
         sessionsRef,
@@ -68,10 +82,10 @@ const TherapistSchedule: React.FC = () => {
       );
 
       const snapshot = await getDocs(q);
-      const sessionsData = snapshot.docs.map(doc => {
+      const sessionsData = snapshot.docs.map((doc) => {
         const data = doc.data();
         const scheduledTime = data.scheduledTime?.toDate() || new Date();
-        
+
         return {
           id: doc.id,
           clientId: data.clientId || '',
@@ -85,10 +99,9 @@ const TherapistSchedule: React.FC = () => {
           notes: data.notes || '',
           createdAt: data.createdAt?.toDate() || new Date(),
           updatedAt: data.updatedAt?.toDate() || new Date(),
-          // Computed fields for display
           time: format(scheduledTime, 'h:mm a'),
           date: scheduledTime,
-          type: data.sessionType || 'video'
+          type: data.sessionType || 'video',
         } as Session;
       });
 
@@ -104,50 +117,50 @@ const TherapistSchedule: React.FC = () => {
 
   const calculateStats = (sessionsData: Session[]) => {
     const today = new Date();
-    const startOfToday = startOfDay(today);
-    const endOfToday = endOfDay(today);
-    const startOfThisWeek = startOfWeekDate(today);
-    const endOfThisWeek = endOfWeek(today);
+    const startToday = startOfDay(today);
+    const endToday = endOfDay(today);
+    const startThisWeek = startOfWeek(today);
+    const endThisWeek = endOfWeek(today);
 
-    const todaysSessions = sessionsData.filter(session => 
-      session.scheduledTime >= startOfToday && session.scheduledTime <= endOfToday
+    const todaysSessions = sessionsData.filter(
+      (s) => s.scheduledTime >= startToday && s.scheduledTime <= endToday
     ).length;
 
-    const thisWeekSessions = sessionsData.filter(session =>
-      session.scheduledTime >= startOfThisWeek && session.scheduledTime <= endOfThisWeek
+    const thisWeekSessions = sessionsData.filter(
+      (s) => s.scheduledTime >= startThisWeek && s.scheduledTime <= endThisWeek
     ).length;
 
-    const uniqueClients = new Set(sessionsData.map(session => session.clientId)).size;
+    const uniqueClients = new Set(sessionsData.map((s) => s.clientId)).size;
 
-    const upcomingSessions = sessionsData
-      .filter(session => session.scheduledTime > new Date())
+    const upcoming = sessionsData
+      .filter((s) => s.scheduledTime > today)
       .sort((a, b) => a.scheduledTime.getTime() - b.scheduledTime.getTime());
 
-    const nextSessionTime = upcomingSessions.length > 0 
-      ? format(upcomingSessions[0].scheduledTime, 'h:mm a')
-      : 'None';
+    const nextSessionTime = upcoming.length > 0 ? format(upcoming[0].scheduledTime, 'h:mm a') : 'None';
 
     setStats({
       todaysSessions,
       thisWeekSessions,
       totalClients: uniqueClients,
-      nextSessionTime
+      nextSessionTime,
     });
   };
 
-  const weekDays = Array.from({ length: 7 }, (_, i) => 
+  const weekDays = Array.from({ length: 7 }, (_, i) =>
     addDays(startOfWeek(selectedDate), i)
   );
 
-  const getSessionsForDate = (date: Date) => {
-    return sessions.filter(session => isSameDay(session.date, date));
-  };
+  const getSessionsForDate = (date: Date) =>
+    sessions.filter((session) => isSameDay(session.date, date));
 
   const getSessionIcon = (type: string) => {
     switch (type) {
-      case 'video': return <Video className="w-4 h-4" />;
-      case 'audio': return <Clock className="w-4 h-4" />;
-      default: return <Users className="w-4 h-4" />;
+      case 'video':
+        return <Video className="w-4 h-4" />;
+      case 'audio':
+        return <Clock className="w-4 h-4" />;
+      default:
+        return <Users className="w-4 h-4" />;
     }
   };
 
@@ -170,292 +183,295 @@ const TherapistSchedule: React.FC = () => {
     setSelectedSession(null);
   };
 
-  // Show loading state
   if (loading && sessions.length === 0) {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white">Loading schedule...</p>
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-700">Loading schedule...</p>
         </div>
       </div>
     );
   }
 
-  // Show message if user is not authenticated
   if (!user) {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <CalendarIcon className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
-          <p className="text-white mb-2">Please log in to view your schedule</p>
-          <p className="text-neutral-400">You need to be authenticated as a therapist</p>
+          <CalendarIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-700 mb-2">Please log in to view your schedule</p>
+          <p className="text-gray-500">You need to be authenticated as a therapist</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 px-4">
+    <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">My Schedule</h1>
-          <p className="text-neutral-300 text-sm sm:text-base">Manage Your Appointments And Availability</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Schedule</h1>
+          <p className="text-gray-600 mt-1">Manage your appointments and availability</p>
         </div>
-        
-        <div className="flex flex-col xs:flex-row items-stretch sm:items-center gap-3">
-          {/* View Toggle */}
-          <div className="flex bg-neutral-800 rounded-2xl p-1">
+
+        <div className="flex flex-col xs:flex-row gap-3">
+          <div className="inline-flex bg-gray-100 rounded-xl p-1">
             <button
               onClick={() => setViewMode('week')}
-              className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl text-sm font-medium ${
-                viewMode === 'week' ? 'bg-primary-500 text-white' : 'text-neutral-300 hover:text-white'
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+                viewMode === 'week'
+                  ? 'bg-white shadow-sm text-gray-900'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               Week
             </button>
             <button
               onClick={() => setViewMode('day')}
-              className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl text-sm font-medium ${
-                viewMode === 'day' ? 'bg-primary-500 text-white' : 'text-neutral-300 hover:text-white'
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+                viewMode === 'day'
+                  ? 'bg-white shadow-sm text-gray-900'
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               Day
             </button>
           </div>
-          
-          <button 
+
+          <button
             onClick={() => navigate('/therapist/availability')}
-            className="bg-primary-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-2xl hover:bg-primary-600 flex items-center justify-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-colors font-medium"
           >
-            <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
-            <span className="text-sm sm:text-base">Add Availability</span>
+            <Plus size={18} />
+            Add Availability
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
-            <CalendarIcon className="w-4 sm:w-5 h-4 sm:h-5 text-primary-500" />
-            <span className="text-neutral-300 text-xs sm:text-sm">Today's</span>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { title: "Today's Sessions", value: stats.todaysSessions, icon: CalendarIcon, color: 'blue-600' },
+          { title: 'This Week', value: stats.thisWeekSessions, icon: Clock, color: 'emerald-600' },
+          { title: 'Total Clients', value: stats.totalClients, icon: Users, color: 'amber-600' },
+          { title: 'Next Session', value: stats.nextSessionTime, icon: Video, color: 'purple-600' },
+        ].map((stat, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow transition-shadow"
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <stat.icon className={`w-5 h-5 text-${stat.color}`} />
+              <span className="text-sm font-medium text-gray-600">{stat.title}</span>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">
+              {loading ? '...' : stat.value}
+            </p>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-white">
-            {loading ? '...' : stats.todaysSessions}
-          </p>
-        </div>
-        
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
-            <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-accent-green" />
-            <span className="text-neutral-300 text-xs sm:text-sm">This Week</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-white">
-            {loading ? '...' : stats.thisWeekSessions}
-          </p>
-        </div>
-        
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
-            <Users className="w-4 sm:w-5 h-4 sm:h-5 text-accent-yellow" />
-            <span className="text-neutral-300 text-xs sm:text-sm">Total Clients</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-white">
-            {loading ? '...' : stats.totalClients}
-          </p>
-        </div>
-        
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
-            <Video className="w-4 sm:w-5 h-4 sm:h-5 text-accent-orange" />
-            <span className="text-neutral-300 text-xs sm:text-sm">Next Session</span>
-          </div>
-          <p className="text-base sm:text-lg font-bold text-white">
-            {loading ? '...' : stats.nextSessionTime}
-          </p>
-        </div>
+        ))}
       </div>
 
-      {/* Calendar View */}
-      <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-neutral-800 overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-neutral-800">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h2 className="text-lg sm:text-xl font-semibold text-white">
+      {/* Calendar Container */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-5 sm:p-6 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
               {format(selectedDate, 'MMMM yyyy')}
             </h2>
-            <div className="flex items-center justify-between sm:justify-end gap-2">
 
-            <button
-              onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? -7 : -1))}
-              className="p-2 bg-neutral-800 rounded-xl text-white hover:bg-neutral-700 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setSelectedDate(new Date())}
-              className="px-3 sm:px-4 py-1 sm:py-2 bg-neutral-800 text-white rounded-xl hover:bg-neutral-700 text-xs sm:text-sm"
-            >
-              Today
-            </button>
-            <button
-              onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? 7 : 1))}
-              className="p-2 bg-neutral-800 rounded-xl text-white hover:bg-neutral-700 transition-colors"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? -7 : -1))}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <ChevronLeft size={20} />
+              </button>
+
+              <button
+                onClick={() => setSelectedDate(new Date())}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors"
+              >
+                Today
+              </button>
+
+              <button
+                onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? 7 : 1))}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <ChevronRight size={20} />
+              </button>
             </div>
           </div>
         </div>
 
         {viewMode === 'week' ? (
           <div className="p-4 sm:p-6">
-            {/* Responsive week headers with dots */}
-            <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
-              {weekDays.map((day, index) => {
+            {/* Week headers */}
+            <div className="grid grid-cols-7 gap-2 mb-4">
+              {weekDays.map((day) => {
                 const daySessions = getSessionsForDate(day);
+                const isToday = isSameDay(day, new Date());
+
                 return (
-                  <div key={index} className="text-center">
-                    <button 
-                      onClick={() => handleDayClick(day)}
-                      className={`w-full p-1 sm:p-2 rounded-lg flex flex-col items-center ${
-                        isSameDay(day, new Date()) ? 'bg-primary-500 text-white' : 'text-neutral-300'
+                  <button
+                    key={day.toString()}
+                    onClick={() => handleDayClick(day)}
+                    className={`py-3 px-2 rounded-xl text-center transition-colors ${
+                      isToday ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <p className="text-xs font-medium text-gray-500">{format(day, 'EEE')}</p>
+                    <p
+                      className={`text-lg font-bold mt-1 ${
+                        isToday ? 'text-blue-700' : 'text-gray-900'
                       }`}
                     >
-                      <p className="text-xs sm:text-sm font-medium">{format(day, 'EEE')}</p>
-                      <p className="text-sm sm:text-base font-bold">{format(day, 'd')}</p>
-                      {daySessions.length > 0 && (
-                        <Dot 
-                          className={`w-4 h-4 ${
-                            daySessions.some(s => s.status === 'confirmed') 
-                              ? 'text-accent-green' 
-                              : 'text-accent-yellow'
-                          }`} 
-                        />
-                      )}
-                    </button>
-                  </div>
+                      {format(day, 'd')}
+                    </p>
+                    {daySessions.length > 0 && (
+                      <Dot
+                        className={`mx-auto mt-1 w-6 h-6 ${
+                          daySessions.some((s) => s.status === 'confirmed')
+                            ? 'text-emerald-500'
+                            : 'text-amber-500'
+                        }`}
+                      />
+                    )}
+                  </button>
                 );
               })}
             </div>
 
-            {/* Calendar cells */}
-            <div className="grid grid-cols-7 gap-1 sm:gap-2">
-              {weekDays.map((day, index) => {
+            {/* Week cells */}
+            <div className="grid grid-cols-7 gap-2">
+              {weekDays.map((day) => {
                 const daySessions = getSessionsForDate(day);
+
                 return (
-                  <div key={index} className="min-h-[100px] sm:min-h-[150px]">
-                    <div className="h-full flex flex-col gap-1 sm:gap-2">
-                      {daySessions.map((session) => (
-                        <button
-                          key={session.id}
-                          onClick={() => handleSessionClick(session)}
-                          className={`p-2 rounded-lg text-xs text-left ${
-                            session.status === 'confirmed'
-                              ? 'bg-accent-green/20 border border-accent-green/30'
-                              : 'bg-accent-yellow/20 border border-accent-yellow/30'
-                          } hover:opacity-80 transition-opacity`}
-                        >
-                          <div className="flex items-center gap-1">
-                            {getSessionIcon(session.type)}
-                            <span className="font-medium text-white truncate">{session.time}</span>
-                          </div>
-                          <p className="text-neutral-300 truncate">{session.clientName}</p>
-                        </button>
-                      ))}
-                    </div>
+                  <div key={day.toString()} className="min-h-[160px] space-y-2">
+                    {daySessions.map((session) => (
+                      <button
+                        key={session.id}
+                        onClick={() => handleSessionClick(session)}
+                        className={`w-full p-3 rounded-xl text-left transition-all text-sm border ${
+                          session.status === 'confirmed'
+                            ? 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
+                            : 'bg-amber-50 border-amber-200 hover:bg-amber-100'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          {getSessionIcon(session.type)}
+                          <span className="font-semibold text-gray-900">{session.time}</span>
+                        </div>
+                        <p className="text-gray-700 truncate">{session.clientName}</p>
+                      </button>
+                    ))}
                   </div>
                 );
               })}
             </div>
           </div>
         ) : (
-          <div className="p-4 sm:p-6">
-            <div className="space-y-3 sm:space-y-4">
-              {getSessionsForDate(selectedDate).map((session) => (
-                <div
-                  key={session.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-neutral-800/50 rounded-xl sm:rounded-2xl gap-3"
-                >
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className={`w-10 sm:w-12 h-10 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center ${
-                      session.status === 'confirmed' ? 'bg-accent-green/20' : 'bg-accent-yellow/20'
-                    }`}>
-                      {getSessionIcon(session.type)}
+          <div className="p-6">
+            {getSessionsForDate(selectedDate).length === 0 ? (
+              <div className="text-center py-20">
+                <CalendarIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-700 mb-2">
+                  No sessions scheduled today
+                </h3>
+                <p className="text-gray-500">Add your availability to accept bookings</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {getSessionsForDate(selectedDate).map((session) => (
+                  <div
+                    key={session.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-gray-50 rounded-2xl border border-gray-200 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`w-14 h-14 rounded-xl flex items-center justify-center ${
+                          session.status === 'confirmed' ? 'bg-emerald-100' : 'bg-amber-100'
+                        }`}
+                      >
+                        {getSessionIcon(session.type)}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{session.clientName}</p>
+                        <p className="text-gray-600 text-sm">
+                          {session.time} • {session.duration} min
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-white font-medium text-sm sm:text-base">{session.clientName}</p>
-                      <p className="text-neutral-300 text-xs sm:text-sm">{session.time} • {session.duration} min</p>
-                    </div>
+                    <button className="mt-4 sm:mt-0 px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium">
+                      Join
+                    </button>
                   </div>
-                  
-                  <button className="bg-primary-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl hover:bg-primary-600 text-xs sm:text-sm">
-                    Join
-                  </button>
-                </div>
-              ))}
-              
-              {getSessionsForDate(selectedDate).length === 0 && (
-                <div className="text-center py-8 sm:py-16">
-                  <CalendarIcon className="w-12 sm:w-16 h-12 sm:h-16 text-neutral-600 mx-auto mb-3 sm:mb-4" />
-                  <p className="text-neutral-300 mb-1 sm:mb-2 text-sm sm:text-base">No sessions scheduled</p>
-                  <p className="text-neutral-400 text-xs sm:text-sm">Add availability to accept bookings</p>
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Session Details Modal */}
+      {/* Session Detail Modal */}
       {showModal && selectedSession && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-neutral-900 rounded-2xl sm:rounded-3xl border border-neutral-800 w-full max-w-md overflow-hidden">
-            <div className="p-4 sm:p-6 border-b border-neutral-800 flex justify-between items-center">
-              <h3 className="text-lg sm:text-xl font-semibold text-white">Session Details</h3>
-              <button onClick={closeModal} className="text-neutral-400 hover:text-white">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg border border-gray-200 shadow-2xl">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-xl font-semibold text-gray-900">Session Details</h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X size={24} />
               </button>
             </div>
-            
-            <div className="p-4 sm:p-6 space-y-4">
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  selectedSession.status === 'confirmed' ? 'bg-accent-green/20' : 'bg-accent-yellow/20'
-                }`}>
+
+            <div className="p-6 space-y-6">
+              <div className="flex items-start gap-4">
+                <div
+                  className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${
+                    selectedSession.status === 'confirmed' ? 'bg-emerald-100' : 'bg-amber-100'
+                  }`}
+                >
                   {getSessionIcon(selectedSession.type)}
                 </div>
                 <div>
-                  <h4 className="text-white font-medium text-lg">{selectedSession.clientName}</h4>
-                  <p className="text-neutral-300 text-sm">
+                  <h4 className="text-lg font-semibold text-gray-900">
+                    {selectedSession.clientName}
+                  </h4>
+                  <p className="text-gray-600 mt-1">
                     {format(selectedSession.date, 'MMMM d, yyyy')} • {selectedSession.time}
                   </p>
                 </div>
               </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-neutral-800/50 p-3 rounded-xl">
-                  <p className="text-neutral-300 text-xs">Duration</p>
-                  <p className="text-white font-medium">{selectedSession.duration} minutes</p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Duration</p>
+                  <p className="font-medium text-gray-900">{selectedSession.duration} minutes</p>
                 </div>
-                
-                <div className="bg-neutral-800/50 p-3 rounded-xl">
-                  <p className="text-neutral-300 text-xs">Type</p>
-                  <p className="text-white font-medium capitalize">{selectedSession.type}</p>
+
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Type</p>
+                  <p className="font-medium text-gray-900 capitalize">{selectedSession.type}</p>
                 </div>
-                
-                <div className="bg-neutral-800/50 p-3 rounded-xl">
-                  <p className="text-neutral-300 text-xs">Status</p>
-                  <p className={`font-medium ${
-                    selectedSession.status === 'confirmed' ? 'text-accent-green' : 'text-accent-yellow'
-                  }`}>
+
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">Status</p>
+                  <p
+                    className={`font-medium ${
+                      selectedSession.status === 'confirmed' ? 'text-emerald-600' : 'text-amber-600'
+                    }`}
+                  >
                     {selectedSession.status}
                   </p>
                 </div>
               </div>
-              
-              <button className="w-full bg-primary-500 text-white py-2 sm:py-3 rounded-xl hover:bg-primary-600">
+
+              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl transition-colors font-medium">
                 Join Session
               </button>
             </div>
@@ -465,47 +481,54 @@ const TherapistSchedule: React.FC = () => {
 
       {/* Day Sessions Modal */}
       {showDayModal && selectedDaySessions.length > 0 && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-neutral-900 rounded-2xl sm:rounded-3xl border border-neutral-800 w-full max-w-md overflow-hidden">
-            <div className="p-4 sm:p-6 border-b border-neutral-800 flex justify-between items-center">
-              <h3 className="text-lg sm:text-xl font-semibold text-white">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg border border-gray-200 shadow-2xl">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-xl font-semibold text-gray-900">
                 {format(selectedDaySessions[0].date, 'MMMM d, yyyy')}
               </h3>
-              <button onClick={closeModal} className="text-neutral-400 hover:text-white">
-                <X className="w-5 h-5" />
+              <button
+                onClick={closeModal}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X size={24} />
               </button>
             </div>
-            
-            <div className="p-4 sm:p-6 space-y-3">
+
+            <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
               {selectedDaySessions.map((session) => (
-                <div 
+                <div
                   key={session.id}
                   onClick={() => {
                     setSelectedSession(session);
                     setShowDayModal(false);
                     setShowModal(true);
                   }}
-                  className="p-3 sm:p-4 bg-neutral-800/50 rounded-xl sm:rounded-2xl flex items-center justify-between gap-3 cursor-pointer hover:bg-neutral-800/70 transition-colors"
+                  className="p-4 bg-gray-50 rounded-xl flex items-center justify-between gap-4 cursor-pointer hover:bg-gray-100 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                      session.status === 'confirmed' ? 'bg-accent-green/20' : 'bg-accent-yellow/20'
-                    }`}>
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        session.status === 'confirmed' ? 'bg-emerald-100' : 'bg-amber-100'
+                      }`}
+                    >
                       {getSessionIcon(session.type)}
                     </div>
                     <div>
-                      <p className="text-white font-medium text-sm sm:text-base">{session.clientName}</p>
-                      <p className="text-neutral-300 text-xs sm:text-sm">{session.time}</p>
+                      <p className="font-medium text-gray-900">{session.clientName}</p>
+                      <p className="text-sm text-gray-600">{session.time}</p>
                     </div>
                   </div>
-                  
-                  <div className={`px-2 sm:px-3 py-1 rounded-full text-xs ${
-                    session.status === 'confirmed'
-                      ? 'bg-accent-green/20 text-accent-green'
-                      : 'bg-accent-yellow/20 text-accent-yellow'
-                  }`}>
+
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      session.status === 'confirmed'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-amber-100 text-amber-700'
+                    }`}
+                  >
                     {session.status}
-                  </div>
+                  </span>
                 </div>
               ))}
             </div>

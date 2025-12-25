@@ -6,17 +6,15 @@ import {
   saveTherapistAvailability,
   getTherapistAvailability
 } from '../../lib/availability';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
 import toast from 'react-hot-toast';
-
 
 const TherapistAvailability = () => {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weeklySchedule, setWeeklySchedule] = useState(getDefaultWeeklySchedule());
-  const [specialDates, setSpecialDates] = useState([]);
+  const [specialDates, setSpecialDates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeView] = useState<'calendar' | 'settings'>('calendar');
   const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
   const [showDateDetailsModal, setShowDateDetailsModal] = useState(false);
   const [editingTimeSlot, setEditingTimeSlot] = useState<any>(null);
@@ -29,14 +27,12 @@ const TherapistAvailability = () => {
     price: 4500
   });
 
-  // Load data on mount
   useEffect(() => {
     if (user?.uid) {
       loadAvailabilityData();
     }
   }, [user]);
 
-  // Populate form when editing a slot
   useEffect(() => {
     if (editingTimeSlot && showTimeSlotModal) {
       setNewTimeSlot({
@@ -62,16 +58,12 @@ const TherapistAvailability = () => {
 
     try {
       setLoading(true);
-
       const availability = await getTherapistAvailability(user.uid);
-      if (availability) {
-      setWeeklySchedule((availability.weeklySchedule || getDefaultWeeklySchedule()) as any);
-      setSpecialDates((availability.specialDates || []) as any);
-      } else {
-        setWeeklySchedule(getDefaultWeeklySchedule());
-        setSpecialDates([]);
-      }
 
+      if (availability) {
+        setWeeklySchedule(availability.weeklySchedule || getDefaultWeeklySchedule());
+        setSpecialDates(availability.specialDates || []);
+      }
     } catch (error: any) {
       console.error('Failed to load availability:', error);
       toast.error('Failed to load availability data');
@@ -96,14 +88,12 @@ const TherapistAvailability = () => {
     const dayOfWeek = selectedDate.getDay();
     const weeklyDay = weeklySchedule.find((day: any) => day.dayOfWeek === dayOfWeek);
 
-    // Combine time slots from both weekly schedule and special dates
     const weeklySlots = weeklyDay?.timeSlots || [];
     const specialSlots = specialDate?.timeSlots || [];
 
-    // Mark slots with their source for potential future differentiation
     const allSlots = [
-      ...weeklySlots.map(slot => ({ ...slot, source: 'weekly' })),
-      ...specialSlots.map(slot => ({ ...slot, source: 'special' }))
+      ...weeklySlots.map((slot: any) => ({ ...slot, source: 'weekly' })),
+      ...specialSlots.map((slot: any) => ({ ...slot, source: 'special' }))
     ];
 
     return {
@@ -126,45 +116,38 @@ const TherapistAvailability = () => {
     const timeSlotId = editingTimeSlot?.id || `slot-${Date.now()}`;
     const timeSlot = {
       id: timeSlotId,
-      isAvailable: true, // All time slots are available for booking
+      isAvailable: true,
       ...newTimeSlot
     };
 
     const dateString = format(selectedDate, 'yyyy-MM-dd');
-
-    let updatedSchedule = weeklySchedule;
+    let updatedSchedule = [...weeklySchedule];
     let updatedSpecialDates = [...specialDates];
 
     if (newTimeSlot.isRecurring) {
-      // Add to weekly schedule - repeats every week
       const dayOfWeek = selectedDate.getDay();
-      updatedSchedule = weeklySchedule.map(day =>
+      updatedSchedule = updatedSchedule.map(day =>
         day.dayOfWeek === dayOfWeek
           ? {
-            ...day,
-            timeSlots: editingTimeSlot
-              ? day.timeSlots.map((ts: any) => (ts.id === timeSlotId ? timeSlot : ts))
-              : [...day.timeSlots, timeSlot] as any
-          }
+              ...day,
+              timeSlots: editingTimeSlot
+                ? day.timeSlots.map((ts: any) => (ts.id === timeSlotId ? timeSlot : ts))
+                : [...day.timeSlots, timeSlot]
+            }
           : day
       );
     } else {
-      // Add to special dates - applies only to this specific date
-      const existingSpecialDateIndex = updatedSpecialDates.findIndex(
-        (sd: any) => sd.date === dateString
-      );
+      const existingIndex = updatedSpecialDates.findIndex(sd => sd.date === dateString);
 
-      if (existingSpecialDateIndex >= 0) {
-        // Update existing special date
-        const existingSpecialDate = updatedSpecialDates[existingSpecialDateIndex];
-        updatedSpecialDates[existingSpecialDateIndex] = {
-          ...existingSpecialDate,
+      if (existingIndex >= 0) {
+        const existing = updatedSpecialDates[existingIndex];
+        updatedSpecialDates[existingIndex] = {
+          ...existing,
           timeSlots: editingTimeSlot
-            ? existingSpecialDate.timeSlots.map((ts: any) => ts.id === timeSlotId ? timeSlot : ts)
-            : [...existingSpecialDate.timeSlots, timeSlot]
+            ? existing.timeSlots.map((ts: any) => (ts.id === timeSlotId ? timeSlot : ts))
+            : [...existing.timeSlots, timeSlot]
         };
       } else {
-        // Create new special date
         updatedSpecialDates.push({
           date: dateString,
           timeSlots: [timeSlot],
@@ -176,20 +159,16 @@ const TherapistAvailability = () => {
     setWeeklySchedule(updatedSchedule);
     setSpecialDates(updatedSpecialDates);
 
-    // Auto-save to database
     try {
       if (user?.uid) {
         await saveTherapistAvailability(user.uid, updatedSchedule, updatedSpecialDates);
         toast.success(editingTimeSlot ? 'Time slot updated' : 'Time slot added');
       }
-    } catch (error: any) {
-      toast.error('Failed to save time slot. Please try again.');
-      // Revert on error
-      setWeeklySchedule(weeklySchedule);
-      setSpecialDates(specialDates);
+    } catch (error) {
+      toast.error('Failed to save changes');
+      loadAvailabilityData(); // revert on error
     }
 
-    // Reset modal
     setEditingTimeSlot(null);
     setShowTimeSlotModal(false);
   };
@@ -198,226 +177,277 @@ const TherapistAvailability = () => {
     const dateString = format(selectedDate, 'yyyy-MM-dd');
     const dayOfWeek = selectedDate.getDay();
 
-    let updatedSchedule = weeklySchedule;
+    let updatedSchedule = [...weeklySchedule];
     let updatedSpecialDates = [...specialDates];
-    let slotFound = false;
 
-    // Check if slot is in weekly schedule
-    const weeklyDay = weeklySchedule.find((day: any) => day.dayOfWeek === dayOfWeek);
-    if (weeklyDay?.timeSlots.some((ts: any) => ts.id === timeSlotId)) {
-      updatedSchedule = weeklySchedule.map(day =>
-        day.dayOfWeek === dayOfWeek
-          ? { ...day, timeSlots: day.timeSlots.filter((ts: any) => ts.id !== timeSlotId) }
-          : day
-      );
-      slotFound = true;
-    }
-
-    // Check if slot is in special dates
-    const specialDateIndex = updatedSpecialDates.findIndex(
-      (sd: any) => sd.date === dateString
-    );
-    if (specialDateIndex >= 0) {
-      const specialDate = updatedSpecialDates[specialDateIndex];
-      if (specialDate.timeSlots.some((ts: any) => ts.id === timeSlotId)) {
-        updatedSpecialDates[specialDateIndex] = {
-          ...specialDate,
-          timeSlots: specialDate.timeSlots.filter((ts: any) => ts.id !== timeSlotId)
+    // Try weekly
+    const weeklyDayIndex = updatedSchedule.findIndex(d => d.dayOfWeek === dayOfWeek);
+    if (weeklyDayIndex !== -1) {
+      const day = updatedSchedule[weeklyDayIndex];
+      if (day.timeSlots.some((ts: any) => ts.id === timeSlotId)) {
+        updatedSchedule[weeklyDayIndex] = {
+          ...day,
+          timeSlots: day.timeSlots.filter((ts: any) => ts.id !== timeSlotId)
         };
-        slotFound = true;
       }
     }
 
-    if (!slotFound) {
-      toast.error('Time slot not found');
-      return;
+    // Try special date
+    const specialIndex = updatedSpecialDates.findIndex(sd => sd.date === dateString);
+    if (specialIndex !== -1) {
+      const sd = updatedSpecialDates[specialIndex];
+      if (sd.timeSlots.some((ts: any) => ts.id === timeSlotId)) {
+        updatedSpecialDates[specialIndex] = {
+          ...sd,
+          timeSlots: sd.timeSlots.filter((ts: any) => ts.id !== timeSlotId)
+        };
+      }
     }
 
     setWeeklySchedule(updatedSchedule);
     setSpecialDates(updatedSpecialDates);
 
-    // Auto-save to database
     try {
       if (user?.uid) {
         await saveTherapistAvailability(user.uid, updatedSchedule, updatedSpecialDates);
         toast.success('Time slot deleted');
       }
-    } catch (error: any) {
-      toast.error('Failed to delete time slot. Please try again.');
-      // Revert on error
-      setWeeklySchedule(weeklySchedule);
-      setSpecialDates(specialDates);
+    } catch (error) {
+      toast.error('Failed to delete slot');
+      loadAvailabilityData(); // revert
     }
   };
 
   const selectedDateData = getSelectedDateData();
-  const dateString = selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const dateString = selectedDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-        <div className="text-xl">Loading availability...</div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading availability...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
+    <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-4xl font-bold mb-2">Availability Management</h1>
-        <p className="text-gray-400 text-sm md:text-base">Manage your schedule and time slots</p>
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Availability Management</h1>
+        <p className="text-gray-600 mt-1">Set and manage your available time slots</p>
       </div>
 
-      {/* View Toggle */}
-      <div className="flex gap-2 mb-6 flex-wrap items-center">
-        <button
-          className="flex items-center space-x-2 px-3 md:px-4 py-2 rounded-2xl text-xs md:text-sm font-medium transition-colors duration-200 bg-primary-500 text-white"
-        >
-          <Calendar size={18} />
-          <span className="hidden sm:inline">Calendar</span>
-        </button>
-      </div>
+      {/* Calendar Container */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        {/* Calendar Header */}
+        <div className="p-5 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {format(selectedDate, 'MMMM yyyy')}
+          </h2>
 
-      {/* Calendar View */}
-      {activeView === 'calendar' && (
-        <div className="space-y-6 max-w-6xl mx-auto">
-          <div className="bg-gray-800 rounded-2xl p-4 md:p-6 shadow-lg">
-            {/* Calendar Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg md:text-xl font-semibold">
-                {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-              </h2>
-              <div className="flex items-center gap-2">
-                <button onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))} className="p-2 rounded-lg hover:bg-gray-700">
-                  <ChevronLeft size={20} />
-                </button>
-                <button onClick={() => setSelectedDate(new Date())} className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg">
-                  Today
-                </button>
-                <button onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))} className="p-2 rounded-lg hover:bg-gray-700">
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedDate(subMonths(startOfMonth(selectedDate), 1))}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+            >
+              <ChevronLeft size={20} />
+            </button>
 
-            {/* Weekdays */}
-            <div className="grid grid-cols-7 gap-2 md:gap-4 mb-3 text-center text-xs md:text-sm text-gray-400 font-medium">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d}>{d}</div>)}
-            </div>
+            <button
+              onClick={() => setSelectedDate(new Date())}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors"
+            >
+              Today
+            </button>
 
-            {/* Calendar Grid */}
-            <div className="grid grid-cols-7 gap-2 md:gap-4">
-              {(() => {
-                const year = selectedDate.getFullYear();
-                const month = selectedDate.getMonth();
-                const firstDay = new Date(year, month, 1).getDay();
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                const days = [];
-
-                for (let i = firstDay; i > 0; i--) {
-                  days.push({ date: new Date(year, month - 1, new Date(year, month, 0).getDate() - i + 1), current: false });
-                }
-                for (let d = 1; d <= daysInMonth; d++) {
-                  days.push({ date: new Date(year, month, d), current: true });
-                }
-                const remaining = (7 - (days.length % 7)) % 7;
-                for (let i = 1; i <= remaining; i++) {
-                  days.push({ date: new Date(year, month + 1, i), current: false });
-                }
-
-                return days.map((item, i) => {
-                  const isToday = item.date.toDateString() === new Date().toDateString();
-                  const isSelected = item.date.toDateString() === selectedDate.toDateString();
-
-                  // Check both weekly schedule and special dates for slots
-                  const weeklySlots = weeklySchedule[item.date.getDay()]?.timeSlots.length > 0;
-                  const dateString = format(item.date, 'yyyy-MM-dd');
-                  const specialDateSlots = specialDates.some(sd => sd.date === dateString && sd.timeSlots.length > 0);
-                  const hasSlots = weeklySlots || specialDateSlots;
-
-                  return (
-                    <button
-                      key={i}
-                      disabled={!item.current}
-                      onClick={() => {
-                        setSelectedDate(item.date);
-                        if (item.current) setShowDateDetailsModal(true);
-                      }}
-                      className={`w-full h-16 md:h-24 lg:h-28 rounded-lg flex items-center justify-center text-sm md:text-lg lg:text-xl font-medium relative transition-all ${
-                        !item.current
-                          ? 'text-gray-600'
-                          : isSelected
-                          ? 'bg-primary-500 text-white scale-110 shadow-lg'
-                          : isToday
-                          ? 'border-2 border-primary-500 text-primary-400'
-                          : 'bg-gray-700 hover:bg-gray-600'
-                      }`}
-                    >
-                      {item.date.getDate()}
-                      {item.current && hasSlots && (
-                        <div className="absolute bottom-1 w-2 h-2 bg-primary-400 rounded-full"></div>
-                      )}
-                    </button>
-                  );
-                });
-              })()}
-            </div>
+            <button
+              onClick={() => setSelectedDate(addMonths(startOfMonth(selectedDate), 1))}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
         </div>
-      )}
+
+        {/* Weekdays */}
+        <div className="grid grid-cols-7 gap-1 px-4 pt-4 text-center text-xs font-medium text-gray-500">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            <div key={day}>{day}</div>
+          ))}
+        </div>
+
+        {/* Days Grid */}
+        <div className="grid grid-cols-7 gap-1 p-4">
+          {(() => {
+            const year = selectedDate.getFullYear();
+            const month = selectedDate.getMonth();
+            const firstDayOfMonth = startOfMonth(selectedDate);
+            const firstDay = firstDayOfMonth.getDay();
+            const daysInMonth = endOfMonth(selectedDate).getDate();
+
+            const days = [];
+
+            // Previous month padding
+            for (let i = firstDay; i > 0; i--) {
+              days.push({ date: new Date(year, month, 0).getDate() - i + 1, currentMonth: false });
+            }
+
+            // Current month
+            for (let d = 1; d <= daysInMonth; d++) {
+              const date = new Date(year, month, d);
+              const isToday = date.toDateString() === new Date().toDateString();
+              const isSelected = date.toDateString() === selectedDate.toDateString();
+
+              const dayOfWeek = date.getDay();
+              const hasWeekly = weeklySchedule[dayOfWeek]?.timeSlots?.length > 0;
+
+              const dateStr = format(date, 'yyyy-MM-dd');
+              const hasSpecial = specialDates.some(sd => sd.date === dateStr && sd.timeSlots?.length > 0);
+
+              const hasSlots = hasWeekly || hasSpecial;
+
+              days.push({
+                date,
+                day: d,
+                currentMonth: true,
+                isToday,
+                isSelected,
+                hasSlots
+              });
+            }
+
+            // Next month padding
+            const remaining = (7 - (days.length % 7)) % 7;
+            for (let i = 1; i <= remaining; i++) {
+              days.push({ date: new Date(year, month + 1, i), currentMonth: false });
+            }
+
+            return days.map((item, index) => (
+              <button
+                key={index}
+                type="button"
+                disabled={!item.currentMonth}
+                onClick={() => {
+                  if (item.currentMonth) {
+                    setSelectedDate(item.date);
+                    setShowDateDetailsModal(true);
+                  }
+                }}
+                className={`
+                  aspect-square rounded-lg flex items-center justify-center text-sm font-medium relative
+                  transition-all duration-200
+                  ${!item.currentMonth 
+                    ? 'text-gray-300 cursor-not-allowed' 
+                    : item.isSelected 
+                      ? 'bg-blue-600 text-white shadow-md scale-105' 
+                      : item.isToday 
+                        ? 'border-2 border-blue-400 text-blue-700 hover:bg-blue-50' 
+                        : 'hover:bg-gray-100 text-gray-800'
+                  }
+                `}
+              >
+                {item.day || ''}
+                {item.currentMonth && item.hasSlots && (
+                  <span className="absolute bottom-1.5 w-2 h-2 bg-blue-500 rounded-full"></span>
+                )}
+              </button>
+            ));
+          })()}
+        </div>
+      </div>
 
       {/* Date Details Modal */}
       {showDateDetailsModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-50" onClick={() => setShowDateDetailsModal(false)}>
-          <div className="bg-gray-800 w-full md:max-w-md rounded-t-3xl md:rounded-2xl p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">{dateString}</h2>
-              <button onClick={() => setShowDateDetailsModal(false)}><X size={28} /></button>
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowDateDetailsModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-semibold text-gray-900">{dateString}</h2>
+              <button 
+                onClick={() => setShowDateDetailsModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
             </div>
 
-
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Time Slots</h3>
-                <button onClick={() => { setEditingTimeSlot(null); setShowTimeSlotModal(true); }} className="bg-primary-500 text-white p-2 rounded-lg p-2">
-                  <Plus size={20} />
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-lg font-semibold text-gray-800">Available Time Slots</h3>
+                <button
+                  onClick={() => {
+                    setEditingTimeSlot(null);
+                    setShowTimeSlotModal(true);
+                  }}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 flex items-center gap-2 text-sm font-medium shadow-sm"
+                >
+                  <Plus size={16} /> Add Slot
                 </button>
               </div>
 
               {selectedDateData.timeSlots.length === 0 ? (
-                <button onClick={() => setShowTimeSlotModal(true)} className="w-full py-8 border border-dashed border-gray-600 rounded-lg text-primary-400 hover:text-primary-300">
-                  + Add your first time slot
-                </button>
+                <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                  <Calendar className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600 mb-2">No time slots scheduled</p>
+                  <button
+                    onClick={() => setShowTimeSlotModal(true)}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    + Add your first time slot
+                  </button>
+                </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {selectedDateData.timeSlots.map((slot: any) => (
-                    <div key={slot.id} className="bg-gray-700 rounded-lg p-4">
+                    <div 
+                      key={slot.id}
+                      className="bg-gray-50 rounded-xl p-5 border border-gray-200 hover:border-gray-300 transition-colors"
+                    >
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <div className="font-bold">{slot.startTime} – {slot.endTime}</div>
-                          <div className="text-sm text-gray-400 capitalize">{slot.sessionType}</div>
+                          <div className="font-semibold text-gray-900">
+                            {slot.startTime} – {slot.endTime}
+                          </div>
+                          <div className="text-sm text-gray-600 capitalize mt-0.5">
+                            {slot.sessionType}
+                          </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">LKR {slot.price.toLocaleString()}</div>
-                          <div className="text-primary-400">
+                          <div className="font-semibold text-gray-900">
+                            LKR {slot.price.toLocaleString()}
+                          </div>
+                          <div className="text-xs text-green-600 font-medium mt-1">
                             Available
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+
+                      <div className="flex gap-3 mt-4">
                         <button
                           onClick={() => {
                             setEditingTimeSlot(slot);
                             setShowTimeSlotModal(true);
                           }}
-                          className="flex-1 py-2 border border-gray-600 rounded-lg text-sm flex items-center justify-center gap-1"
+                          className="flex-1 py-2.5 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
                         >
                           <Edit3 size={16} /> Edit
                         </button>
                         <button
                           onClick={() => handleDeleteTimeSlot(slot.id)}
-                          className="flex-1 py-2 border border-red-600 text-red-400 rounded-lg text-sm flex items-center justify-center gap-1"
+                          className="flex-1 py-2.5 bg-red-50 border border-red-200 text-red-700 rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
                         >
                           <Trash2 size={16} /> Delete
                         </button>
@@ -433,81 +463,70 @@ const TherapistAvailability = () => {
 
       {/* Time Slot Modal */}
       {showTimeSlotModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-50" onClick={() => setShowTimeSlotModal(false)}>
-          <div className="bg-gray-800 w-full md:max-w-md rounded-t-3xl md:rounded-2xl p-6" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">{editingTimeSlot ? 'Edit' : 'Add'} Time Slot</h2>
-              <button onClick={() => setShowTimeSlotModal(false)}><X size={28} /></button>
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowTimeSlotModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl w-full max-w-md shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {editingTimeSlot ? 'Edit' : 'Add'} Time Slot
+              </h2>
+              <button 
+                onClick={() => setShowTimeSlotModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={24} />
+              </button>
             </div>
 
-            <div className="space-y-5">
+            <div className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Start Time</label>
-                  <input type="time" value={newTimeSlot.startTime} onChange={e => setNewTimeSlot(prev => ({ ...prev, startTime: e.target.value }))} className="w-full p-3 bg-gray-700 rounded-lg" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Time</label>
+                  <input
+                    type="time"
+                    value={newTimeSlot.startTime}
+                    onChange={e => setNewTimeSlot(prev => ({ ...prev, startTime: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">End Time</label>
-                  <input type="time" value={newTimeSlot.endTime} onChange={e => setNewTimeSlot(prev => ({ ...prev, endTime: e.target.value }))} className="w-full p-3 bg-gray-700 rounded-lg" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">End Time</label>
+                  <input
+                    type="time"
+                    value={newTimeSlot.endTime}
+                    onChange={e => setNewTimeSlot(prev => ({ ...prev, endTime: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  />
                 </div>
               </div>
-{/* 
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Session Type</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {(['video', 'audio', 'chat'] as const).map(t => (
-                    <label key={t} className="cursor-pointer">
-                      <input
-                        type="radio"
-                        name="type"
-                        checked={newTimeSlot.sessionType === t}
-                        onChange={() => setNewTimeSlot(prev => ({ ...prev, sessionType: t }))}
-                        className="hidden"
-                      />
-                      <div className={`p-3 text-center rounded-lg font-medium ${newTimeSlot.sessionType === t ? 'bg-primary-500 text-white' : 'bg-gray-700'}`}>
-                        {t.charAt(0).toUpperCase() + t.slice(1)}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div> */}
 
-              {/* <div>
-                <label className="block text-sm text-gray-400 mb-1">Price (LKR)</label>
+              <div className="flex items-center gap-3">
                 <input
-                  type="number"
-                  value={newTimeSlot.price}
-                  onChange={e => setNewTimeSlot(prev => ({ ...prev, price: Number(e.target.value) }))}
-                  className="w-full p-3 bg-gray-700 rounded-lg"
-                  min="0"
-                  step="100"
+                  type="checkbox"
+                  checked={newTimeSlot.isRecurring}
+                  onChange={e => setNewTimeSlot(prev => ({ ...prev, isRecurring: e.target.checked }))}
+                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-              </div> */}
-
-              <div className="space-y-3">
-                <label className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={newTimeSlot.isRecurring}
-                    onChange={e => setNewTimeSlot(prev => ({ ...prev, isRecurring: e.target.checked }))}
-                    className="w-5 h-5 rounded text-primary-500 bg-gray-700"
-                  />
-                  <span>Recurring weekly</span>
-                </label>
+                <span className="text-gray-700 font-medium">Recurring weekly (every {selectedDate.toLocaleDateString('en-US', { weekday: 'long' })})</span>
               </div>
 
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => setShowTimeSlotModal(false)}
-                  className="flex-1 py-3 bg-gray-700 rounded-xl"
+                  className="flex-1 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddTimeSlot}
-                  className="flex-1 py-3 bg-primary-500 text-white rounded-xl font-medium"
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-sm"
                 >
-                  {editingTimeSlot ? 'Update' : 'Add'} Slot
+                  {editingTimeSlot ? 'Update Slot' : 'Add Slot'}
                 </button>
               </div>
             </div>

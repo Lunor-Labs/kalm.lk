@@ -27,19 +27,11 @@ const ClientLayout: React.FC = () => {
     { name: 'Home', href: '/client/home', icon: Home },
     { name: 'My Sessions', href: '/client/sessions', icon: Video },
     { name: 'Find Therapists', href: '/client/therapists', icon: Search },
-    /*
-    { name: 'Messages', href: '/client/messages', icon: MessageCircle },
-
-    { name: 'Payments', href: '/client/payments', icon: CreditCard },
-    { name: 'Profile', href: '/client/profile', icon: User },
-    { name: 'Settings', href: '/client/settings', icon: Settings },
-     */
   ];
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      // toast.success('Signed out successfully');
       navigate('/');
     } catch (error: any) {
       toast.error('Failed to sign out. Please try refreshing the page.');
@@ -47,22 +39,28 @@ const ClientLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-900">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-page-light)' }}>
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden"
+          style={{ backgroundColor: 'rgba(30, 30, 30, 0.5)' }}
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-black backdrop-blur-sm border-r border-neutral-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 backdrop-blur-sm transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      }`}
+      style={{ 
+        backgroundColor: 'var(--bg-card-light)',
+        borderRight: '1px solid var(--neutral-200)'
+      }}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-neutral-800">
+          <div className="flex items-center justify-between p-6"
+            style={{ borderBottom: '1px solid var(--neutral-200)' }}>
             <button
               onClick={() => {
                 if (location.pathname === '/') {
@@ -81,14 +79,15 @@ const ClientLayout: React.FC = () => {
                 alt="Kalm Logo"
                 className="w-8 h-8 rounded-lg"
               />
-              <span className="text-xl font-bold text-white">kalm.lk</span>
+              <span className="text-xl font-bold" style={{ color: 'black' }}>kalm.lk</span>
             </button>
-            {/* <button
+            <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden text-neutral-400 hover:text-white"
+              className="lg:hidden"
+              style={{ color: 'var(--neutral-500)' }}
             >
               <X className="w-6 h-6" />
-            </button> */}
+            </button>
           </div>
 
           {/* Navigation */}
@@ -103,11 +102,21 @@ const ClientLayout: React.FC = () => {
                         navigate(item.href);
                         setSidebarOpen(false);
                       }}
-                      className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-colors duration-200 ${
-                        isActive
-                          ? 'bg-primary-500 text-white'
-                          : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
-                      }`}
+                      className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-colors duration-200"
+                      style={{
+                        backgroundColor: isActive ? 'var(--primary-300)' : 'transparent',
+                        color: isActive ? '#0C4A6E' : 'var(--neutral-600)',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = 'var(--neutral-100)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }
+                      }}
                     >
                       <item.icon className="w-5 h-5" />
                       <span className="font-medium">{item.name}</span>
@@ -119,23 +128,32 @@ const ClientLayout: React.FC = () => {
           </nav>
 
           {/* User Info & Sign Out */}
-          <div className="p-6 border-t border-neutral-800">
+          <div className="p-6"
+            style={{ borderTop: '1px solid var(--neutral-200)' }}>
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold">
-                  {user?.displayName?.charAt(0) || 'U'}
-                </span>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                style={{ backgroundColor: 'var(--primary-300)', color: '#0C4A6E' }}>
+                {user?.displayName?.charAt(0) || 'U'}
               </div>
               <div>
-                <p className="text-white text-xs">{user?.displayName || 'User'}</p>
-                <p className="text-neutral-400 text-xs">
+                <p className="font-medium" style={{ color: 'var(--fixes-heading-dark)' }}>
+                  {user?.displayName || 'User'}
+                </p>
+                <p className="text-sm" style={{ color: 'var(--neutral-500)' }}>
                   {user?.isAnonymous ? 'Anonymous User' : user?.email}
                 </p>
               </div>
             </div>
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors duration-200"
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-colors duration-200"
+              style={{ color: 'var(--neutral-600)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--neutral-100)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
             >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Sign Out</span>
@@ -145,32 +163,37 @@ const ClientLayout: React.FC = () => {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-64 flex flex-col min-h-screen">
         {/* Top bar */}
-        <div className="sticky top-0 z-30 bg-neutral-900/95 backdrop-blur-sm border-b border-neutral-800">
+        <div className="sticky top-0 z-30 backdrop-blur-sm"
+          style={{ backgroundColor: 'hsla(0, 0%, 100%, 1.00)' }}>
           <div className="flex items-center justify-between px-6 py-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-neutral-400 hover:text-white"
+              className="lg:hidden"
+              style={{ color: 'var(--neutral-500)' }}
             >
               <Menu className="w-6 h-6" />
             </button>
             
-            {/* <div className="flex items-center space-x-4">
-              <div className="text-white">
-                <h1 className="text-xl font-semibold">
-                 Welcome back, {user?.displayName || 'User'}
+            <div className="flex items-center space-x-4 w-full">
+              <div>
+                <h1 className="text-xl font-semibold" style={{ color: 'var(--fixes-heading-dark)' }}>
+                  {(() => {
+                    if (location.pathname.startsWith('/client/home')) return 'Home';
+                    if (location.pathname.startsWith('/client/sessions')) return 'My Sessions';
+                    if (location.pathname.startsWith('/client/therapists')) return 'Find Therapists';
+                    return 'Client Portal';
+                  })()}
                 </h1>
-                {user?.isAnonymous && (
-                  <p className="text-sm text-accent-green">Anonymous Account</p>
-                )}
               </div>
-            </div> */}
+            </div>
           </div>
+          <div style={{ borderBottom: '1px solid var(--neutral-200)', marginTop: '1.25rem' }}></div>
         </div>
 
         {/* Page content */}
-        <main className="p-6">
+        <main className="p-6 flex-1" style={{ backgroundColor: 'var(--primary-300)' }}>
           <Outlet />
         </main>
       </div>

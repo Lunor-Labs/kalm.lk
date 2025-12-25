@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, ArrowLeft, CreditCard, Shield, CheckCircle, Video, MessageCircle, Phone } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, CreditCard, Edit, Tag, Video, MessageCircle, Phone, CheckCircle, Shield } from 'lucide-react';
+import { format } from 'date-fns';
 import { BookingData } from '../../../types/booking';
 import { createSession } from '../../../lib/sessions';
 import { useAuth } from '../../../contexts/AuthContext';
 import { initiatePayHerePayment } from '../../../lib/payhere';
 import toast from 'react-hot-toast';
 import { db } from '../../../lib/firebase';
-import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from 'firebase/firestore';
-import { logPaymentError, logUserError } from '../../../lib/errorLogger';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { logPaymentError } from '../../../lib/errorLogger';
 
 interface PaymentStepProps {
   bookingData: BookingData;
@@ -18,20 +19,21 @@ interface PaymentStepProps {
 const PaymentStep: React.FC<PaymentStepProps> = ({
   bookingData,
   onPaymentComplete,
-  onBack
+  onBack,
 }) => {
-    useEffect(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, []);
-    
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const { user } = useAuth();
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
-  const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>(bookingData.sessionType || 'video');
+  const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>(
+    bookingData.sessionType || 'video'
+  );
   const [showTerms, setShowTerms] = useState(false);
   const [showCancellation, setShowCancellation] = useState(false);
 
-  // Update sessionType when bookingData changes
   useEffect(() => {
     if (bookingData.sessionType) {
       setSessionType(bookingData.sessionType);
@@ -47,11 +49,9 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     setProcessing(true);
 
     try {
-      // Calculate final amount with session type discount
       const sessionTypeDiscount = sessionType === 'audio' ? 500 : sessionType === 'chat' ? 1000 : 0;
-      const finalAmount = totalAmount - sessionTypeDiscount;
-      
-      // Prepare payment data for PayHere
+      const finalAmount = (bookingData.amount || 0) - sessionTypeDiscount;
+
       const paymentData = {
         amount: finalAmount,
         currency: 'LKR' as const,
@@ -60,7 +60,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         firstName: user.displayName?.split(' ')[0] || 'User',
         lastName: user.displayName?.split(' ')[1] || '',
         email: user.email || 'user@kalm.lk',
-        phone: '0771234567', // You might want to get this from user profile
+        phone: '0771234567', // Replace with real user phone if available
         address: 'Colombo',
         city: 'Colombo',
         country: 'Sri Lanka' as const,
@@ -68,122 +68,97 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         deliveryCity: 'Colombo',
         deliveryCountry: 'Sri Lanka' as const,
         custom1: bookingData.therapistId,
-        custom2: sessionType
+        custom2: sessionType,
       };
 
-      // Initiate PayHere payment
       const paymentResult = await initiatePayHerePayment(paymentData);
-      
+
       if (paymentResult.success) {
         const bookingId = paymentResult.orderId || `booking-${Date.now()}`;
-        console.log('bookingData.therapistId', bookingData.therapistId);
-        // Therapist ID is now directly the user ID
-        const therapistUserId = bookingData.therapistId;
 
-        // Create the session in Firebase after successful payment
+        // Create session
         const sessionId = await createSession({
           bookingId,
-          therapistId: bookingData.therapistId, // Use therapist's userId, not document ID
+          therapistId: bookingData.therapistId,
           clientId: user.uid,
-          sessionType: bookingData.sessionType || 'video', // Use sessionType from bookingData
+          sessionType: sessionType,
           status: 'scheduled',
           scheduledTime: bookingData.sessionTime,
           duration: bookingData.duration || 60,
         });
 
-        // Record payment in Firestore for admin reporting & payouts
+        // Record payment
         try {
-          const paymentData = {
+          await addDoc(collection(db, 'payments'), {
             bookingId,
             sessionId,
             clientId: user.uid,
             clientName: user.displayName || user.email || 'Unknown',
             therapistId: bookingData.therapistId,
             amount: bookingData.amount || finalAmount,
-            currency: 'LKR' as const,
-            paymentMethod: 'payhere' as const,
-            paymentStatus: 'completed' as const,
+            currency: 'LKR',
+            paymentMethod: 'payhere',
+            paymentStatus: 'completed',
             paymentId: paymentResult.paymentId || null,
             orderId: bookingId,
             couponCode: bookingData.couponCode || null,
             discountAmount: bookingData.discountAmount || 0,
             finalAmount,
-            payoutStatus: 'pending' as const,
+            payoutStatus: 'pending',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
-          };
-
-          const paymentsRef = collection(db, 'payments');
-          await addDoc(paymentsRef, paymentData);
-        } catch (paymentError: any) {
-          console.error('Failed to record payment document:', paymentError);
-          toast.error(paymentError?.message || 'Session booked, but failed to record payment in admin reports.');
+          });
+        } catch (paymentErr: any) {
+          console.error('Payment record failed:', paymentErr);
+          toast.error('Session booked, but payment record failed.');
         }
 
         toast.success('Payment successful! Session booked.');
-        console.log('Session created with ID:', sessionId);
-        
         onPaymentComplete();
       } else {
         throw new Error(paymentResult.error || 'Payment failed');
       }
     } catch (error: any) {
       console.error('Payment failed:', error);
+      await logPaymentError(error, user?.uid || 'unknown', bookingData.amount || 0, 'payhere');
 
-      // Log payment error for monitoring
-      await logPaymentError(
-        error,
-        user?.uid || 'unknown',
-        finalAmount,
-        'payhere'
-      );
-
-      // Provide user-friendly error messages
       let userMessage = 'Payment failed. Please try again.';
-
       if (error.message?.includes('network') || error.message?.includes('connection')) {
-        userMessage = 'Payment failed due to network issues. Please check your connection and try again.';
+        userMessage = 'Network issue. Please check your connection.';
       } else if (error.message?.includes('card') || error.message?.includes('payment')) {
-        userMessage = 'Payment processing failed. Please check your card details and try again.';
+        userMessage = 'Card declined. Please check details.';
       } else if (error.message?.includes('cancelled') || error.message?.includes('declined')) {
-        userMessage = 'Payment was declined. Please try a different payment method.';
-      } else if (error.message && error.message.length < 80 && !error.message.includes('firebase') && !error.message.includes('firestore')) {
-        // Use the error message if it's short and not technical
-        userMessage = error.message;
+        userMessage = 'Payment declined. Try another method.';
       }
 
       toast.error(userMessage);
+    } finally {
       setProcessing(false);
     }
   };
 
-  const finalAmount = (bookingData.amount || 0) - (bookingData.discountAmount || 0);
   const sessionTypeDiscount = sessionType === 'audio' ? 500 : sessionType === 'chat' ? 1000 : 0;
-  const totalAmount = finalAmount - sessionTypeDiscount;
+  const totalAmount = (bookingData.amount || 0) - sessionTypeDiscount;
 
   const getSessionTypeIcon = (type: string) => {
     switch (type) {
-      case 'video': return <Video className="w-4 h-4" />;
-      case 'audio': return <Phone className="w-4 h-4" />;
-      case 'chat': return <MessageCircle className="w-4 h-4" />;
-      default: return <Video className="w-4 h-4" />;
+      case 'video': return <Video className="w-5 h-5 text-blue-600" />;
+      case 'audio': return <Phone className="w-5 h-5 text-emerald-600" />;
+      case 'chat': return <MessageCircle className="w-5 h-5 text-amber-600" />;
+      default: return <Video className="w-5 h-5 text-blue-600" />;
     }
   };
 
   if (processing) {
     return (
-      <div className="p-8">
-        <div className="flex items-center justify-center py-16">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-            <h3 className="text-xl font-semibold text-white mb-2">Processing Payment</h3>
-            <p className="text-neutral-300 mb-4">Please wait while we process your payment and create your session...</p>
-            <div className="mt-6 p-4 bg-accent-green/10 border border-accent-green/20 rounded-2xl">
-              <p className="text-accent-green text-sm">
-                <Shield className="w-4 h-4 inline mr-2" />
-                Your payment is secured with 256-bit SSL encryption
-              </p>
-            </div>
+      <div className="p-6 sm:p-8 flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">Processing Payment</h3>
+          <p className="text-gray-600 mb-6">Please wait while we process your payment and create your session...</p>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl">
+            <Shield className="w-5 h-5" />
+            <span className="text-sm font-medium">Secured with 256-bit SSL encryption</span>
           </div>
         </div>
       </div>
@@ -191,364 +166,210 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   }
 
   return (
-    <div className="p-8">
-      {/* Back button above the title, left-aligned */}
-      <div className="mb-4">
-        <button
-          onClick={onBack}
-          className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
-        </button>
-      </div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-white whitespace-nowrap">Complete Payment</h2>
-        {/* <p className="text-neutral-300">Secure payment powered by PayHere</p> */}
+    <div className="p-6 sm:p-8 max-w-5xl mx-auto">
+      {/* Back Button */}
+      <button
+        onClick={onBack}
+        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors mb-8 font-medium"
+      >
+        <ArrowLeft className="w-5 h-5" />
+        <span>Back</span>
+      </button>
+
+      {/* Title */}
+      <div className="mb-10">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Complete Payment</h2>
+        <p className="text-gray-600 mt-2">Secure payment powered by PayHere</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Payment Methods */}
+        {/* Left Column */}
         <div className="space-y-6">
-          <div className="bg-accent-orange/10 border border-accent-orange/20 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
-              <Clock className="w-5 h-5" />
+          {/* Cancellation Policy */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-blue-600" />
               <span>Cancellation Policy</span>
             </h3>
-            
-            <div className="space-y-3 text-sm">
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-accent-green rounded-full mt-2 flex-shrink-0"></div>
+
+            <div className="space-y-4 text-sm text-gray-700">
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
                 <div>
-                  <p className="text-white font-medium">100% Refund</p>
-                  <p className="text-neutral-300">Cancel more than 24 hours before session</p>
+                  <p className="font-medium text-gray-900">100% Refund</p>
+                  <p className="text-gray-600">Cancel more than 24 hours before session</p>
                 </div>
               </div>
-              
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-accent-yellow rounded-full mt-2 flex-shrink-0"></div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-amber-500 rounded-full mt-1.5 flex-shrink-0" />
                 <div>
-                  <p className="text-white font-medium">50% Refund</p>
-                  <p className="text-neutral-300">Cancel 12-24 hours before session</p>
+                  <p className="font-medium text-gray-900">50% Refund</p>
+                  <p className="text-gray-600">Cancel 12-24 hours before session</p>
                 </div>
               </div>
-              
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5 flex-shrink-0" />
                 <div>
-                  <p className="text-white font-medium">No Refund</p>
-                  <p className="text-neutral-300">Cancel less than 12 hours before session or no-show</p>
+                  <p className="font-medium text-gray-900">No Refund</p>
+                  <p className="text-gray-600">Cancel less than 12 hours or no-show</p>
                 </div>
               </div>
             </div>
-            
-            {/* <div className="mt-4 p-3 bg-black/30 rounded-xl border border-neutral-700">
-              <p className="text-neutral-300 text-xs">
-                <strong>Emergency Cancellations:</strong> Medical emergencies and unforeseen circumstances 
-                will be reviewed individually. Contact support for assistance.
-              </p>
-            </div> */}
-          </div>
-          {/* Session Type Selection */}
-          {/*<div>
-            <h3 className="text-lg font-semibold text-white mb-4">Final Session Type</h3>
-            <div className="space-y-3">
-              {[
-                { type: 'video' as const, label: 'Video Session', discount: 0, description: 'Face-to-face with video and audio' },
-                { type: 'audio' as const, label: 'Audio Session', discount: 500, description: 'Voice-only communication' },
-                { type: 'chat' as const, label: 'Chat Session', discount: 1000, description: 'Text-based messaging' }
-              ].map((option) => (
-                <label
-                  key={option.type}
-                  className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
-                    sessionType === option.type
-                      ? 'border-primary-500 bg-primary-500/10'
-                      : 'border-neutral-800 hover:border-neutral-700 bg-black/30'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="sessionType"
-                    value={option.type}
-                    checked={sessionType === option.type}
-                    onChange={(e) => setSessionType(e.target.value as any)}
-                    className="sr-only"
-                  />
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      {getSessionTypeIcon(option.type)}
-                      <div>
-                        <p className="font-medium text-white">{option.label}</p>
-                        <p className="text-sm text-neutral-300">{option.description}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      {option.discount > 0 && (
-                        <p className="text-accent-green text-sm">-LKR {option.discount}</p>
-                      )}
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>*/}
 
-          <div>
-            {/* <h3 className="text-lg font-semibold text-white mb-4">Payment Method</h3> */}
-            
-            <div className="space-y-3">
-              {/* Credit/Debit Card */}
-              {/* <label className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
-                paymentMethod === 'card'
-                  ? 'border-primary-500 bg-primary-500/10'
-                  : 'border-neutral-800 hover:border-neutral-700 bg-black/30'
-              }`}>
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="card"
-                  checked={paymentMethod === 'card'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="sr-only"
-                />
-                <div className="flex items-center space-x-3">
-                  <CreditCard className="w-6 h-6 text-primary-500" />
-                  <div>
-                    <p className="font-medium text-white">Credit/Debit Card</p>
-                    <p className="text-sm text-neutral-300">Visa, Mastercard, American Express</p>
-                  </div>
-                </div>
-              </label> */}
-
-              {/* Mobile Wallet */}
-              {/* <label className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
-                paymentMethod === 'mobile'
-                  ? 'border-primary-500 bg-primary-500/10'
-                  : 'border-neutral-800 hover:border-neutral-700 bg-black/30'
-              }`}>
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="mobile"
-                  checked={paymentMethod === 'mobile'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="sr-only"
-                />
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-accent-green rounded flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">M</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">Mobile Wallet</p>
-                    <p className="text-sm text-neutral-300">eZ Cash, mCash, Dialog Pay</p>
-                  </div>
-                </div>
-              </label> */}
-
-              {/* Bank Transfer */}
-              {/* <label className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
-                paymentMethod === 'bank'
-                  ? 'border-primary-500 bg-primary-500/10'
-                  : 'border-neutral-800 hover:border-neutral-700 bg-black/30'
-              }`}>
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="bank"
-                  checked={paymentMethod === 'bank'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="sr-only"
-                />
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-accent-yellow rounded flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">B</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">Online Banking</p>
-                    <p className="text-sm text-neutral-300">All major Sri Lankan banks</p>
-                  </div>
-                </div>
-              </label> */}
+            <div className="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm text-gray-600">
+              <strong>Emergency Cancellations:</strong> Medical emergencies reviewed case-by-case. Contact support.
             </div>
           </div>
 
           {/* Security Notice */}
-          {/* <div className="p-4 bg-accent-green/10 border border-accent-green/20 rounded-2xl">
-            <div className="flex items-start space-x-3">
-              <Shield className="w-5 h-5 text-accent-green flex-shrink-0 mt-0.5" />
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
+            <div className="flex items-start gap-3">
+              <Shield className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-medium text-accent-green text-sm mb-1">Secure Payment</h4>
-                <p className="text-xs text-neutral-300">
-                  Your payment information is encrypted and secure. We never store your card details.
+                <h4 className="font-medium text-emerald-700 text-sm mb-1">Secure Payment</h4>
+                <p className="text-sm text-emerald-600">
+                  Your payment is encrypted and secure. We never store your card details.
                 </p>
               </div>
             </div>
-          </div> */}
+          </div>
         </div>
 
-        {/* Order Summary */}
+        {/* Right Column – Order Summary */}
         <div className="space-y-6">
-          <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
-            <h3 className="text-lg font-semibold text-white mb-4">Order Summary</h3>
-            
-            <div className="space-y-4">
+          {/* Order Summary */}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-blue-600" />
+              <span>Order Summary</span>
+            </h3>
+
+            <div className="space-y-3 text-gray-700">
               <div className="flex justify-between">
-                <span className="text-neutral-300">Base Session Fee</span>
-                <span className="text-white">LKR {(bookingData.amount || 0).toLocaleString()}</span>
+                <span>Base Session Fee</span>
+                <span className="font-medium">LKR {(bookingData.amount || 0).toLocaleString()}</span>
               </div>
-              
-              {sessionTypeDiscount > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-accent-green">
-                    {sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Session Discount
-                  </span>
-                  <span className="text-accent-green">-LKR {sessionTypeDiscount.toLocaleString()}</span>
+
+              {sessionType === 'audio' && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>Audio Session Discount</span>
+                  <span>-LKR 500</span>
                 </div>
               )}
-              
-              {bookingData.discountAmount && bookingData.discountAmount > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-accent-green">Coupon Discount</span>
-                  <span className="text-accent-green">-LKR {bookingData.discountAmount.toLocaleString()}</span>
+
+              {sessionType === 'chat' && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>Chat Session Discount</span>
+                  <span>-LKR 1,000</span>
                 </div>
               )}
-              
-              <div className="border-t border-neutral-700 pt-4">
-                <div className="flex justify-between">
-                  <span className="text-xl font-semibold text-white">Total</span>
-                  <span className="text-xl font-semibold text-primary-500">
-                    LKR {totalAmount.toLocaleString()}
-                  </span>
-                </div>
+
+              <div className="border-t border-gray-200 pt-4 flex justify-between text-lg font-semibold">
+                <span className="text-gray-900">Total</span>
+                <span className="text-blue-700">
+                  LKR {totalAmount.toLocaleString()}
+                </span>
               </div>
             </div>
           </div>
 
-
-          {/* Disclaimer */}
-          <div className=" text-neutral-400 text-xs">
-            “I understand that cancelling a session less than 48 hours before will result in a partial refund. I also understand that my chat history is stored only for my personal reference, and that Kalm has no access to private conversations. All sessions are confidential.”
-          </div>
-
-          {/* Payment Button */}
+          {/* Confirm Button */}
           <button
             onClick={handlePayment}
-            className="w-full bg-primary-500 text-white py-4 rounded-2xl hover:bg-primary-600 transition-colors duration-200 font-semibold text-lg flex items-center justify-center space-x-2"
+            disabled={processing}
+            className="w-full bg-blue-600 text-white py-4 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-lg shadow-sm flex items-center justify-center gap-2"
           >
             <CreditCard className="w-5 h-5" />
             <span>Pay LKR {totalAmount.toLocaleString()}</span>
           </button>
 
-          {/* Payment Features */}
-          <div className="space-y-3">
-            <div className="flex items-center space-x-3 text-sm text-neutral-300">
-              <CheckCircle className="w-4 h-4 text-accent-green" />
+          {/* Features */}
+          <div className="space-y-3 text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-600" />
               <span>Instant session creation</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-neutral-300">
-              <CheckCircle className="w-4 h-4 text-accent-green" />
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-600" />
               <span>24/7 customer support</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-neutral-300">
-              <CheckCircle className="w-4 h-4 text-accent-green" />
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-600" />
               <span>Easy cancellation policy</span>
             </div>
           </div>
 
-          {/* Terms */}
-          <div className="text-center">
-            <p className="text-neutral-400 text-xs">
-              By completing this payment, you agree to our{' '}
-              <button
-                type="button"
-                className="text-primary-500 hover:text-primary-600 underline"
-                onClick={() => setShowTerms(true)}
-              >
-                Terms of Service
-              </button>
-              {' '}and{' '}
-              <button
-                type="button"
-                className="text-primary-500 hover:text-primary-600 underline"
-                onClick={() => setShowCancellation(true)}
-              >
-                Cancellation Policy
-              </button>
-              .
-            </p>
+          {/* Terms & Policy */}
+          <div className="text-center text-sm text-gray-500">
+            By completing payment, you agree to our{' '}
+            <button
+              type="button"
+              className="text-blue-600 hover:text-blue-700 underline"
+              onClick={() => setShowTerms(true)}
+            >
+              Terms of Service
+            </button>{' '}
+            and{' '}
+            <button
+              type="button"
+              className="text-blue-600 hover:text-blue-700 underline"
+              onClick={() => setShowCancellation(true)}
+            >
+              Cancellation Policy
+            </button>.
           </div>
 
-          {/* Terms of Service Modal */}
+          {/* Terms Modal */}
           {showTerms && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black backdrop-blur-sm">
-              <div className="bg-black backdrop-blur-md rounded-2xl p-8 max-w-lg w-full border border-neutral-700 shadow-xl max-h-[80vh] overflow-y-auto">
-                <h3 className="text-lg font-bold text-white mb-4">Terms of Service</h3>
-                <div className="text-neutral-300 text-sm mb-6">
-                  {/* Replace with your actual terms */}
-                  <p>
-                    <strong>Welcome to Kalm.lk:</strong> By using our platform, you agree to our Terms.<br/><br/>
-      
-                    <strong>Services:</strong> We connect users with licensed mental health professionals for video, audio, and chat therapy sessions.<br/><br/>
-                    
-                    <strong>Eligibility:</strong> Must be 13+ (under 18 requires parental consent) and provide accurate information.<br/><br/>
-                    
-                    <strong>User Responsibilities:</strong> Use lawfully, respect privacy, provide honest information, attend/cancel sessions appropriately.<br/><br/>
-                    
-                    <strong>Therapists:</strong> Independently licensed professionals (we don't provide medical advice directly).<br/><br/>
-                    
-                    <strong>Payment:</strong> Fees displayed before booking, processed securely via PayHere.<br/><br/>
-                    
-                    <strong>Privacy:</strong> All communications encrypted and confidential.<br/><br/>
-                    
-                    <strong>Liability:</strong> We're not liable for therapy outcomes, therapist actions, or technical issues beyond our control.<br/><br/>
-                    
-                    <strong>Termination:</strong> Accounts can be deleted anytime or suspended for violations.<br/><br/>
-                    
-                    <strong>Contact:</strong> legal@kalm.lk | +94 (76) 633 0360
-                  </p>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                <div className="p-6 border-b border-gray-200">
+                  <h3 className="text-xl font-semibold text-gray-900">Terms of Service</h3>
                 </div>
-                <button
-                  className="bg-primary-500 text-white px-4 py-2 rounded-full hover:bg-primary-600 transition"
-                  onClick={() => setShowTerms(false)}
-                >
-                  Close
-                </button>
+                <div className="p-6 text-gray-700 text-sm space-y-4">
+                  <p><strong>Welcome to Kalm.lk:</strong> By using our platform, you agree to these Terms.</p>
+                  <p><strong>Services:</strong> We connect users with licensed mental health professionals.</p>
+                  <p><strong>Eligibility:</strong> Must be 13+ (under 18 needs parental consent).</p>
+                  <p><strong>Privacy:</strong> All sessions are confidential and encrypted.</p>
+                  <p><strong>Liability:</strong> We are not liable for therapy outcomes.</p>
+                  {/* Add more terms as needed */}
+                </div>
+                <div className="p-6 border-t border-gray-200 flex justify-end">
+                  <button
+                    onClick={() => setShowTerms(false)}
+                    className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Cancellation Policy Modal */}
+          {/* Cancellation Modal */}
           {showCancellation && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black backdrop-blur-sm">
-              <div className="bg-black backdrop-blur-md rounded-2xl p-8 max-w-lg w-full border border-neutral-700 shadow-xl max-h-[80vh] overflow-y-auto">
-                <h3 className="text-lg font-bold text-white mb-4">Cancellation Policy</h3>
-                <div className="text-neutral-300 text-sm mb-6">
-                  {/* Replace with your actual policy */}
-                  <p>
-                       <strong>Our Refund Commitment:</strong> We want you to be completely satisfied with our services.<br/><br/>
-      
-                      <strong>Refund Eligibility:</strong><br/>
-                      • 100% Refund: Cancellation - 24h before session, therapist cancellation, technical issues<br/>
-                      • 50% Refund: Cancellation 12-24h before session, interrupted sessions<br/>
-                      • No Refund: Cancellation -12h before session, no-shows, completed sessions<br/><br/>
-                      
-                      <strong>Refund Process:</strong> Contact support within 7 days with booking reference and reason.<br/>
-                      Processing takes 3-5 business days after approval.<br/><br/>
-                      
-                      <strong>Emergency Cancellations:</strong> Medical/family emergencies reviewed case-by-case.<br/><br/>
-                      
-                      <strong>Payment Methods:</strong> Refunds processed to original payment method (7-10 business days).<br/><br/>
-                      
-                      <strong>Contact:</strong> refunds@kalm.lk | support@kalm.lk | +94 (76) 633 0360<br/>
-                      Support Hours: Mon-Fri, 9AM-6PM (Sri Lanka Time)
-                  </p>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                <div className="p-6 border-b border-gray-200">
+                  <h3 className="text-xl font-semibold text-gray-900">Cancellation Policy</h3>
                 </div>
-                <button
-                  className="bg-primary-500 text-white px-4 py-2 rounded-full hover:bg-primary-600 transition"
-                  onClick={() => setShowCancellation(false)}
-                >
-                  Close
-                </button>
+                <div className="p-6 text-gray-700 text-sm space-y-4">
+                  <p><strong>100% Refund:</strong> Cancel more than 24 hours before.</p>
+                  <p><strong>50% Refund:</strong> Cancel 12-24 hours before.</p>
+                  <p><strong>No Refund:</strong> Less than 12 hours or no-show.</p>
+                  <p><strong>Emergencies:</strong> Reviewed case-by-case.</p>
+                  {/* Add more details */}
+                </div>
+                <div className="p-6 border-t border-gray-200 flex justify-end">
+                  <button
+                    onClick={() => setShowCancellation(false)}
+                    className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           )}

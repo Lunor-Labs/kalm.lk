@@ -14,11 +14,9 @@ const ClientHome: React.FC = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
 
-  // Fetch therapists
   const { therapists, loading: therapistsLoading } = useTherapists({ useFirebase: true });
-  const featuredTherapists = therapists.slice(0, 3);
+  const featuredTherapists = therapists.slice(0, 3); // still unused but kept for future
 
-  // Load real sessions from Firebase
   useEffect(() => {
     if (!user) {
       setLoadingSessions(false);
@@ -32,7 +30,7 @@ const ClientHome: React.FC = () => {
         setSessions(userSessions);
       } catch (error: any) {
         console.error('Failed to load sessions:', error);
-        toast.error('Failed to load sessions');
+        toast.error('Failed to load your sessions');
       } finally {
         setLoadingSessions(false);
       }
@@ -41,82 +39,75 @@ const ClientHome: React.FC = () => {
     loadSessions();
   }, [user]);
 
-  // Get upcoming sessions (scheduled or active, future dates)
+  // Upcoming sessions (top 3)
   const upcomingSessions = sessions
-    .filter(session => 
-      (session.status === 'scheduled' || session.status === 'active') && 
-      isFuture(session.scheduledTime)
+    .filter(
+      (session) =>
+        (session.status === 'scheduled' || session.status === 'active') &&
+        isFuture(session.scheduledTime)
     )
     .sort((a, b) => a.scheduledTime.getTime() - b.scheduledTime.getTime())
     .slice(0, 3)
-    .map(session => ({
+    .map((session) => ({
       id: session.id,
       therapist: session.therapistName || 'Therapist',
-      date: format(session.scheduledTime, 'yyyy-MM-dd'),
+      date: format(session.scheduledTime, 'MMM d, yyyy'),
       time: format(session.scheduledTime, 'h:mm a'),
       type: session.sessionType,
-      status: session.status === 'active' ? 'Active' : 'Confirmed'
+      status: session.status === 'active' ? 'Active' : 'Confirmed',
     }));
 
-  // Generate recent activity from sessions
+  // Recent activity
   const recentActivity = sessions
-    .filter(session => session.status === 'completed' || session.status === 'scheduled')
+    .filter((session) => session.status === 'completed' || session.status === 'scheduled')
     .sort((a, b) => {
       const aTime = a.status === 'completed' && a.endTime ? a.endTime.getTime() : a.updatedAt.getTime();
       const bTime = b.status === 'completed' && b.endTime ? b.endTime.getTime() : b.updatedAt.getTime();
       return bTime - aTime;
     })
     .slice(0, 3)
-    .map(session => {
-      const timeAgo = session.status === 'completed' && session.endTime
-        ? formatDistanceToNow(session.endTime, { addSuffix: true })
-        : formatDistanceToNow(session.updatedAt, { addSuffix: true });
-      
+    .map((session) => {
+      const timeAgo =
+        session.status === 'completed' && session.endTime
+          ? formatDistanceToNow(session.endTime, { addSuffix: true })
+          : formatDistanceToNow(session.updatedAt, { addSuffix: true });
+
       return {
         id: session.id,
         type: session.status === 'completed' ? 'session_completed' : 'booking_confirmed',
-        message: session.status === 'completed'
-          ? `Session with ${session.therapistName || 'therapist'} completed`
-          : `Booking confirmed for ${format(session.scheduledTime, 'MMM d')}`,
-        time: timeAgo
+        message:
+          session.status === 'completed'
+            ? `Session with ${session.therapistName || 'therapist'} completed`
+            : `Booking confirmed for ${format(session.scheduledTime, 'MMM d')}`,
+        time: timeAgo,
       };
     });
 
   const quickActions = [
     {
       title: 'Book New Session',
-      description: 'Find and book a session with a therapist',
+      description: 'Find and book with a therapist',
       icon: Plus,
-      color: 'bg-primary-500',
-      action: () => navigate('/client/book')
+      color: 'bg-blue-600',
+      action: () => navigate('/client/book'),
     },
     {
       title: 'My Sessions',
       description: 'View and join your appointments',
       icon: Calendar,
-      color: 'bg-accent-green',
-      action: () => navigate('/client/sessions')
+      color: 'bg-emerald-600',
+      action: () => navigate('/client/sessions'),
     },
     {
       title: 'Find Therapists',
       description: 'Browse our network of professionals',
       icon: Search,
-      color: 'bg-accent-orange',
-      action: () => navigate('/client/therapists')
-    }
+      color: 'bg-amber-600',
+      action: () => navigate('/client/therapists'),
+    },
   ];
 
-  const handleBookSession = (therapist: any) => {
-    navigate('/client/book', { 
-      state: { 
-        preSelectedTherapist: therapist.id,
-        therapistName: therapist.name,
-        returnTo: 'booking'
-      } 
-    });
-  };
-
-  // Wellness tips array
+  // Wellness tips (kept your original array)
   const wellnessTips = [
     {
       title: "Practice Mindful Breathing",
@@ -166,241 +157,167 @@ const ClientHome: React.FC = () => {
   const wellnessTipRef = useRef<HTMLDivElement>(null);
   const autoPlayIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-play functionality
   useEffect(() => {
     if (isAutoPlaying && showWellnessTip) {
       autoPlayIntervalRef.current = setInterval(() => {
-        setCurrentTipIndex((prevIndex) => 
-          (prevIndex + 1) % wellnessTips.length
-        );
-      }, 5000); // Change tip every 5 seconds
+        setCurrentTipIndex((prev) => (prev + 1) % wellnessTips.length);
+      }, 5000);
     }
-
     return () => {
-      if (autoPlayIntervalRef.current) {
-        clearInterval(autoPlayIntervalRef.current);
-      }
+      if (autoPlayIntervalRef.current) clearInterval(autoPlayIntervalRef.current);
     };
-  }, [isAutoPlaying, showWellnessTip, wellnessTips.length]);
+  }, [isAutoPlaying, showWellnessTip]);
 
-  // Intersection Observer for showing wellness tips
   useEffect(() => {
-    const observer = new window.IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            setShowWellnessTip(true);
-          }
-        });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setShowWellnessTip(true);
       },
       { threshold: 0.5 }
     );
-    if (wellnessTipRef.current) {
-      observer.observe(wellnessTipRef.current);
-    }
+    if (wellnessTipRef.current) observer.observe(wellnessTipRef.current);
     return () => {
-      if (wellnessTipRef.current) {
-        observer.unobserve(wellnessTipRef.current);
-      }
+      if (wellnessTipRef.current) observer.unobserve(wellnessTipRef.current);
     };
   }, []);
 
-  // Manual navigation functions
   const goToPreviousTip = () => {
-    setCurrentTipIndex((prevIndex) => 
-      prevIndex === 0 ? wellnessTips.length - 1 : prevIndex - 1
-    );
+    setCurrentTipIndex((prev) => (prev === 0 ? wellnessTips.length - 1 : prev - 1));
     setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000); // Resume auto-play after 10 seconds
+    setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
   const goToNextTip = () => {
-    setCurrentTipIndex((prevIndex) => 
-      (prevIndex + 1) % wellnessTips.length
-    );
+    setCurrentTipIndex((prev) => (prev + 1) % wellnessTips.length);
     setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000); // Resume auto-play after 10 seconds
+    setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
   const goToSpecificTip = (index: number) => {
     setCurrentTipIndex(index);
     setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000); // Resume auto-play after 10 seconds
+    setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
   const currentTip = wellnessTips[currentTipIndex];
 
   return (
-    <div className="space-y-8">
-      {/* Welcome Section */}
-      {/* <div className="bg-gradient-to-r from-primary-500/20 to-accent-green/20 rounded-3xl p-8 border border-primary-500/20">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
-              Welcome to Kalm
-            </h1>
-            <p className="text-neutral-300 mb-4">
-              {user?.isAnonymous 
-                ? 'Continue your anonymous wellness journey with complete privacy.'
-                : 'Continue your mental wellness journey with personalized support.'
-              }
-            </p>
-          </div>
-        </div>
-      </div> */}
-
-      <div className="hidden md:block lg:hidden">
-  <div className="bg-gradient-to-r from-primary-500/20 to-accent-green/20 rounded-3xl p-8 border border-primary-500/20 w-full">
-    <div className="mx-auto text-center max-w-2xl">
-      <h1 className="text-3xl font-bold text-white mb-2">
-        Welcome to Kalm
-      </h1>
-      <p className="text-neutral-300 mb-4">
-        {user?.isAnonymous 
-          ? 'Continue your anonymous wellness journey with complete privacy.'
-          : 'Continue your mental wellness journey with personalized support.'
-        }
-      </p>
-    </div>
-  </div>
-</div>
-
-
-
-<div className="block md:hidden lg:block">
-  <div className="bg-gradient-to-r from-primary-500/20 to-accent-green/20 rounded-3xl p-8 border border-primary-500/20">
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+    <div className="space-y-10 pb-12">
+      {/* Welcome Banner */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-10 text-center">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
           Welcome to Kalm
         </h1>
-        <p className="text-neutral-300 mb-4">
-          {user?.isAnonymous 
+        <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+          {user?.isAnonymous
             ? 'Continue your anonymous wellness journey with complete privacy.'
-            : 'Continue your mental wellness journey with personalized support.'
-          }
+            : 'Continue your mental wellness journey with personalized support.'}
         </p>
       </div>
-    </div>
-  </div>
-</div>
-
 
       {/* Quick Actions */}
-      <div className="hidden lg:block">
-        <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {quickActions.map((action, index) => {
             const Icon = action.icon;
             return (
               <button
                 key={index}
                 onClick={action.action}
-                className="group bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800 hover:border-neutral-700 transition-all duration-300 hover:-translate-y-2 text-left"
+                className="group bg-white rounded-2xl border border-gray-200 p-6 md:p-8 hover:shadow-md hover:border-blue-300 transition-all duration-300 flex flex-col items-center text-center"
               >
-                <div className={`w-12 h-12 ${action.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="w-6 h-6 text-white" />
+                <div
+                  className={`w-16 h-16 ${action.color} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}
+                >
+                  <Icon className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{action.title}</h3>
-                <p className="text-neutral-300 text-sm">{action.description}</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">{action.title}</h3>
+                <p className="text-gray-600">{action.description}</p>
               </button>
             );
           })}
         </div>
-      </div>
+      </section>
 
-      {/* Mobile and Tab Quick Actions */}
-      <div className="block lg:hidden">
-        <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {quickActions.map((action, index) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={index}
-                onClick={action.action}
-                className="group bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800 hover:border-neutral-700 transition-all duration-300 hover:-translate-y-2 text-center"
-              >
-                <div className={`w-12 h-12 ${action.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 mx-auto`}>
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{action.title}</h3>
-                <p className="text-neutral-300 text-sm">{action.description}</p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      
-      {/* Dashboard Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+      {/* Main Dashboard Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         {/* Upcoming Sessions */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-white">Upcoming Sessions</h2>
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 lg:p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-gray-900">Upcoming Sessions</h2>
             <button
               onClick={() => navigate('/client/sessions')}
-              className="text-primary-500 hover:text-primary-600 transition-colors duration-200 text-xs sm:text-sm"
+              className="text-blue-600 hover:text-blue-700 font-medium"
             >
-              View All
+              View All →
             </button>
           </div>
 
           {loadingSessions ? (
-            <div className="text-center py-6 sm:py-8">
-              <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-3 sm:mb-4"></div>
-              <p className="text-neutral-300 text-sm sm:text-base">Loading sessions...</p>
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="text-gray-600">Loading your sessions...</p>
             </div>
           ) : upcomingSessions.length > 0 ? (
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-5">
               {upcomingSessions.map((session) => (
-                <div 
-                  key={session.id} 
-                  className="flex items-center justify-between p-3 sm:p-4 bg-neutral-800/50 rounded-lg sm:rounded-xl md:rounded-2xl"
+                <div
+                  key={session.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-gray-50 rounded-xl border border-gray-200 hover:border-blue-300 transition-colors"
                 >
-                  {/* Left side */}
-                  <div className="flex items-center space-x-3 sm:space-x-4">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-500/20 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="flex items-start gap-4">
+                    <div
+                      className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 ${
+                        session.type === 'video'
+                          ? 'bg-blue-100'
+                          : session.type === 'audio'
+                          ? 'bg-emerald-100'
+                          : 'bg-amber-100'
+                      }`}
+                    >
                       {session.type === 'video' ? (
-                        <Video className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" />
+                        <Video className="w-6 h-6 text-blue-600" />
                       ) : session.type === 'audio' ? (
-                        <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" />
+                        <Clock className="w-6 h-6 text-emerald-600" />
                       ) : (
-                        <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary-500" />
+                        <MessageCircle className="w-6 h-6 text-amber-600" />
                       )}
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-white font-medium text-sm sm:text-base truncate">{session.therapist}</p>
-                      <p className="text-neutral-300 text-xs sm:text-sm">{session.date} at {session.time}</p>
-                      <span className={`flex items-center justify-center px-2 py-0.5 sm:px-3 sm:py-2 rounded-full text-xs h-6 sm:h-8 mt-1 w-20 ${
-                        session.status === 'Active' 
-                          ? 'bg-accent-green/20 text-accent-green'
-                          : 'bg-primary-500/20 text-primary-500'
-                      }`}>
+
+                    <div>
+                      <p className="font-semibold text-gray-900 text-lg">{session.therapist}</p>
+                      <p className="text-gray-600 mt-1">
+                        {session.date} • {session.time}
+                      </p>
+                      <span
+                        className={`inline-block px-3 py-1 mt-2 rounded-full text-xs font-medium ${
+                          session.status === 'Active'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-blue-100 text-blue-700'
+                        }`}
+                      >
                         {session.status}
                       </span>
                     </div>
                   </div>
 
-                  {/* Right side */}
-                  <div className="flex items-center ml-4">
-                    <button 
-                      onClick={() => navigate(`/client/session/${session.id}`)}
-                      className="bg-primary-500 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl hover:bg-primary-600 transition-colors duration-200 text-xs sm:text-sm"
-                    >
-                      {session.status === 'Active' ? 'Join' : 'View'}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => navigate(`/client/session/${session.id}`)}
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-sm whitespace-nowrap"
+                  >
+                    {session.status === 'Active' ? 'Join Now' : 'View Details'}
+                  </button>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-6 sm:py-8">
-              <Calendar className="w-12 h-12 sm:w-16 sm:h-16 text-neutral-600 mx-auto mb-3 sm:mb-4" />
-              <p className="text-neutral-300 mb-2 text-sm sm:text-base">No upcoming sessions</p>
+            <div className="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+              <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-700 text-xl mb-4">No upcoming sessions yet</p>
               <button
                 onClick={() => navigate('/client/book')}
-                className="bg-primary-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-primary-600 transition-colors duration-200 text-sm sm:text-base"
+                className="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-sm"
               >
                 Book Your First Session
               </button>
@@ -409,87 +326,88 @@ const ClientHome: React.FC = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Recent Activity</h2>
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 lg:p-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Recent Activity</h2>
+
           {recentActivity.length > 0 ? (
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-4">
               {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 bg-neutral-800/50 rounded-lg sm:rounded-xl md:rounded-2xl">
-                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-accent-green rounded-full mt-2 sm:mt-2.5 flex-shrink-0"></div>
-                  <div className="min-w-0">
-                    <p className="text-white text-sm sm:text-base line-clamp-2">{activity.message}</p>
-                    <p className="text-neutral-400 text-xs sm:text-sm mt-1">{activity.time}</p>
+                <div
+                  key={activity.id}
+                  className="flex items-start gap-4 p-5 bg-gray-50 rounded-xl border border-gray-200"
+                >
+                  <div className="w-3 h-3 rounded-full bg-emerald-500 mt-2.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-900 font-medium">{activity.message}</p>
+                    <p className="text-gray-500 text-sm mt-1">{activity.time}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-6 sm:py-8">
-              <MessageCircle className="w-12 h-12 sm:w-16 sm:h-16 text-neutral-600 mx-auto mb-3 sm:mb-4" />
-              <p className="text-neutral-300 text-sm sm:text-base">No recent activity</p>
+            <div className="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+              <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-700 text-xl">No recent activity yet</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Enhanced Auto-Sliding Wellness Tip */}
+      {/* Wellness Tips Carousel */}
       <div
         ref={wellnessTipRef}
-        className={`bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800 shadow-2xl relative overflow-hidden
-          transition-all duration-1000 ease-out
-          ${showWellnessTip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24'}
-        `}
+        className={`bg-white rounded-2xl border border-gray-200 shadow-sm p-6 lg:p-8 transition-all duration-700 ${
+          showWellnessTip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+        }`}
       >
-        {/* Header with controls */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">Daily Wellness Tip</h2>
-        </div>
-
-        {/* Tip content with slide animation */}
-        <div className="relative min-h-[120px]">
-          <div className="flex items-start space-x-4 transition-all duration-500 ease-in-out">
-            <div className="w-12 h-12 bg-accent-yellow/20 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <Star className="w-6 h-6 text-accent-yellow" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-medium text-white mb-2 transition-all duration-300">
-                {currentTip.title}
-              </h3>
-              <p className="text-neutral-300 leading-relaxed transition-all duration-300">
-                {currentTip.text}
-              </p>
-            </div>
+          <h2 className="text-2xl font-semibold text-gray-900">Daily Wellness Tip</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={goToPreviousTip}
+              className="p-2.5 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={goToNextTip}
+              className="p-2.5 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
         </div>
 
-        {/* Dot indicators */}
-        <div className="flex items-center justify-center space-x-2 mt-6">
-          {wellnessTips.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSpecificTip(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentTipIndex 
-                  ? 'bg-accent-yellow w-6' 
-                  : 'bg-neutral-600 hover:bg-neutral-500'
-              }`}
-              aria-label={`Go to tip ${index + 1}`}
-            />
-          ))}
-        </div>
+        <div className="relative min-h-[120px]">
+          <div className="flex items-start gap-5">
+            <div className="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Star className="w-7 h-7 text-amber-600" />
+            </div>
 
-        {/* Progress bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-neutral-800">
-          <div 
-            className="h-full bg-gradient-to-r from-accent-yellow to-accent-green transition-all duration-100 ease-linear"
-            style={{
-              width: isAutoPlaying ? '100%' : '0%',
-              animation: isAutoPlaying ? 'progress 5s linear infinite' : 'none'
-            }}
-          />
-        </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">{currentTip.title}</h3>
+              <p className="text-gray-600 leading-relaxed text-lg">{currentTip.text}</p>
+            </div>
+          </div>
 
-       
+          {/* Dots */}
+          <div className="flex justify-center gap-2.5 mt-8">
+            {wellnessTips.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSpecificTip(index)}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                  index === currentTipIndex ? 'bg-blue-600 scale-125' : 'bg-gray-300 hover:bg-gray-400'
+                }`}
+                aria-label={`Tip ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
