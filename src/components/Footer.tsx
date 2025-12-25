@@ -179,7 +179,7 @@ const Footer: React.FC = () => {
             <h4 className="text-base font-semibold mb-4">Contact</h4>
             <div className="space-y-3">
               <div className="flex items-start space-x-2 justify-center md:justify-start">
-                <Mail className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
+                <Mail className="w-4 h-4 text-fixes-accent-purple mt-0.5 flex-shrink-0" />
                 <div>
                   <a 
                     href="mailto:team@kalm.lk"
@@ -190,7 +190,7 @@ const Footer: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-start space-x-2 justify-center md:justify-start">
-                <Phone className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
+                <Phone className="w-4 h-4 text-fixes-accent-purple mt-0.5 flex-shrink-0" />
                 <div>
                   <a 
                     href="tel:+94766330360"
@@ -201,7 +201,7 @@ const Footer: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-start space-x-2 justify-center md:justify-start">
-                <MapPin className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
+                <MapPin className="w-4 h-4 text-fixes-accent-purple mt-0.5 flex-shrink-0" />
                 <div>
                   <a 
                     href="https://www.google.com/maps/search/?api=1&query=Colombo%2C+Sri+Lanka"

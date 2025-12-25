@@ -12,13 +12,13 @@ const WhatsAppFloat: React.FC = () => {
   return (
     <button
       onClick={handleWhatsAppClick}
-      className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-accent-green hover:bg-accent-green/90 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 flex items-center justify-center group"
+      className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-fixes-box-purple hover:bg-fixes-box-purple/90 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 flex items-center justify-center group"
       aria-label="Contact us on WhatsApp"
     >
       <MessageCircle className="w-7 h-7 group-hover:scale-110 transition-transform duration-200" />
       
       {/* Pulse animation */}
-      <div className="absolute inset-0 rounded-full bg-accent-green animate-ping opacity-20"></div>
+      <div className="absolute inset-0 rounded-full bg-fixes-box-purple animate-ping opacity-20"></div>
       
       {/* Tooltip */}
       <div className="absolute right-full mr-3 bg-neutral-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">

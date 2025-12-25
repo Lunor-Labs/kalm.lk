@@ -36,17 +36,16 @@ const HowItWorks: React.FC = () => {
   ];
 
   return (
-    <section id="how-it-works" className="py-8 lg:py-12 bg-cream-50 relative">
-      <div className="absolute inset-0 bg-black/10 pointer-events-none z-0"></div>
+    <section id="how-it-works" className="py-24 lg:py-24 bg-fixes-bg-purple relative font-body">
       {/* Subtle grain texture overlay for cream background */}
-      <div className="absolute inset-0 opacity-5 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23000000%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2247%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+      {/* <div className="absolute inset-0 opacity-5 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23000000%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2247%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div> */}
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl lg:text-3xl font-bold text-neutral-800 mb-4">
+        <div className="text-center mb-12">
+          <h2 className="font-display font-medium text-5xl lg:text-6xl text-fixes-heading-dark mb-6">
             How It Works
           </h2>
-          <p className="text-base lg:text-lg text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="mt-6 text-lg font-light text-fixes-heading-dark">
             Getting started with your mental wellness journey is simple and straightforward.
           </p>
         </div>
@@ -63,20 +62,20 @@ const HowItWorks: React.FC = () => {
             >
               <div className="relative z-10">
                 {/* Number on top, centered */}
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-cream-50 border-2 border-neutral-200 rounded-full flex items-center justify-center text-xs font-bold text-neutral-800 shadow-md">
+                {/* <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-cream-50 border-2 border-neutral-200 rounded-full flex items-center justify-center text-xs font-bold text-neutral-800 shadow-md">
                   {index + 1}
-                </div>
+                </div> */}
         
-                <div className={`w-20 h-20 ${step.color} rounded-3xl flex items-center justify-center mx-auto mb-4 mt-6 group-hover:scale-110 transition-all duration-300 shadow-lg`}>
-                  <step.icon className="w-8 h-8 text-white" />
+                <div className={`w-20 h-20 bg-fixes-box-purple rounded-3xl flex items-center justify-center mx-auto mb-4 mt-6 group-hover:scale-110 transition-all duration-300`}>
+                  <step.icon className="w-7 h-7 text-white" />
                 </div>
               </div>
         
               <div className="max-w-xs mx-auto text-center">
-                <h3 className="text-lg font-semibold text-neutral-800 mb-4 mt-8 lg:mt-0">
+                <h3 className="text-fixes-heading-dark mb-4 mt-8 lg:mt-0 font-body font-medium text-lg text-center">
                   {step.title}
                 </h3>
-                <p className="text-neutral-600 leading-relaxed text-sm">
+                <p className="text-fixes-heading-dark leading-relaxed text-sm font-body font-light text-center">
                   {step.description}
                 </p>
               </div>
