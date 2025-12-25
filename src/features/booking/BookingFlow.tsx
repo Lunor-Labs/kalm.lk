@@ -18,26 +18,25 @@ const BookingFlow: React.FC = () => {
   useEffect(() => {
     const stateData = location.state;
     const pendingBooking = sessionStorage.getItem('pendingBooking');
-    
+
     let initialData: Partial<BookingData> = {};
-    
-    // Check navigation state first
+
+    // Navigation state priority
     if (stateData?.preSelectedService) {
       initialData.serviceType = stateData.preSelectedService;
-      setCurrentStep(2); // Skip to therapist selection
+      setCurrentStep(2);
     }
-    
+
     if (stateData?.preSelectedTherapist) {
       initialData.therapistId = stateData.preSelectedTherapist;
-      setCurrentStep(3); // Skip to time slot selection
+      setCurrentStep(3);
     }
-    
-    // Check pending booking from session storage
+
+    // Pending booking from sessionStorage (fallback)
     if (pendingBooking) {
       try {
         const pending = JSON.parse(pendingBooking);
-        // Check if the pending booking is recent (within 1 hour)
-        if (Date.now() - pending.timestamp < 3600000) {
+        if (Date.now() - pending.timestamp < 3600000) { // 1 hour validity
           if (pending.serviceCategory) {
             initialData.serviceType = pending.serviceCategory;
             setCurrentStep(2);
@@ -47,14 +46,12 @@ const BookingFlow: React.FC = () => {
             setCurrentStep(3);
           }
         }
-        // Clear the pending booking
-        sessionStorage.removeItem('pendingBooking');
       } catch (error) {
         console.error('Error parsing pending booking:', error);
-        sessionStorage.removeItem('pendingBooking');
       }
+      sessionStorage.removeItem('pendingBooking');
     }
-    
+
     if (Object.keys(initialData).length > 0) {
       setBookingData(initialData);
     }
@@ -69,7 +66,7 @@ const BookingFlow: React.FC = () => {
   ];
 
   const updateBookingData = (data: Partial<BookingData>) => {
-    setBookingData(prev => ({ ...prev, ...data }));
+    setBookingData((prev) => ({ ...prev, ...data }));
   };
 
   const nextStep = () => {
@@ -148,61 +145,65 @@ const BookingFlow: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-900">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-10">
           <button
             onClick={() => navigate('/client/home')}
-            className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200 mb-6"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-6"
           >
             <ArrowLeft className="w-5 h-5" />
             <span className="font-medium">Back to Home</span>
           </button>
-          
-          <h1 className="text-3xl font-bold text-white mb-2">Book a Session</h1>
-          <p className="text-neutral-300">Follow the steps below to book your therapy session</p>
+
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+            Book a Session
+          </h1>
+          <p className="text-lg text-gray-600">
+            Follow the steps below to schedule your therapy session
+          </p>
         </div>
 
         {/* Progress Steps */}
-        <div className="mb-8">
+        <div className="mb-10">
           <div className="flex items-center justify-between">
             {steps.map((step, index) => (
-              <div key={step.step} className="flex items-center">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors duration-200 ${
-                  step.step < currentStep
-                    ? 'bg-primary-500 border-primary-500 text-white'
-                    : step.step === currentStep
-                    ? 'border-primary-500 text-primary-500 bg-transparent'
-                    : 'border-neutral-600 text-neutral-400 bg-transparent'
-                }`}>
+              <div key={step.step} className="flex-1 flex items-center">
+                <div
+                  className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
+                    step.step < currentStep
+                      ? 'bg-blue-600 border-blue-600 text-white'
+                      : step.step === currentStep
+                      ? 'border-blue-600 text-blue-600 bg-white'
+                      : 'border-gray-300 text-gray-400 bg-white'
+                  }`}
+                >
                   {step.step < currentStep ? (
                     <Check className="w-5 h-5" />
                   ) : (
                     <span className="text-sm font-semibold">{step.step}</span>
                   )}
                 </div>
-                
-                <div className="ml-3 hidden sm:block">
-                  <p className={`text-sm font-medium ${
-                    step.step <= currentStep ? 'text-white' : 'text-neutral-400'
-                  }`}>
-                    {step.title}
-                  </p>
+
+                <div className="hidden sm:block flex-1 mx-4">
+                  <div
+                    className={`h-1 rounded-full transition-all duration-300 ${
+                      step.step <= currentStep ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}
+                  />
                 </div>
-                
-                {index < steps.length - 1 && (
-                  <div className={`hidden sm:block w-16 h-0.5 ml-6 ${
-                    step.step < currentStep ? 'bg-primary-500' : 'bg-neutral-600'
-                  }`} />
-                )}
+
+                <div className="hidden sm:block text-sm font-medium text-gray-700 whitespace-nowrap">
+                  {step.title}
+                </div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Step Content */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-3xl border border-neutral-800 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           {renderStep()}
         </div>
       </div>
