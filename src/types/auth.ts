@@ -24,7 +24,6 @@ export interface User {
     hourlyRate: number;
     nextAvailableSlot?: string;
     calendarUrl?: string;
-    therapistIdInt?: number; // Sequential therapist ID
   };
 }
 

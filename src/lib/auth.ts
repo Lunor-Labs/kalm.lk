@@ -13,7 +13,6 @@ import {
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { User, UserRole, LoginCredentials, SignupData, AnonymousSignupData } from '../types/auth';
-import { getNextId } from './counters';
 import { logAuthError } from './errorLogger';
 
 // Enhanced login function that supports both email and username
@@ -79,47 +78,6 @@ export const signIn = async (credentials: LoginCredentials): Promise<User> => {
     
     const userData = userDoc.data();
     
-    // Backfill clientIdInt for existing users who don't have it yet
-    if (userData.role === 'client' && !userData.clientIdInt) {
-      try {
-        const clientIdInt = await getNextId('client');
-        await updateDoc(doc(db, 'users', firebaseUser.uid), {
-          clientIdInt,
-          updatedAt: serverTimestamp(),
-        });
-        // Log backfill operation only in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`Backfilled clientIdInt (${clientIdInt}) for user ${firebaseUser.uid}`);
-        }
-      } catch (error) {
-        // Log backfill failure only in development
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Failed to backfill clientIdInt for existing user:', error);
-        }
-        // Don't block login if backfill fails
-      }
-    }
-
-    // Backfill therapistIdInt for existing therapists who don't have it yet
-    if (userData.role === 'therapist' && !userData.therapistIdInt) {
-      try {
-        const therapistIdInt = await getNextId('therapist');
-        await updateDoc(doc(db, 'users', firebaseUser.uid), {
-          therapistIdInt,
-          updatedAt: serverTimestamp(),
-        });
-        // Log backfill operation only in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`Backfilled therapistIdInt (${therapistIdInt}) for user ${firebaseUser.uid}`);
-        }
-      } catch (error) {
-        // Log backfill failure only in development
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Failed to backfill therapistIdInt for existing therapist:', error);
-        }
-        // Don't block login if backfill fails
-      }
-    }
     
     return {
       uid: firebaseUser.uid,
@@ -168,9 +126,6 @@ export const signUp = async (signupData: SignupData): Promise<User> => {
       displayName: signupData.displayName
     });
     
-    // Generate sequential client ID for new user
-    const clientIdInt = await getNextId('client');
-    
     // Create user document in Firestore with default client role
     const userData = {
       uid: firebaseUser.uid,
@@ -179,7 +134,6 @@ export const signUp = async (signupData: SignupData): Promise<User> => {
       role: 'client' as UserRole, // Default role for all signups
       phone: signupData.phone || null,
       isAnonymous: false,
-      clientIdInt, // Sequential integer ID for easy tracking
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -223,9 +177,6 @@ export const signInWithGoogle = async (): Promise<User> => {
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
     
     if (!userDoc.exists()) {
-      // Generate sequential client ID for new user
-      const clientIdInt = await getNextId('client');
-      
       // Create new user document with default client role
       const userData = {
         uid: firebaseUser.uid,
@@ -233,7 +184,6 @@ export const signInWithGoogle = async (): Promise<User> => {
         displayName: firebaseUser.displayName,
         role: 'client' as UserRole,
         isAnonymous: false,
-        clientIdInt, // Sequential integer ID for easy tracking
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -284,9 +234,6 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
       await firebaseSignOut(auth);
       throw new Error('Username already exists. Please choose a different username.');
     }    
-    // Generate sequential client ID for new anonymous user
-    const clientIdInt = await getNextId('client');
-    
     // Create user document in Firestore for anonymous user
     const userData = {
       uid: firebaseUser.uid,
@@ -295,7 +242,6 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
       username: anonymousData.username,
       role: 'client' as UserRole,
       isAnonymous: true,
-      clientIdInt, // Sequential integer ID for easy tracking
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -382,47 +328,6 @@ export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User |
       console.log('Raw Firestore data:', userData);
     }
 
-    // Backfill clientIdInt for existing users who don't have it yet
-    if (userData.role === 'client' && !userData.clientIdInt) {
-      try {
-        const clientIdInt = await getNextId('client');
-        await updateDoc(doc(db, 'users', firebaseUser.uid), {
-          clientIdInt,
-          updatedAt: serverTimestamp(),
-        });
-        // Log backfill operation only in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`Backfilled clientIdInt (${clientIdInt}) for user ${firebaseUser.uid}`);
-        }
-      } catch (error) {
-        // Log backfill failure only in development
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Failed to backfill clientIdInt for existing user:', error);
-        }
-        // Don't block user access if backfill fails
-      }
-    }
-
-    // Backfill therapistIdInt for existing therapists who don't have it yet
-    if (userData.role === 'therapist' && !userData.therapistIdInt) {
-      try {
-        const therapistIdInt = await getNextId('therapist');
-        await updateDoc(doc(db, 'users', firebaseUser.uid), {
-          therapistIdInt,
-          updatedAt: serverTimestamp(),
-        });
-        // Log backfill operation only in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`Backfilled therapistIdInt (${therapistIdInt}) for user ${firebaseUser.uid}`);
-        }
-      } catch (error) {
-        // Log backfill failure only in development
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Failed to backfill therapistIdInt for existing therapist:', error);
-        }
-        // Don't block user access if backfill fails
-      }
-    }
     
     return {
       uid: firebaseUser.uid,
@@ -462,20 +367,11 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
     }
     
     // If promoting to therapist, generate ID first
-    let therapistIdInt: number | undefined;
-    if (newRole === 'therapist') {
-      therapistIdInt = await getNextId('therapist');
-    }
-
-    // Update the user role (and add therapistIdInt if applicable)
+    // Update the user role
     const userUpdateData: any = {
       role: newRole,
       updatedAt: serverTimestamp(),
     };
-
-    if (therapistIdInt) {
-      userUpdateData.therapistIdInt = therapistIdInt;
-    }
 
     await updateDoc(userDocRef, userUpdateData);
 
@@ -485,7 +381,6 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
 
       // Create therapist profile data
       const therapistProfile = {
-        therapistIdInt, // Sequential integer ID for easy tracking
         firstName: userData.displayName?.split(' ')[0] || 'First',
         lastName: userData.displayName?.split(' ')[1] || 'Last',
         credentials: ['Licensed Therapist'],

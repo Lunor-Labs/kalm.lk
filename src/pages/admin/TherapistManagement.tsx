@@ -21,7 +21,6 @@ import {
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { db, secondaryAuth } from '../../lib/firebase'; // Import secondaryAuth
 import { uploadTherapistPhoto, deleteTherapistPhoto, getStoragePathFromUrl, validateImageFile } from '../../lib/storage';
-import { getNextId } from '../../lib/counters';
 import toast from 'react-hot-toast';
 
 interface Therapist {
@@ -326,8 +325,6 @@ const TherapistManagement: React.FC = () => {
           displayName: `${formData.firstName} ${formData.lastName}`
         });
         
-        // Generate sequential therapist ID for new therapist first
-        const therapistIdInt = await getNextId('therapist');
 
         // Create user document in Firestore with therapist profile
         await setDoc(doc(db, 'users', user.uid), {
@@ -339,7 +336,6 @@ const TherapistManagement: React.FC = () => {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           therapistProfile: {
-            therapistIdInt, // Sequential integer ID for easy tracking
             firstName: formData.firstName,
             lastName: formData.lastName,
             credentials: formData.credentials.filter(c => c !== 'Other'),

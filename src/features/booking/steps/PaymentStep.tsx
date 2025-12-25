@@ -7,7 +7,6 @@ import { initiatePayHerePayment } from '../../../lib/payhere';
 import toast from 'react-hot-toast';
 import { db } from '../../../lib/firebase';
 import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from 'firebase/firestore';
-import { getNextId } from '../../../lib/counters';
 import { logPaymentError, logUserError } from '../../../lib/errorLogger';
 
 interface PaymentStepProps {
@@ -94,79 +93,22 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
         // Record payment in Firestore for admin reporting & payouts
         try {
-          // Get sequential integer IDs
-          const [clientIdInt, therapistIdInt, bookingIdInt, paymentIdInt] = await Promise.all([
-            // Get client integer ID from user document (should exist from signup, but fallback if missing)
-            (async () => {
-              const userDoc = await getDoc(doc(db, 'users', user.uid));
-              if (userDoc.exists() && userDoc.data().clientIdInt) {
-                return userDoc.data().clientIdInt;
-              }
-              // Fallback: Generate new client ID if somehow missing (shouldn't happen for new signups)
-              console.warn('User missing clientIdInt, generating fallback ID');
-              const newClientIdInt = await getNextId('client');
-              // Try to save it to user document (may fail if not allowed, that's ok)
-              try {
-                await updateDoc(doc(db, 'users', user.uid), { clientIdInt: newClientIdInt });
-              } catch (e) {
-                // Ignore if we can't update user doc
-              }
-              return newClientIdInt;
-            })(),
-            // Get therapist integer ID from user document
-            (async () => {
-              try {
-                const userDoc = await getDoc(doc(db, 'users', bookingData.therapistId));
-                if (userDoc.exists()) {
-                  const userData = userDoc.data();
-                  if (userData.therapistProfile?.therapistIdInt) {
-                    return userData.therapistProfile.therapistIdInt;
-                  }
-                  // Generate new therapist ID if not exists and update user document
-                  const newTherapistId = await getNextId('therapist');
-                  try {
-                    await updateDoc(doc(db, 'users', bookingData.therapistId), {
-                      therapistProfile: {
-                        ...userData.therapistProfile,
-                        therapistIdInt: newTherapistId
-                      }
-                    });
-                  } catch (e) {
-                    // Ignore if we can't update user doc
-                  }
-                  return newTherapistId;
-                }
-                return undefined;
-              } catch (e) {
-                console.warn('Could not get therapist integer ID:', e);
-                return undefined;
-              }
-            })(),
-            getNextId('booking'),
-            getNextId('payment'),
-          ]);
-
-          const paymentData: any = {
+          const paymentData = {
             bookingId,
             sessionId,
             clientId: user.uid,
             clientName: user.displayName || user.email || 'Unknown',
             therapistId: bookingData.therapistId,
-            // Sequential integer IDs (only include if defined)
-            ...(clientIdInt && { clientIdInt }),
-            ...(therapistIdInt && { therapistIdInt }),
-            ...(bookingIdInt && { bookingIdInt }),
-            ...(paymentIdInt && { paymentIdInt }),
             amount: bookingData.amount || finalAmount,
-            currency: 'LKR',
-            paymentMethod: 'payhere',
-            paymentStatus: 'completed',
+            currency: 'LKR' as const,
+            paymentMethod: 'payhere' as const,
+            paymentStatus: 'completed' as const,
             paymentId: paymentResult.paymentId || null,
             orderId: bookingId,
             couponCode: bookingData.couponCode || null,
             discountAmount: bookingData.discountAmount || 0,
             finalAmount,
-            payoutStatus: 'pending',
+            payoutStatus: 'pending' as const,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           };

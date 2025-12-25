@@ -45,10 +45,6 @@ const PaymentsManagement: React.FC = () => {
           clientId: data.clientId,
           therapistId: data.therapistId,
           // Sequential integer IDs
-          clientIdInt: data.clientIdInt as number | undefined,
-          therapistIdInt: data.therapistIdInt as number | undefined,
-          bookingIdInt: data.bookingIdInt as number | undefined,
-          paymentIdInt: data.paymentIdInt as number | undefined,
           clientName: data.clientName as string | undefined,
           therapistName: data.therapistName as string | undefined,
           amount: data.amount as number | undefined,
@@ -154,10 +150,12 @@ const PaymentsManagement: React.FC = () => {
       p.clientId.toLowerCase().includes(searchLower) ||
       p.therapistId.toLowerCase().includes(searchLower) ||
       p.orderId.toLowerCase().includes(searchLower) ||
-      (p.clientIdInt && p.clientIdInt.toString().includes(searchQuery)) ||
-      (p.therapistIdInt && p.therapistIdInt.toString().includes(searchQuery)) ||
-      (p.bookingIdInt && p.bookingIdInt.toString().includes(searchQuery)) ||
-      (p.paymentIdInt && p.paymentIdInt.toString().includes(searchQuery));
+      p.clientId.includes(searchQuery) ||
+      p.therapistId.includes(searchQuery) ||
+      p.bookingId.includes(searchQuery) ||
+      p.orderId.includes(searchQuery) ||
+      (p.clientName && p.clientName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (p.therapistName && p.therapistName.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesPayout = payoutFilter === 'all' || p.payoutStatus === payoutFilter;
 
@@ -267,7 +265,7 @@ const PaymentsManagement: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
             <input
               type="text"
-              placeholder="Search by name, ID, or integer ID (Client #, Therapist #, Booking #, Payment #)..."
+              placeholder="Search by name, client ID, therapist ID, booking ID, or order ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
@@ -302,7 +300,7 @@ const PaymentsManagement: React.FC = () => {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-white">Payment Records</h2>
             <div className="text-xs text-neutral-400">
-              Showing integer IDs: Payment #, Booking #, Client #, Therapist #
+              Showing UIDs and order IDs
             </div>
           </div>
         </div>
@@ -338,12 +336,8 @@ const PaymentsManagement: React.FC = () => {
                   <tr key={p.id} className="border-t border-neutral-800 hover:bg-neutral-800/40">
                     <td className="p-3 text-neutral-200">
                       <div className="flex flex-col gap-1">
-                        {p.paymentIdInt && (
-                          <span className="font-semibold text-primary-500">Payment #{p.paymentIdInt}</span>
-                        )}
-                        {p.bookingIdInt && (
-                          <span className="text-xs text-neutral-300">Booking #{p.bookingIdInt}</span>
-                        )}
+                        <span className="font-semibold text-primary-500">Payment {p.orderId}</span>
+                        <span className="text-xs text-neutral-300">Booking {p.bookingId}</span>
                         <span className="text-[10px] text-neutral-500 font-mono">Doc: {p.id.slice(0, 8)}...</span>
                       </div>
                     </td>
@@ -357,7 +351,6 @@ const PaymentsManagement: React.FC = () => {
                       <div className="flex flex-col">
                         <span className="font-medium">{p.clientName || p.clientId}</span>
                         <div className="flex items-center gap-2 text-xs text-neutral-400">
-                          {p.clientIdInt && <span className="text-primary-400">Client #{p.clientIdInt}</span>}
                           <span>UID: {p.clientId.slice(0, 8)}...</span>
                         </div>
                       </div>
@@ -366,7 +359,6 @@ const PaymentsManagement: React.FC = () => {
                       <div className="flex flex-col">
                         <span className="font-medium">{p.therapistName || p.therapistId}</span>
                         <div className="flex items-center gap-2 text-xs text-neutral-400">
-                          {p.therapistIdInt && <span className="text-accent-green">Therapist #{p.therapistIdInt}</span>}
                           <span>UID: {p.therapistId.slice(0, 8)}...</span>
                         </div>
                       </div>
