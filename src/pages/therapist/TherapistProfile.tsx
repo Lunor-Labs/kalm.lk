@@ -150,6 +150,7 @@ const TherapistProfile: React.FC = () => {
         id: userDoc.id,
         ...userData.therapistProfile,
         email: userData.email,
+        isActive: userData.isActive === undefined ? true : userData.isActive,
         createdAt: userData.createdAt?.toDate(),
         updatedAt: userData.updatedAt?.toDate()
       } as Therapist;

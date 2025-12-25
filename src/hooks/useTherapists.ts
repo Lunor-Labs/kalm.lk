@@ -16,8 +16,7 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
   const [error, setError] = useState<string | null>(null);
   const { useFirebase = false, serviceCategory } = options;
 
-  useEffect(() => {
-    const loadTherapists = async () => {
+  const loadTherapists = async () => {
       setLoading(true);
       setError(null);
 
@@ -33,6 +32,9 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
             const therapistProfile = userData.therapistProfile;
 
             if (!therapistProfile) return null;
+
+            // Skip therapists explicitly marked inactive (either at user level or inside profile)
+            if (userData.isActive === false || therapistProfile.isActive === false) return null;
 
             // Convert Firebase therapist to TherapistData format
             return {
@@ -50,7 +52,8 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
               serviceCategory: determineServiceCategory(therapistProfile.services),
               experience: therapistProfile.experience,
               bio: therapistProfile.bio,
-              isAvailable: therapistProfile.isAvailable
+              isAvailable: therapistProfile.isAvailable,
+              isActive: therapistProfile.isActive === undefined ? true : therapistProfile.isActive
             } as TherapistData;
           }).filter(Boolean) as TherapistData[];
 
@@ -61,27 +64,37 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
 
           setTherapists(filteredTherapists);
         } else {
-          // Use dummy data
-          const filteredTherapists = serviceCategory 
+          // Use dummy data — only include therapists who are active (default true)
+          const base = serviceCategory 
             ? therapistsData.filter(t => t.serviceCategory === serviceCategory)
             : therapistsData;
-          
-          setTherapists(filteredTherapists);
+
+          const filteredTherapists = base
+            .filter(t => (t as any).isActive !== false) // respect isActive if present
+            .map(t => ({ ...(t as any), isActive: (t as any).isActive === undefined ? true : (t as any).isActive }));
+
+          setTherapists(filteredTherapists as any);
         }
       } catch (err: any) {
         console.error('Error loading therapists:', err);
         setError(err.message || 'Failed to load therapists');
         
-        // Fallback to dummy data on error
-        const filteredTherapists = serviceCategory 
+        // Fallback to dummy data on error — respect isActive
+        const base = serviceCategory 
           ? therapistsData.filter(t => t.serviceCategory === serviceCategory)
           : therapistsData;
-        setTherapists(filteredTherapists);
+
+        const filteredTherapists = base
+          .filter(t => (t as any).isActive !== false)
+          .map(t => ({ ...(t as any), isActive: (t as any).isActive === undefined ? true : (t as any).isActive }));
+
+        setTherapists(filteredTherapists as any);
       } finally {
         setLoading(false);
       }
-    };
+  };
 
+  useEffect(() => {
     loadTherapists();
   }, [useFirebase, serviceCategory]);
 

@@ -222,15 +222,15 @@ const TherapistProfile: React.FC<TherapistProfileProps> = ({ therapist, onClose,
 
                 <button
                   onClick={() => onBookNow(therapist)}
-                  disabled={!therapist.isAvailable}
+                  disabled={!therapist.isAvailable || therapist.isActive === false}
                   className={`w-full py-4 rounded-2xl font-semibold text-lg transition-colors duration-200 flex items-center justify-center space-x-2 ${
-                    therapist.isAvailable
+                    (therapist.isAvailable && therapist.isActive !== false)
                       ? 'bg-primary-500 text-white hover:bg-primary-600'
                       : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
                   }`}
                 >
                   <Calendar className="w-5 h-5" />
-                  <span>{therapist.isAvailable ? 'Book Session' : 'Currently Unavailable'}</span>
+                  <span>{(therapist.isActive === false) ? 'Inactive' : (therapist.isAvailable ? 'Book Session' : 'Currently Unavailable')}</span>
                 </button>
 
                 {therapist.isAvailable && (

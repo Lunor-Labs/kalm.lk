@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, Search, Plus, Edit, Trash2, Upload, X, Save,
+  Users, Search, Plus, Edit, Upload, X, Save, ToggleRight,
   Star, Clock, Award, Video, Phone, MessageCircle,
   Eye, EyeOff, ArrowLeft, Calendar, DollarSign, ChevronLeft, ChevronRight, ChevronDown, ChevronUp
 } from 'lucide-react';
@@ -20,7 +20,8 @@ import {
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { db, secondaryAuth } from '../../lib/firebase'; // Import secondaryAuth
-import { uploadTherapistPhoto, deleteTherapistPhoto, getStoragePathFromUrl, validateImageFile } from '../../lib/storage';
+import { getUserSessions } from '../../lib/sessions';
+import { uploadTherapistPhoto, validateImageFile } from '../../lib/storage';
 import toast from 'react-hot-toast';
 
 interface Therapist {
@@ -34,6 +35,7 @@ interface Therapist {
   languages: string[];
   services: string[];
   isAvailable: boolean;
+  isActive: boolean;
   sessionFormats: string[];
   bio: string;
   experience: number;
@@ -168,6 +170,7 @@ const TherapistManagement: React.FC = () => {
           id: doc.id,
           ...userData.therapistProfile,
           email: userData.email,
+          isActive: userData.isActive === undefined ? true : userData.isActive,
           createdAt: userData.createdAt?.toDate(),
           updatedAt: userData.updatedAt?.toDate()
         } as Therapist;
@@ -332,6 +335,7 @@ const TherapistManagement: React.FC = () => {
           email: user.email,
           displayName: `${formData.firstName} ${formData.lastName}`,
           role: 'therapist',
+          isActive: true,
           isAnonymous: false,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
@@ -382,32 +386,53 @@ const TherapistManagement: React.FC = () => {
     }
   };
 
-  const handleDelete = async (therapist: Therapist) => {
-    if (!window.confirm(`Are you sure you want to remove therapist privileges from ${therapist.firstName} ${therapist.lastName}? This will change their role to client.`)) {
-      return;
+  const handleToggleActive = async (therapist: Therapist, newStatus: boolean) => {
+    // If deactivating, check for ongoing sessions first
+    if (!newStatus) {
+      try {
+        const sessions = await getUserSessions(therapist.id, 'therapist');
+        const now = new Date();
+        const ongoing = sessions.filter(s => s.status === 'active' || (s.status === 'scheduled' && s.scheduledTime && s.scheduledTime > now));
+
+        if (ongoing.length > 0) {
+          toast.error(`${therapist.firstName} ${therapist.lastName} has ${ongoing.length} upcoming or active session(s). Deactivate only after they are completed or cancelled.`);
+          return;
+        }
+      } catch (err) {
+        console.error('Error checking therapist sessions before deactivation:', err);
+        toast.error('Failed to verify therapist bookings. Please try again.');
+        return;
+      }
+
+      // Confirm if deactivating
+      if (!window.confirm(`Are you sure you want to deactivate ${therapist.firstName} ${therapist.lastName}? This will make them unavailable for bookings.`)) {
+        return;
+      }
     }
 
     try {
-      if (therapist.profilePhoto && !therapist.profilePhoto.includes('pexels.com')) {
-        const photoPath = getStoragePathFromUrl(therapist.profilePhoto);
-        if (photoPath) {
-          await deleteTherapistPhoto(photoPath);
-        }
+      const userRef = doc(db, 'users', therapist.id);
+
+      const updates: any = {
+        isActive: newStatus,
+        updatedAt: serverTimestamp()
+      };
+
+      // If deactivating, also mark them unavailable for new bookings
+      if (!newStatus) {
+        updates['therapistProfile.isAvailable'] = false;
       }
 
-      // Change role back to client and remove therapist profile
-      const userRef = doc(db, 'users', therapist.id);
-      await updateDoc(userRef, {
-        role: 'client',
-        therapistProfile: null,
-        updatedAt: serverTimestamp()
-      });
+      // Always set therapistProfile.isActive so client lists respect the flag
+      updates['therapistProfile.isActive'] = newStatus;
 
-      toast.success('Therapist privileges removed successfully');
+      await updateDoc(userRef, updates);
+
+      toast.success(newStatus ? 'Therapist activated successfully' : 'Therapist deactivated successfully');
       loadTherapists();
     } catch (error: any) {
-      console.error('Error removing therapist privileges:', error);
-      toast.error('Failed to remove therapist privileges. Please try again.');
+      console.error('Error updating therapist status:', error);
+      toast.error('Failed to update therapist status. Please try again.');
     }
   };
 
@@ -596,7 +621,7 @@ const TherapistManagement: React.FC = () => {
             </div>
           </div>
           <div className="md:text-left text-center">
-            <h3 className="text-2xl font-bold text-white mb-1">{therapists.length}</h3>
+            <h3 className="text-2xl font-bold text-white mb-1">{therapists.filter(t => t.isActive).length}</h3>
             <p className="text-neutral-400 text-sm mb-2">Total Therapists</p>
             <p className="text-accent-green text-sm">Licensed professionals</p>
           </div>
@@ -614,7 +639,7 @@ const TherapistManagement: React.FC = () => {
           </div>
           <div className="md:text-left text-center">
             <h3 className="text-2xl font-bold text-white mb-1">
-              {therapists.filter(t => t.isAvailable).length}
+              {therapists.filter(t => t.isAvailable && t.isActive).length}
             </h3>
             <p className="text-neutral-400 text-sm mb-2">Available Now</p>
             <p className="text-accent-green text-sm">Ready for sessions</p>
@@ -661,6 +686,9 @@ const TherapistManagement: React.FC = () => {
               <div className="p-4 sm:p-6 pt-2 sm:pt-4 text-center">
                 <h3 className="text-base sm:text-lg font-semibold text-white mb-1">
                   {therapist.firstName} {therapist.lastName}
+                  {!therapist.isActive && (
+                    <span className="ml-2 inline-block text-xs px-2 py-0.5 rounded-full bg-red-700 text-white">Inactive</span>
+                  )}
                 </h3>
                 <p className="text-neutral-400 text-xs sm:text-sm mb-2 line-clamp-1">{therapist.email}</p>
 
@@ -717,11 +745,12 @@ const TherapistManagement: React.FC = () => {
                     <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(therapist)}
-                    className="p-1 sm:p-2 bg-neutral-800 text-neutral-300 hover:text-red-500 rounded-lg sm:rounded-xl transition-colors duration-200"
-                    title="Delete therapist"
+                    onClick={() => handleToggleActive(therapist, !therapist.isActive)}
+                    className="p-1 sm:p-2 bg-neutral-800 text-neutral-300 hover:text-white rounded-lg sm:rounded-xl transition-colors duration-200"
+                    title={therapist.isActive ? 'Deactivate therapist' : 'Activate therapist'}
+                    aria-pressed={therapist.isActive}
                   >
-                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <ToggleRight className={`w-3 h-3 sm:w-4 sm:h-4 ${therapist.isActive ? 'text-accent-green' : 'text-neutral-400'}`} />
                   </button>
                 </div>
               </div>
@@ -773,6 +802,9 @@ const TherapistManagement: React.FC = () => {
                         <div>
                           <p className="text-white font-medium text-sm sm:text-base">
                             {therapist.firstName} {therapist.lastName}
+                            {!therapist.isActive && (
+                              <span className="ml-2 inline-block text-xs px-2 py-0.5 rounded-full bg-red-700 text-white">Inactive</span>
+                            )}
                           </p>
                           <p className="text-neutral-400 text-xs sm:text-sm">{therapist.email}</p>
                         </div>
@@ -830,11 +862,11 @@ const TherapistManagement: React.FC = () => {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(therapist)}
-                          className="p-2 text-neutral-400 hover:text-red-500 transition-colors duration-200"
-                          title="Delete therapist"
+                          onClick={() => handleToggleActive(therapist, !therapist.isActive)}
+                          className="p-2 text-neutral-400 hover:text-white transition-colors duration-200"
+                          title={therapist.isActive ? 'Deactivate therapist' : 'Activate therapist'}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <ToggleRight className={`w-4 h-4 ${therapist.isActive ? 'text-accent-green' : 'text-neutral-400'}`} />
                         </button>
                       </div>
                     </td>
@@ -947,6 +979,9 @@ const TherapistManagement: React.FC = () => {
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold text-white mt-3 sm:mt-4">
                   {viewingTherapist.firstName} {viewingTherapist.lastName}
+                  {!viewingTherapist.isActive && (
+                    <span className="ml-2 inline-block text-xs px-2 py-0.5 rounded-full bg-red-700 text-white">Inactive</span>
+                  )}
                 </h3>
                 <p className="text-neutral-400 text-sm sm:text-base">{viewingTherapist.email}</p>
                 
