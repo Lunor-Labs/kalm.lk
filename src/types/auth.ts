@@ -6,6 +6,26 @@ export interface User {
   isAnonymous: boolean;
   createdAt: Date;
   updatedAt: Date;
+  // Therapist-specific profile data (only populated for therapists)
+  therapistProfile?: {
+    firstName: string;
+    lastName: string;
+    credentials: string[];
+    profilePhoto: string;
+    specializations: string[];
+    languages: string[];
+    services: string[];
+    isAvailable: boolean;
+    sessionFormats: ('video' | 'audio' | 'chat')[];
+    bio: string;
+    experience: number; // years
+    rating: number;
+    reviewCount: number;
+    hourlyRate: number;
+    nextAvailableSlot?: string;
+    calendarUrl?: string;
+    therapistIdInt?: number; // Sequential therapist ID
+  };
 }
 
 export type UserRole = 'client' | 'therapist' | 'admin';

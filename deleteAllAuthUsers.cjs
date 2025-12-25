@@ -35,15 +35,17 @@ async function deleteUserData(uid) {
   const db = admin.firestore();
 
   try {
-    // Delete user document from Firestore
-    await db.collection('users').doc(uid).delete();
-
-    // Check if user is a therapist and delete therapist document
-    const therapistDoc = await db.collection('therapists').doc(uid).get();
-    if (therapistDoc.exists) {
-      await db.collection('therapists').doc(uid).delete();
-      console.log(`🧑‍⚕️ Deleted therapist profile for ${uid}`);
+    // Check user data before deletion
+    const userDoc = await db.collection('users').doc(uid).get();
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      if (userData.role === 'therapist') {
+        console.log(`🧑‍⚕️ Deleting therapist user: ${uid}`);
+      }
     }
+
+    // Delete user document from Firestore (includes therapist data if present)
+    await db.collection('users').doc(uid).delete();
 
     // Delete related bookings (if any)
     const bookingsQuery = await db.collection('bookings')

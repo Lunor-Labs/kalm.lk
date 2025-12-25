@@ -479,24 +479,21 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
 
     await updateDoc(userDocRef, userUpdateData);
 
-    // If promoting to therapist, create therapist profile
+    // If promoting to therapist, add therapist profile to user document
     if (newRole === 'therapist') {
       const userData = userDoc.data();
 
-      // Create therapist document with placeholder values
-      const therapistData = {
-        id: uid,
-        userId: uid,
+      // Create therapist profile data
+      const therapistProfile = {
         therapistIdInt, // Sequential integer ID for easy tracking
         firstName: userData.displayName?.split(' ')[0] || 'First',
         lastName: userData.displayName?.split(' ')[1] || 'Last',
-        email: userData.email,
         credentials: ['Licensed Therapist'],
         specializations: ['General Counseling'],
         languages: ['English'],
         services: ['Individual Therapy'],
         isAvailable: false,
-        sessionFormats: ['video'],
+        sessionFormats: ['video' as const],
         bio: 'Professional therapist ready to help you on your wellness journey.',
         experience: 1,
         rating: 5.0,
@@ -504,11 +501,10 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
         hourlyRate: 4500,
         profilePhoto: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
         nextAvailableSlot: 'Please set availability',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
       };
-        
-      await setDoc(doc(db, 'therapists', uid), therapistData);
+
+      // Add therapist profile to the user document
+      userUpdateData.therapistProfile = therapistProfile;
     }
   } catch (error: any) {
     throw new Error(error.message || 'Failed to update user role');

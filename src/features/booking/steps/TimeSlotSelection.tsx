@@ -47,16 +47,10 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
   useEffect(() => {
     const loadTherapistAvailability = async () => {
       try {
-        // First, get the therapist document to find the userId
-        const therapistDoc = await getDoc(doc(db, 'therapists', therapistId));
-        if (!therapistDoc.exists()) {
-          throw new Error('Therapist not found');
-        }
+        // Therapist ID is now directly the user ID
+        const therapistUserId = therapistId;
 
-        const therapistData = therapistDoc.data();
-        const therapistUserId = therapistData?.userId || therapistId; // Fallback to document ID if userId not found
-
-        // Now get availability using the correct userId
+        // Get availability using the userId
         const availability = await getTherapistAvailability(therapistUserId);
         setTherapistAvailability(availability);
       } catch (error: any) {
