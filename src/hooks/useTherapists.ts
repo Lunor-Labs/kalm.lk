@@ -3,28 +3,7 @@ import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { therapistsData, TherapistData } from '../data/therapists';
 
-export interface FirebaseTherapist {
-  id: string;
-  userId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  credentials: string[];
-  specializations: string[];
-  languages: string[];
-  services: string[];
-  isAvailable: boolean;
-  sessionFormats: string[];
-  bio: string;
-  experience: number;
-  rating: number;
-  reviewCount: number;
-  hourlyRate: number;
-  profilePhoto: string;
-  nextAvailableSlot: string;
-  createdAt: any;
-  updatedAt: any;
-}
+// FirebaseTherapist interface is now handled by the User type from auth.ts
 
 export interface UseTherapistsOptions {
   useFirebase?: boolean;
@@ -44,33 +23,36 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
 
       try {
         if (useFirebase) {
-          // Fetch from Firebase
-          const therapistsRef = collection(db, 'therapists');
-          const q = query(therapistsRef, orderBy('createdAt', 'desc'));
+          // Fetch from Firebase users collection, filter for therapists
+          const usersRef = collection(db, 'users');
+          const q = query(usersRef, where('role', '==', 'therapist'), orderBy('createdAt', 'desc'));
           const snapshot = await getDocs(q);
-          
+
           const firebaseTherapists = snapshot.docs.map(doc => {
-            const data = doc.data() as FirebaseTherapist;
-            
+            const userData = doc.data();
+            const therapistProfile = userData.therapistProfile;
+
+            if (!therapistProfile) return null;
+
             // Convert Firebase therapist to TherapistData format
             return {
               id: doc.id,
-              name: `${data.firstName} ${data.lastName}`,
-              specialty: data.specializations[0] || 'General Counseling',
-              image: data.profilePhoto,
-              languages: data.languages,
-              credentials: data.credentials.join(', '),
-              availability: data.isAvailable ? 'Available Today' : data.nextAvailableSlot,
-              rating: data.rating,
-              reviewCount: data.reviewCount,
-              hourlyRate: data.hourlyRate,
-              sessionFormats: data.sessionFormats,
-              serviceCategory: determineServiceCategory(data.services),
-              experience: data.experience,
-              bio: data.bio,
-              isAvailable: data.isAvailable
+              name: `${therapistProfile.firstName} ${therapistProfile.lastName}`,
+              specialty: therapistProfile.specializations[0] || 'General Counseling',
+              image: therapistProfile.profilePhoto,
+              languages: therapistProfile.languages,
+              credentials: therapistProfile.credentials.join(', '),
+              availability: therapistProfile.isAvailable ? 'Available Today' : therapistProfile.nextAvailableSlot || 'Not Available',
+              rating: therapistProfile.rating,
+              reviewCount: therapistProfile.reviewCount,
+              hourlyRate: therapistProfile.hourlyRate,
+              sessionFormats: therapistProfile.sessionFormats,
+              serviceCategory: determineServiceCategory(therapistProfile.services),
+              experience: therapistProfile.experience,
+              bio: therapistProfile.bio,
+              isAvailable: therapistProfile.isAvailable
             } as TherapistData;
-          });
+          }).filter(Boolean) as TherapistData[];
 
           // Filter by service category if specified
           const filteredTherapists = serviceCategory 

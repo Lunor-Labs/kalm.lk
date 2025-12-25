@@ -78,11 +78,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       if (paymentResult.success) {
         const bookingId = paymentResult.orderId || `booking-${Date.now()}`;
         console.log('bookingData.therapistId', bookingData.therapistId);
-        // Get the therapist's userId from the therapist document
-        const therapistDoc = await getDoc(doc(db, 'therapists', bookingData.therapistId));
-        const therapistUserId = therapistDoc.exists()
-          ? therapistDoc.data()?.userId || bookingData.therapistId
-          : bookingData.therapistId;
+        // Therapist ID is now directly the user ID
+        const therapistUserId = bookingData.therapistId;
 
         // Create the session in Firebase after successful payment
         const sessionId = await createSession({
@@ -116,22 +113,30 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               }
               return newClientIdInt;
             })(),
-            // Get therapist integer ID from therapist document
+            // Get therapist integer ID from user document
             (async () => {
               try {
-                const therapistDoc = await getDoc(doc(db, 'therapists', bookingData.therapistId));
-                if (therapistDoc.exists() && therapistDoc.data().therapistIdInt) {
-                  return therapistDoc.data().therapistIdInt;
+                const userDoc = await getDoc(doc(db, 'users', bookingData.therapistId));
+                if (userDoc.exists()) {
+                  const userData = userDoc.data();
+                  if (userData.therapistProfile?.therapistIdInt) {
+                    return userData.therapistProfile.therapistIdInt;
+                  }
+                  // Generate new therapist ID if not exists and update user document
+                  const newTherapistId = await getNextId('therapist');
+                  try {
+                    await updateDoc(doc(db, 'users', bookingData.therapistId), {
+                      therapistProfile: {
+                        ...userData.therapistProfile,
+                        therapistIdInt: newTherapistId
+                      }
+                    });
+                  } catch (e) {
+                    // Ignore if we can't update user doc
+                  }
+                  return newTherapistId;
                 }
-                // Generate new therapist ID if not exists
-                const newTherapistId = await getNextId('therapist');
-                // Try to save it to therapist document
-                try {
-                  await updateDoc(doc(db, 'therapists', bookingData.therapistId), { therapistIdInt: newTherapistId });
-                } catch (e) {
-                  // Ignore if we can't update therapist doc
-                }
-                return newTherapistId;
+                return undefined;
               } catch (e) {
                 console.warn('Could not get therapist integer ID:', e);
                 return undefined;
