@@ -103,75 +103,124 @@ const TherapistAvailability = () => {
     };
   };
 
-  const handleAddTimeSlot = async () => {
-    if (!newTimeSlot.startTime || !newTimeSlot.endTime) {
-      toast.error('Please select start and end times');
-      return;
-    }
-    if (newTimeSlot.startTime >= newTimeSlot.endTime) {
-      toast.error('End time must be after start time');
-      return;
-    }
+const handleAddTimeSlot = async () => {
+  if (!newTimeSlot.startTime || !newTimeSlot.endTime) {
+    toast.error('Please select start and end times');
+    return;
+  }
+  if (newTimeSlot.startTime >= newTimeSlot.endTime) {
+    toast.error('End time must be after start time');
+    return;
+  }
 
-    const timeSlotId = editingTimeSlot?.id || `slot-${Date.now()}`;
-    const timeSlot = {
-      id: timeSlotId,
-      isAvailable: true,
-      ...newTimeSlot
-    };
-
-    const dateString = format(selectedDate, 'yyyy-MM-dd');
-    let updatedSchedule = [...weeklySchedule];
-    let updatedSpecialDates = [...specialDates];
-
-    if (newTimeSlot.isRecurring) {
-      const dayOfWeek = selectedDate.getDay();
-      updatedSchedule = updatedSchedule.map(day =>
-        day.dayOfWeek === dayOfWeek
-          ? {
-              ...day,
-              timeSlots: editingTimeSlot
-                ? day.timeSlots.map((ts: any) => (ts.id === timeSlotId ? timeSlot : ts))
-                : [...day.timeSlots, timeSlot]
-            }
-          : day
-      );
-    } else {
-      const existingIndex = updatedSpecialDates.findIndex(sd => sd.date === dateString);
-
-      if (existingIndex >= 0) {
-        const existing = updatedSpecialDates[existingIndex];
-        updatedSpecialDates[existingIndex] = {
-          ...existing,
-          timeSlots: editingTimeSlot
-            ? existing.timeSlots.map((ts: any) => (ts.id === timeSlotId ? timeSlot : ts))
-            : [...existing.timeSlots, timeSlot]
-        };
-      } else {
-        updatedSpecialDates.push({
-          date: dateString,
-          timeSlots: [timeSlot],
-          reason: 'One-time availability'
-        });
-      }
-    }
-
-    setWeeklySchedule(updatedSchedule);
-    setSpecialDates(updatedSpecialDates);
-
-    try {
-      if (user?.uid) {
-        await saveTherapistAvailability(user.uid, updatedSchedule, updatedSpecialDates);
-        toast.success(editingTimeSlot ? 'Time slot updated' : 'Time slot added');
-      }
-    } catch (error) {
-      toast.error('Failed to save changes');
-      loadAvailabilityData(); // revert on error
-    }
-
-    setEditingTimeSlot(null);
-    setShowTimeSlotModal(false);
+  // Parse times into minutes for easy calculation
+  const parseTime = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
   };
+
+  const startMinutes = parseTime(newTimeSlot.startTime);
+  const endMinutes = parseTime(newTimeSlot.endTime);
+
+  // Generate hourly slots
+  const generatedSlots: any[] = [];
+  let currentStart = startMinutes;
+
+  while (currentStart + 60 <= endMinutes) {
+    const startHour = Math.floor(currentStart / 60).toString().padStart(2, '0');
+    const startMin = (currentStart % 60).toString().padStart(2, '0');
+    const endHour = Math.floor((currentStart + 60) / 60).toString().padStart(2, '0');
+    const endMin = ((currentStart + 60) % 60).toString().padStart(2, '0');
+
+    const timeSlotId = editingTimeSlot?.id || `slot-${Date.now()}-${generatedSlots.length}`;
+
+    generatedSlots.push({
+      id: timeSlotId,
+      startTime: `${startHour}:${startMin}`,
+      endTime: `${endHour}:${endMin}`,
+      isAvailable: true,
+      isRecurring: newTimeSlot.isRecurring,
+      sessionType: newTimeSlot.sessionType,
+      price: newTimeSlot.price,
+    });
+
+    currentStart += 60;
+  }
+
+  if (generatedSlots.length === 0) {
+    toast.error('The selected time range must allow at least one full hour slot');
+    return;
+  }
+
+  const dateString = format(selectedDate, 'yyyy-MM-dd');
+  let updatedSchedule = [...weeklySchedule];
+  let updatedSpecialDates = [...specialDates];
+
+  if (newTimeSlot.isRecurring) {
+    // Add all generated hourly slots to the weekly schedule for this day
+    const dayOfWeek = selectedDate.getDay();
+
+    updatedSchedule = weeklySchedule.map(day =>
+      day.dayOfWeek === dayOfWeek
+        ? {
+            ...day,
+            timeSlots: editingTimeSlot
+              ? day.timeSlots
+                  .filter((ts: any) => ts.id !== editingTimeSlot.id) // remove old if editing
+                  .concat(generatedSlots)
+              : [...day.timeSlots, ...generatedSlots]
+          }
+        : day
+    );
+  } else {
+    // Add to special date
+    const existingSpecialDateIndex = updatedSpecialDates.findIndex(
+      (sd: any) => sd.date === dateString
+    );
+
+    if (existingSpecialDateIndex >= 0) {
+      const existing = updatedSpecialDates[existingSpecialDateIndex];
+      updatedSpecialDates[existingSpecialDateIndex] = {
+        ...existing,
+        timeSlots: editingTimeSlot
+          ? existing.timeSlots
+              .filter((ts: any) => ts.id !== editingTimeSlot.id)
+              .concat(generatedSlots)
+          : [...existing.timeSlots, ...generatedSlots]
+      };
+    } else {
+      updatedSpecialDates.push({
+        date: dateString,
+        timeSlots: generatedSlots,
+        reason: 'One-time availability'
+      });
+    }
+  }
+
+  setWeeklySchedule(updatedSchedule as any);
+  setSpecialDates(updatedSpecialDates);
+
+  // Save to DB
+  try {
+    if (user?.uid) {
+      await saveTherapistAvailability(user.uid, updatedSchedule, updatedSpecialDates);
+      toast.success(
+        editingTimeSlot
+          ? `Updated ${generatedSlots.length} hourly slot(s)`
+          : `Added ${generatedSlots.length} hourly slot(s)`
+      );
+    }
+  } catch (error: any) {
+    toast.error('Failed to save time slots');
+    // Revert changes on error
+    setWeeklySchedule(weeklySchedule);
+    setSpecialDates(specialDates);
+  }
+
+  // Reset modal
+  setEditingTimeSlot(null);
+  setShowTimeSlotModal(false);
+};
 
   const handleDeleteTimeSlot = async (timeSlotId: string) => {
     const dateString = format(selectedDate, 'yyyy-MM-dd');
