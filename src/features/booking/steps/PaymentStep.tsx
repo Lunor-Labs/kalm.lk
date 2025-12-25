@@ -146,18 +146,17 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             getNextId('payment'),
           ]);
 
-          const paymentsRef = collection(db, 'payments');
-          await addDoc(paymentsRef, {
+          const paymentData: any = {
             bookingId,
             sessionId,
             clientId: user.uid,
             clientName: user.displayName || user.email || 'Unknown',
             therapistId: bookingData.therapistId,
-            // Sequential integer IDs
-            clientIdInt,
-            therapistIdInt,
-            bookingIdInt,
-            paymentIdInt,
+            // Sequential integer IDs (only include if defined)
+            ...(clientIdInt && { clientIdInt }),
+            ...(therapistIdInt && { therapistIdInt }),
+            ...(bookingIdInt && { bookingIdInt }),
+            ...(paymentIdInt && { paymentIdInt }),
             amount: bookingData.amount || finalAmount,
             currency: 'LKR',
             paymentMethod: 'payhere',
@@ -170,7 +169,10 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             payoutStatus: 'pending',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
-          });
+          };
+
+          const paymentsRef = collection(db, 'payments');
+          await addDoc(paymentsRef, paymentData);
         } catch (paymentError: any) {
           console.error('Failed to record payment document:', paymentError);
           toast.error(paymentError?.message || 'Session booked, but failed to record payment in admin reports.');
