@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Video, MessageCircle, Phone, Play, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Session } from '../../types/session';
-import { getUserSessions } from '../../lib/sessions';
+import { getUserSessions, canJoinSessionByTime } from '../../lib/sessions';
 import { format, isToday, isFuture } from 'date-fns';
 import toast from 'react-hot-toast';
 
@@ -24,7 +24,10 @@ const TherapistSessions: React.FC = () => {
       try {
         setLoading(true);
         const userSessions = await getUserSessions(user.uid, 'therapist');
-        console.log('Fetched sessions:', userSessions); // Debug log
+        // Log session count only in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Fetched sessions:', userSessions.length, 'sessions');
+        }
         setSessions(userSessions);
       } catch (error: any) {
         console.error('Failed to load sessions:', error);
@@ -62,7 +65,10 @@ const TherapistSessions: React.FC = () => {
 
   useEffect(() => {
     // Debug pagination
-    console.log('Filtered sessions:', filteredSessions.length, 'Total pages:', totalPages, 'Current page:', currentPage);
+    // Log pagination info only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Filtered sessions:', filteredSessions.length, 'Total pages:', totalPages, 'Current page:', currentPage);
+    }
   }, [filteredSessions, currentPage]);
 
   const getSessionIcon = (sessionType:  string) => {
@@ -91,16 +97,33 @@ const TherapistSessions: React.FC = () => {
     return 'Past';
   };
 
+  const [joinableSessions, setJoinableSessions] = useState<Set<string>>(new Set());
+
+  // Update joinable sessions when sessions change
+  useEffect(() => {
+    const updateJoinableSessions = async () => {
+      const joinable = new Set<string>();
+      for (const session of sessions) {
+        try {
+          const canJoin = await canJoinSessionByTime(session);
+          if (canJoin) {
+            joinable.add(session.id);
+          }
+        } catch (error) {
+          // On error, fall back to basic status check
+          if (session.status === 'scheduled' || session.status === 'active') {
+            joinable.add(session.id);
+          }
+        }
+      }
+      setJoinableSessions(joinable);
+    };
+
+    updateJoinableSessions();
+  }, [sessions]);
+
   const canJoinSession = (session: Session) => {
-    return session.status === 'scheduled' || session.status === 'active';
-    // if (session.status === 'active') return true;
-    // if (session.status !== 'scheduled') return false;
-    
-    // const now = new Date();
-    // const sessionTime = session.scheduledTime;
-    // const joinWindow = subMinutes(sessionTime, 15);
-    
-    // return now >= joinWindow;
+    return joinableSessions.has(session.id);
   };
 
   const handleJoinSession = (session: Session) => {

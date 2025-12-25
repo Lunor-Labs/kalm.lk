@@ -191,7 +191,7 @@ const TherapistProfile: React.FC = () => {
       toast.success('Image uploaded successfully');
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error(error.message || 'Failed to upload image');
+      toast.error('Failed to upload image. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -303,7 +303,7 @@ const TherapistProfile: React.FC = () => {
       await loadTherapistProfile(); // Reload to get updated data
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast.error(error.message || 'Failed to update profile');
+      toast.error('Failed to update profile. Please try again.');
     } finally {
       setSaving(false);
     }

@@ -124,7 +124,10 @@ const BookingFlow: React.FC = () => {
         return (
           <BookingConfirmation
             bookingData={bookingData}
-            onConfirm={nextStep}
+            onConfirm={(selectedSessionType) => {
+              updateBookingData({ sessionType: selectedSessionType });
+              nextStep();
+            }}
             onBack={prevStep}
             onEdit={(step) => setCurrentStep(step)}
           />

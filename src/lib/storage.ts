@@ -41,13 +41,22 @@ export const uploadTherapistPhoto = async (file: File, therapistId?: string): Pr
       }
     };
 
-    console.log('Uploading file:', fileName);
+    // Log upload start only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Uploading file:', fileName);
+    }
     const snapshot = await uploadBytes(storageRef, file, metadata);
-    console.log('Upload successful:', snapshot);
-    
+    // Log success only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Upload successful');
+    }
+
     // Get download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
-    console.log('Download URL:', downloadURL);
+    // Log URL only in development (sensitive information)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Download URL:', downloadURL);
+    }
     
     return {
       url: downloadURL,
@@ -58,17 +67,17 @@ export const uploadTherapistPhoto = async (file: File, therapistId?: string): Pr
     
     // Provide more specific error messages
     if (error.code === 'storage/unauthorized') {
-      throw new Error('Upload failed: Insufficient permissions. Please check Firebase Storage rules.');
+      throw new Error('Upload failed: You do not have permission to upload files. Please contact support.');
     } else if (error.code === 'storage/canceled') {
       throw new Error('Upload was canceled.');
     } else if (error.code === 'storage/unknown') {
-      throw new Error('Upload failed due to an unknown error. Please try again.');
+      throw new Error('Upload failed due to an unexpected error. Please try again.');
     } else if (error.code === 'storage/invalid-format') {
-      throw new Error('Invalid file format. Please upload a valid image file.');
+      throw new Error('Invalid file format. Please upload a valid image file (JPG, PNG, etc.).');
     } else if (error.code === 'storage/invalid-argument') {
-      throw new Error('Invalid upload parameters. Please try again.');
+      throw new Error('Invalid file selected. Please choose a different image and try again.');
     } else {
-      throw new Error(error.message || 'Failed to upload image. Please try again.');
+      throw new Error('Failed to upload image. Please check your file and try again.');
     }
   }
 };
@@ -77,13 +86,18 @@ export const deleteTherapistPhoto = async (photoPath: string): Promise<void> => 
   try {
     const storageRef = ref(storage, photoPath);
     await deleteObject(storageRef);
-    console.log('Photo deleted successfully:', photoPath);
+    // Log success only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Photo deleted successfully:', photoPath);
+    }
   } catch (error: any) {
     console.error('Delete error:', error);
-    
+
     if (error.code === 'storage/object-not-found') {
-      // File doesn't exist, which is fine
-      console.log('File not found, already deleted:', photoPath);
+      // File doesn't exist, which is fine - log only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('File not found, already deleted:', photoPath);
+      }
     } else {
       throw new Error(error.message || 'Failed to delete image');
     }

@@ -88,7 +88,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
       // toast.success('Signed out successfully');
       setShowProfileMenu(false);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to sign out');
+      toast.error('Failed to sign out. Please try refreshing the page.');
     }
   };
 

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, Clock, Video, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Session } from '../../types/session';
-import { getSession, generateMeetingToken, startSession, endSession } from '../../lib/sessions';
+import { getSession, generateMeetingToken, startSession, endSession, canJoinSessionByTime } from '../../lib/sessions';
 import VideoCallInterface from './VideoCallInterface';
 import ChatInterface from './ChatInterface';
 import toast from 'react-hot-toast';
@@ -44,6 +44,12 @@ const SessionRoom: React.FC = () => {
         // Check if session is still joinable (active or scheduled)
         if (sessionData.status === 'completed' || sessionData.status === 'cancelled') {
           throw new Error('This session has already ended');
+        }
+
+        // Check if session can be joined based on timing rules
+        const canJoinByTime = await canJoinSessionByTime(sessionData);
+        if (!canJoinByTime) {
+          throw new Error('This session is not available for joining at this time');
         }
 
         setSession(sessionData);

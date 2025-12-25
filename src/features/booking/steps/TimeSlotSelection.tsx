@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import { format, addDays, startOfDay, isSameDay } from 'date-fns';
 import { getTherapistAvailability, getAvailableTimeSlots } from '../../../lib/availability';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
 interface TimeSlotSelectionProps {
@@ -46,7 +47,17 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
   useEffect(() => {
     const loadTherapistAvailability = async () => {
       try {
-        const availability = await getTherapistAvailability(therapistId);
+        // First, get the therapist document to find the userId
+        const therapistDoc = await getDoc(doc(db, 'therapists', therapistId));
+        if (!therapistDoc.exists()) {
+          throw new Error('Therapist not found');
+        }
+
+        const therapistData = therapistDoc.data();
+        const therapistUserId = therapistData?.userId || therapistId; // Fallback to document ID if userId not found
+
+        // Now get availability using the correct userId
+        const availability = await getTherapistAvailability(therapistUserId);
         setTherapistAvailability(availability);
       } catch (error: any) {
         console.error('Failed to load therapist availability:', error);
@@ -65,23 +76,35 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
 
     const dateString = format(date, 'yyyy-MM-dd');
     const dayOfWeek = date.getDay();
-    
+
     // Check for special dates first
     const specialDate = therapistAvailability.specialDates?.find((sd: any) => sd.date === dateString);
     let availableTimeSlots: any[] = [];
 
     if (specialDate) {
-      if (!specialDate.isAvailable) {
-        return []; // No slots available on this special date
-      }
+      // Special dates don't have isAvailable flag in the new system, so always use them if they exist
       availableTimeSlots = specialDate.timeSlots || [];
     } else {
       // Use weekly schedule
       const daySchedule = therapistAvailability.weeklySchedule?.find((day: any) => day.dayOfWeek === dayOfWeek);
-      if (!daySchedule || !daySchedule.isAvailable) {
+
+      if (!daySchedule) {
+        return []; // No schedule available on this day
+      }
+
+      // Check availability (support both old and new data structures)
+      const isAvailable = daySchedule.isAvailable !== false; // Default to true if not set
+
+      if (!isAvailable) {
         return []; // No slots available on this day
       }
+
+      // Check if the day has time slots configured
       availableTimeSlots = daySchedule.timeSlots || [];
+
+      if (availableTimeSlots.length === 0) {
+        return []; // No slots available on this day
+      }
     }
 
     // Check for existing bookings to mark slots as booked
@@ -108,7 +131,14 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
         // Check if this slot is already booked
         const slotKey = `${hour}:00`;
         const isBooked = bookedSlots.includes(slotKey);
-        
+
+        // Only show slots that start in the future (with 15-minute buffer)
+        const now = new Date();
+        const bufferTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
+        if (startTime <= bufferTime) {
+          continue; // Skip past and imminent time slots
+        }
+
         slots.push({
           id: `${therapistId}-${dateString}-${hour}`,
           startTime,
@@ -120,7 +150,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
         });
       }
     }
-    
+
     return slots.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
   };
 

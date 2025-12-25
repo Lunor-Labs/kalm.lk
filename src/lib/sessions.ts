@@ -1,13 +1,14 @@
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  updateDoc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  setDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
   serverTimestamp,
   onSnapshot,
   Timestamp
@@ -15,6 +16,8 @@ import {
 import { db } from './firebase';
 import { Session, ChatMessage, SessionParticipant } from '../types/session';
 import { dailyService } from './daily';
+import { saveTherapistAvailability, getTherapistAvailability } from './availability';
+import { format, subMinutes, addMinutes, isBefore, isAfter } from 'date-fns';
 
 export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
   try {
@@ -51,7 +54,28 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
     };
 
     const docRef = await addDoc(collection(db, 'sessions'), sessionDoc);
-    return docRef.id;
+    const sessionId = docRef.id;
+
+    // Update therapist availability to mark the time slot as booked
+    try {
+      console.log('sessionData.therapistId', sessionData.therapistId);
+      // Resolve the correct therapist user ID from the therapist document
+      const therapistDoc = await getDoc(doc(db, 'therapists', sessionData.therapistId));
+      if (therapistDoc.exists()) {
+        const therapistData = therapistDoc.data();
+        const therapistUserId = therapistData?.userId || sessionData.therapistId; // Fallback to document ID
+        console.log('therapistUserId', therapistUserId);
+        console.log(therapistData?.userId);
+        await updateTherapistAvailabilityAfterBooking(therapistUserId, sessionData.scheduledTime);
+      } else {
+        console.warn('Therapist document not found, skipping availability update');
+      }
+    } catch (availabilityError) {
+      // Log error but don't fail the session creation
+      console.error('Failed to update therapist availability after booking:', availabilityError);
+    }
+
+    return sessionId;
   } catch (error: any) {
     console.error('Error creating session:', error);
     throw new Error(error.message || 'Failed to create session');
@@ -299,5 +323,290 @@ export const updateParticipantStatus = async (sessionId: string, userId: string,
   } catch (error: any) {
     console.error('Error updating participant status:', error);
     throw new Error(error.message || 'Failed to update participant status');
+  }
+};
+
+/**
+ * Update therapist availability to mark a time slot as booked
+ */
+const updateTherapistAvailabilityAfterBooking = async (
+  therapistId: string,
+  scheduledTime: Date
+): Promise<void> => {
+  try {
+    // Validate scheduledTime
+    if (!scheduledTime || isNaN(scheduledTime.getTime())) {
+      console.error('Invalid scheduledTime provided:', scheduledTime);
+      return;
+    }
+
+    // Get current therapist availability
+    const availability = await getTherapistAvailability(therapistId);
+
+    if (!availability) {
+      console.warn('No availability found for therapist, skipping update');
+      return;
+    }
+
+    let dateString: string;
+    let timeString: string;
+
+    try {
+      dateString = format(scheduledTime, 'yyyy-MM-dd');
+      timeString = format(scheduledTime, 'HH:mm');
+    } catch (formatError) {
+      console.error('Error formatting scheduledTime:', formatError);
+      return;
+    }
+
+    // Check if this is a special date booking
+    const specialDateIndex = availability.specialDates?.findIndex(
+      (sd: any) => sd.date === dateString
+    );
+
+    if (specialDateIndex !== undefined && specialDateIndex >= 0) {
+      // Update special date time slot
+      const specialDate = availability.specialDates[specialDateIndex];
+      const updatedTimeSlots = specialDate.timeSlots.map((slot: any) => {
+        try {
+          // Handle both Date objects and time strings
+          let slotStartTime: any = slot.startTime;
+
+          // If it's a Firestore Timestamp, convert to Date
+          if (slotStartTime && typeof slotStartTime === 'object' && slotStartTime.toDate) {
+            slotStartTime = slotStartTime.toDate();
+          }
+
+          // If startTime is a time string like "09:00", compare directly
+          if (typeof slotStartTime === 'string' && slotStartTime.includes(':')) {
+            if (slotStartTime === timeString) {
+              return { ...slot, isAvailable: false, isBooked: true };
+            }
+            return slot;
+          }
+
+          // If it's a Date object, format and compare
+          if (slotStartTime instanceof Date || (typeof slotStartTime === 'string' && !isNaN(Date.parse(slotStartTime)))) {
+            const dateObj = slotStartTime instanceof Date ? slotStartTime : new Date(slotStartTime);
+            if (!isNaN(dateObj.getTime())) {
+              const slotTime = format(dateObj, 'HH:mm');
+              if (slotTime === timeString) {
+                return { ...slot, isAvailable: false, isBooked: true };
+              }
+            }
+          }
+
+          return slot;
+        } catch (slotError) {
+          console.error('❌ [AVAILABILITY] Error processing special date slot:', slotError, 'slot:', slot);
+          return slot;
+        }
+      });
+
+      availability.specialDates[specialDateIndex] = {
+        ...specialDate,
+        timeSlots: updatedTimeSlots
+      };
+    } else {
+      // Update weekly schedule
+      const dayOfWeek = scheduledTime.getDay();
+      const daySchedule = availability.weeklySchedule?.find((day: any) => day.dayOfWeek === dayOfWeek);
+
+      if (daySchedule) {
+        const updatedTimeSlots = daySchedule.timeSlots.map((slot: any) => {
+          try {
+            // Handle both Date objects and time strings
+            let slotStartTime: any = slot.startTime;
+
+            // If it's a Firestore Timestamp, convert to Date
+            if (slotStartTime && typeof slotStartTime === 'object' && slotStartTime.toDate) {
+              slotStartTime = slotStartTime.toDate();
+            }
+
+            // If startTime is a time string like "09:00", compare directly
+            if (typeof slotStartTime === 'string' && slotStartTime.includes(':')) {
+              if (slotStartTime === timeString) {
+                return { ...slot, isAvailable: false, isBooked: true };
+              }
+              return slot;
+            }
+
+            // If it's a Date object, format and compare
+            if (slotStartTime instanceof Date || (typeof slotStartTime === 'string' && !isNaN(Date.parse(slotStartTime)))) {
+              const dateObj = slotStartTime instanceof Date ? slotStartTime : new Date(slotStartTime);
+              if (!isNaN(dateObj.getTime())) {
+                const slotTime = format(dateObj, 'HH:mm');
+                if (slotTime === timeString) {
+                  return { ...slot, isAvailable: false, isBooked: true };
+                }
+              }
+            }
+
+            return slot;
+          } catch (slotError) {
+            console.error('❌ [AVAILABILITY] Error processing weekly slot:', slotError, 'slot:', slot);
+            return slot;
+          }
+        });
+
+        const dayIndex = availability.weeklySchedule.findIndex((day: any) => day.dayOfWeek === dayOfWeek);
+        if (dayIndex >= 0) {
+          availability.weeklySchedule[dayIndex] = {
+            ...daySchedule,
+            timeSlots: updatedTimeSlots
+          };
+        }
+      }
+    }
+
+    // Save updated availability
+    try {
+      await saveTherapistAvailability(therapistId, availability.weeklySchedule, availability.specialDates);
+    } catch (saveError: any) {
+      console.warn('Availability update skipped - booking still successful');
+      // Don't fail the booking process - availability update is a nice-to-have feature
+    }
+  } catch (error) {
+    console.error('Error updating therapist availability after booking:', error);
+    // Don't throw error - booking should still succeed even if availability update fails
+  }
+};
+
+// Session configuration types and functions
+export interface SessionConfig {
+  joinEarlyMinutes: number; // Minutes before session start when join button becomes available
+  joinLateMinutes: number; // Minutes after session end when join button remains available
+  updatedAt: Date;
+  updatedBy: string;
+}
+
+// Default session configuration
+const DEFAULT_SESSION_CONFIG: Omit<SessionConfig, 'updatedAt' | 'updatedBy'> = {
+  joinEarlyMinutes: 15, // 15 minutes before session start
+  joinLateMinutes: 30,  // 30 minutes after session end
+};
+
+// Get session configuration from database
+export const getSessionConfig = async (): Promise<SessionConfig> => {
+  try {
+    const configRef = doc(db, 'systemConfig', 'sessionTiming');
+    const configSnap = await getDoc(configRef);
+
+    if (configSnap.exists()) {
+      const data = configSnap.data();
+      return {
+        joinEarlyMinutes: data.joinEarlyMinutes ?? DEFAULT_SESSION_CONFIG.joinEarlyMinutes,
+        joinLateMinutes: data.joinLateMinutes ?? DEFAULT_SESSION_CONFIG.joinLateMinutes,
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        updatedBy: data.updatedBy || 'system',
+      };
+    }
+
+    // Return default config if not found
+    return {
+      ...DEFAULT_SESSION_CONFIG,
+      updatedAt: new Date(),
+      updatedBy: 'system',
+    };
+  } catch (error) {
+    console.error('Failed to get session config:', error);
+    // Return default config on error
+    return {
+      ...DEFAULT_SESSION_CONFIG,
+      updatedAt: new Date(),
+      updatedBy: 'system',
+    };
+  }
+};
+
+// Update session configuration (admin only)
+export const updateSessionConfig = async (
+  config: Partial<Pick<SessionConfig, 'joinEarlyMinutes' | 'joinLateMinutes'>>,
+  updatedBy: string
+): Promise<void> => {
+  try {
+    const configRef = doc(db, 'systemConfig', 'sessionTiming');
+    await setDoc(configRef, {
+      ...config,
+      updatedAt: serverTimestamp(),
+      updatedBy,
+    }, { merge: true });
+  } catch (error) {
+    console.error('Failed to update session config:', error);
+    throw new Error('Failed to update session configuration');
+  }
+};
+
+// Check if session can be joined based on timing rules
+export const canJoinSessionByTime = async (session: Session): Promise<boolean> => {
+  try {
+    const config = await getSessionConfig();
+    const now = new Date();
+
+    // If session is active, always allow joining
+    if (session.status === 'active') {
+      return true;
+    }
+
+    // If session is not scheduled, don't allow joining
+    if (session.status !== 'scheduled') {
+      return false;
+    }
+
+    const sessionStart = session.scheduledTime;
+    const sessionEnd = addMinutes(sessionStart, session.duration || 60); // Default 60 minutes
+
+    // Can join from X minutes before start
+    const earliestJoinTime = subMinutes(sessionStart, config.joinEarlyMinutes);
+
+    // Can join until Y minutes after end
+    const latestJoinTime = addMinutes(sessionEnd, config.joinLateMinutes);
+    console.log('earliestJoinTime', earliestJoinTime);
+    console.log('latestJoinTime', latestJoinTime);
+
+    return isAfter(now, earliestJoinTime) && isBefore(now, latestJoinTime);
+  } catch (error) {
+    console.error('Failed to check session join timing:', error);
+    // On error, fall back to basic status check
+    return session.status === 'scheduled' || session.status === 'active';
+  }
+};
+
+// Check if a scheduled session should be marked as missed
+export const shouldMarkSessionAsMissed = async (session: Session): Promise<boolean> => {
+  try {
+    // Only check scheduled sessions
+    if (session.status !== 'scheduled') {
+      return false;
+    }
+
+    const config = await getSessionConfig();
+    const now = new Date();
+    const sessionStart = session.scheduledTime;
+    const sessionEnd = addMinutes(sessionStart, session.duration || 60);
+
+    // Latest time when session could still be joined
+    const latestJoinTime = addMinutes(sessionEnd, config.joinLateMinutes);
+
+    // If current time is past the latest join time, session should be marked as missed
+    return isAfter(now, latestJoinTime);
+  } catch (error) {
+    console.error('Failed to check if session should be marked as missed:', error);
+    // On error, don't mark as missed
+    return false;
+  }
+};
+
+// Mark a session as missed
+export const markSessionAsMissed = async (sessionId: string): Promise<void> => {
+  try {
+    const sessionRef = doc(db, 'sessions', sessionId);
+    await updateDoc(sessionRef, {
+      status: 'missed',
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Failed to mark session as missed:', error);
+    throw new Error('Failed to update session status');
   }
 };

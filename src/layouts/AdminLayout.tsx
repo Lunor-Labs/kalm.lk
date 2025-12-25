@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  CreditCard, 
-  Bell, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  CreditCard,
+  Bell,
+  Settings,
   LogOut,
   Menu,
   X,
-  UserCheck
+  UserCheck,
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '../lib/auth';
@@ -26,9 +28,11 @@ const AdminLayout: React.FC = () => {
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Users', href: '/admin/users', icon: UserCheck },
     { name: 'Therapists', href: '/admin/therapists', icon: Users },
-   /* 
+    { name: 'Payments', href: '/admin/payments', icon: CreditCard },
+    { name: 'Session Config', href: '/admin/session-config', icon: Clock },
+    { name: 'Error Logs', href: '/admin/error-logs', icon: AlertTriangle },
+   /*
    { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
-   { name: 'Payments', href: '/admin/payments', icon: CreditCard },
     { name: 'Notifications', href: '/admin/notifications', icon: Bell },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
     */
@@ -40,7 +44,7 @@ const AdminLayout: React.FC = () => {
       // toast.success('Signed out successfully');
       navigate('/');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to sign out');
+      toast.error('Failed to sign out. Please try refreshing the page.');
     }
   };
 

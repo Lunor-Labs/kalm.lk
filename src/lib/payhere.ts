@@ -107,7 +107,10 @@ export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): P
 
     // Fetch secure hash from server
     const hash = await fetchPayHereHash(paymentData.orderId, paymentData.amount, paymentData.currency);
-    console.log(hash)
+    // Payment hash for verification (only logged in development)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Payment hash generated:', hash);
+    }
 
     // Prepare PayHere payment object
     const payment: PayHerePayment = {

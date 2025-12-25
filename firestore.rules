@@ -48,7 +48,7 @@ service cloud.firestore {
                       request.resource.data.uid == uid &&
                       request.resource.data.role == 'client';
       
-      // Users can update their own profile (excluding role)
+      // Users can update their own profile (excluding role, but allowing patientId for sequential tracking)
       allow update: if isOwner(uid) && 
                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'uid']);
       
@@ -63,10 +63,11 @@ service cloud.firestore {
 
     // Therapists collection - Public read, restricted write
     match /therapists/{therapistId} {
-      // Anyone authenticated can read therapist profiles (for browsing/booking)
-      allow read: if isAuthenticated();
+      // Anyone can read therapist profiles (public for browsing/booking, even without auth)
+      allow read: if true;
       
       // Therapists can update their own profile (matching userId field, not document ID)
+      // therapistIdInt can be added for sequential tracking
       allow update: if isAuthenticated() && 
                       resource.data.userId == request.auth.uid &&
                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'userId', 'createdAt']);
@@ -181,7 +182,7 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Payments collection - Read-only for users
+    // Payments collection - clients create, admins manage payouts
     match /payments/{paymentId} {
       // Clients can read their own payments
       allow read: if isAuthenticated() && 
@@ -193,19 +194,31 @@ service cloud.firestore {
       
       // Admins can read all payments
       allow read: if isAdmin();
-      
-      // Only Cloud Functions can write payments
-      allow write: if false;
+
+      // Clients can create their own payment records after successful checkout
+      allow create: if isAuthenticated() &&
+                     request.resource.data.clientId == request.auth.uid &&
+                     request.resource.data.keys().hasAll(['bookingId', 'clientId', 'therapistId', 'amount', 'currency', 'paymentMethod', 'paymentStatus', 'orderId', 'finalAmount', 'payoutStatus']);
+
+      // Admins can update payout-related fields for any payment
+      allow update: if isAdmin() &&
+                     request.resource.data.diff(resource.data).affectedKeys()
+                     .hasOnly(['payoutStatus', 'payoutDate', 'therapistPayoutAmount', 'updatedAt']);
+
+      // No deletes from client side
+      allow delete: if false;
     }
 
     // Therapist availability collection
     match /therapistAvailability/{therapistId} {
       // Anyone authenticated can read availability (for booking)
       allow read: if isAuthenticated();
-      
-      // Only the therapist can manage their own availability
-      allow write: if isOwner(therapistId);
-      
+
+      // Therapists can manage their own availability, OR
+      // Authenticated users can update availability (for booking system)
+      // This allows the booking process to mark slots as booked
+      allow write: if isOwner(therapistId) || isAuthenticated();
+
       // Admins can read all
       allow read: if isAdmin();
       
@@ -251,6 +264,38 @@ service cloud.firestore {
       
       // Admins can read all
       allow read: if isAdmin();
+    }
+
+    // Counters collection - for sequential integer IDs
+    match /counters/{counterType} {
+      // Anyone authenticated can read counters (for getting current count)
+      allow read: if isAuthenticated();
+
+      // Only allow creating/updating counters through transactions
+      // This is handled by the getNextId function which uses transactions
+      // For safety, we allow authenticated users to update counters
+      // (The transaction logic ensures atomicity)
+      allow write: if isAuthenticated();
+    }
+
+    // Error logs collection - Admin only access for monitoring
+    match /error_logs/{logId} {
+      // Only admins can read error logs
+      allow read: if isAdmin();
+
+      // Allow system/server-side writes only (no client writes)
+      allow write: if false;
+    }
+
+    // System configuration collection
+    match /systemConfig/{configId} {
+      // Authenticated users can read system configuration (for session timing, etc.)
+      allow read: if isAuthenticated();
+      // Only admins can write system configuration
+      allow write: if isAdmin();
+
+      // No deletes
+      allow delete: if false;
     }
 
     // Default deny all other collections and documents
