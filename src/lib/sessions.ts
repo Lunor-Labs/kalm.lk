@@ -44,6 +44,28 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
       dailyRoomName = room.name;
     }
 
+    // Validate therapist is active and available for booking
+    try {
+      const therapistRef = doc(db, 'users', sessionData.therapistId);
+      const therapistSnap = await getDoc(therapistRef);
+      if (!therapistSnap.exists()) {
+        throw new Error('Therapist not found');
+      }
+
+      const tdata: any = therapistSnap.data();
+      const tprofile = tdata?.therapistProfile;
+      if (tdata && (tdata.isActive === false)) {
+        throw new Error('Therapist is not available for booking.');
+      }
+
+      if (tprofile && (tprofile.isActive === false || tprofile.isAvailable === false)) {
+        throw new Error('Therapist is not available for booking.');
+      }
+    } catch (err: any) {
+      console.error('Error validating therapist availability:', err);
+      throw err;
+    }
+
     // Create session document in Firestore
     const sessionDoc = {
       ...sessionData,
