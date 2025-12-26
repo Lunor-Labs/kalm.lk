@@ -27,7 +27,7 @@ export interface User {
   };
 }
 
-export type UserRole = 'client' | 'therapist' | 'admin';
+export type UserRole = 'client' | 'therapist' | 'admin' | 'superadmin';
 
 export interface AuthState {
   user: User | null;

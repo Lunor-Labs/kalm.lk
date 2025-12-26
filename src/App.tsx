@@ -6,12 +6,14 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // Layouts
 import AdminLayout from './layouts/AdminLayout';
+import SuperAdminLayout from './layouts/SuperAdminLayout';
 import TherapistLayout from './layouts/TherapistLayout';
 import ClientLayout from './layouts/ClientLayout';
 
 // Auth Components
 import UnauthorizedPage from './components/auth/UnauthorizedPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import { useAuth } from './contexts/AuthContext';
 
 // Landing Page Components (unchanged)
 import Header from './components/Header';
@@ -36,6 +38,18 @@ import TherapistManagement from './pages/admin/TherapistManagement';
 import PaymentsManagement from './pages/admin/PaymentsManagement';
 import ErrorLogsDashboard from './pages/admin/ErrorLogsDashboard';
 import SessionConfigManagement from './pages/admin/SessionConfigManagement';
+
+// Dynamic Admin Layout Selector
+const AdminLayoutSelector: React.FC = () => {
+  const { user } = useAuth();
+
+  if (user?.role === 'superadmin') {
+    return <SuperAdminLayout />;
+  }
+
+  return <AdminLayout />;
+};
+
 import TherapistSchedule from './pages/therapist/TherapistSchedule';
 import TherapistSessions from './pages/therapist/TherapistSessions';
 import TherapistAvailability from './pages/therapist/TherapistAvailability';
@@ -133,8 +147,8 @@ function App() {
 						
 						{/* Admin Routes */}
 						<Route path="/admin/*" element={
-							<ProtectedRoute requiredRole="admin">
-								<AdminLayout />
+							<ProtectedRoute requiredRole={['admin', 'superadmin']}>
+								<AdminLayoutSelector />
 							</ProtectedRoute>
 						}>
 							<Route path="dashboard" element={<AdminDashboard />} />

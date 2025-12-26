@@ -328,7 +328,7 @@ export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User |
       console.log('Raw Firestore data:', userData);
     }
 
-    
+
     return {
       uid: firebaseUser.uid,
       email: firebaseUser.email,

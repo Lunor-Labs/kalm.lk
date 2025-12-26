@@ -18,7 +18,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '../lib/auth';
 import toast from 'react-hot-toast';
 
-const AdminLayout: React.FC = () => {
+const SuperAdminLayout: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,8 +29,8 @@ const AdminLayout: React.FC = () => {
     { name: 'Users', href: '/admin/users', icon: UserCheck },
     { name: 'Therapists', href: '/admin/therapists', icon: Users },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
-    // { name: 'Session Config', href: '/admin/session-config', icon: Clock }, // Super admin only
-    // { name: 'Error Logs', href: '/admin/error-logs', icon: AlertTriangle }, // Super admin only
+    { name: 'Session Config', href: '/admin/session-config', icon: Clock },
+    { name: 'Error Logs', href: '/admin/error-logs', icon: AlertTriangle },
    /*
    { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
     { name: 'Notifications', href: '/admin/notifications', icon: Bell },
@@ -52,7 +52,7 @@ const AdminLayout: React.FC = () => {
     <div className="min-h-screen bg-neutral-900">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -83,7 +83,7 @@ const AdminLayout: React.FC = () => {
                 alt="Kalm Logo"
                 className="w-8 h-8 rounded-lg"
               />
-              <span className="text-xl font-bold text-white">Admin</span>
+              <span className="text-xl font-bold text-white">Super Admin</span>
             </button>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -123,14 +123,15 @@ const AdminLayout: React.FC = () => {
           {/* User Info & Sign Out */}
           <div className="p-6 border-t border-neutral-800">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-semibold">
-                  {user?.displayName?.charAt(0) || 'A'}
+                  {user?.displayName?.charAt(0) || 'S'}
                 </span>
               </div>
               <div>
-                <p className="text-white font-medium">{user?.displayName || 'Admin'}</p>
+                <p className="text-white font-medium">{user?.displayName || 'Super Admin'}</p>
                 <p className="text-neutral-400 text-sm">{user?.email}</p>
+                <p className="text-red-400 text-xs font-medium">Super Admin</p>
               </div>
             </div>
             <button
@@ -155,10 +156,10 @@ const AdminLayout: React.FC = () => {
             >
               <Menu className="w-6 h-6" />
             </button>
-            
+
             <div className="flex items-center space-x-4">
               <div className="text-white">
-                <h1 className="text-xl font-semibold">Admin Dashboard</h1>
+                <h1 className="text-xl font-semibold">Super Admin Dashboard</h1>
               </div>
             </div>
           </div>
@@ -173,4 +174,4 @@ const AdminLayout: React.FC = () => {
   );
 };
 
-export default AdminLayout;
+export default SuperAdminLayout;
