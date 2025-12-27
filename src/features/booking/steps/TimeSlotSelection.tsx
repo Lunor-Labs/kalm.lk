@@ -106,43 +106,43 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
     
     // Convert availability time slots to TimeSlot format
     const slots: TimeSlot[] = [];
-    
+
     for (const availSlot of availableTimeSlots) {
       if (!availSlot.isAvailable) continue;
-      
-      // Parse start and end times
-      const [startHour, startMinute] = availSlot.startTime.split(':').map(Number);
-      const [endHour, endMinute] = availSlot.endTime.split(':').map(Number);
-      
-      // Generate hourly slots within the available time range
-      for (let hour = startHour; hour < endHour; hour++) {
-        const startTime = new Date(date);
-        startTime.setHours(hour, 0, 0, 0);
-        
-        const endTime = new Date(date);
-        endTime.setHours(hour + 1, 0, 0, 0);
-        
-        // Check if this slot is already booked
-        const slotKey = `${hour}:00`;
-        const isBooked = bookedSlots.includes(slotKey);
 
-        // Only show slots that start in the future (with 15-minute buffer)
-        const now = new Date();
-        const bufferTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
-        if (startTime <= bufferTime) {
-          continue; // Skip past and imminent time slots
-        }
+      const parseSlotTime = (timeStr: string) => {
+        const [hour, minute] = timeStr.split(':').map(Number);
+        const slotTime = new Date(date);
+        slotTime.setHours(hour, minute ?? 0, 0, 0);
+        return slotTime;
+      };
 
-        slots.push({
-          id: `${therapistId}-${dateString}-${hour}`,
-          startTime,
-          endTime,
-          isAvailable: !isBooked,
-          isBooked,
-          price: availSlot.price || 4500,
-          sessionType: availSlot.sessionType || 'video'
-        });
+      const startTime = parseSlotTime(availSlot.startTime);
+      const endTime = parseSlotTime(availSlot.endTime);
+
+      // Skip invalid ranges
+      if (endTime <= startTime) continue;
+
+      // Check if this slot is already booked
+      const slotKey = format(startTime, 'HH:mm');
+      const isBooked = bookedSlots.includes(slotKey);
+
+      // Only show slots that start in the future (with 15-minute buffer)
+      const now = new Date();
+      const bufferTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
+      if (startTime <= bufferTime) {
+        continue; // Skip past and imminent time slots
       }
+
+      slots.push({
+        id: `${therapistId}-${dateString}-${slotKey}`,
+        startTime,
+        endTime,
+        isAvailable: !isBooked,
+        isBooked,
+        price: availSlot.price || 4500,
+        sessionType: availSlot.sessionType || 'video'
+      });
     }
 
     return slots.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
@@ -167,7 +167,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
         const bookingDate = booking.sessionTime?.toDate();
         
         if (bookingDate && format(bookingDate, 'yyyy-MM-dd') === dateString) {
-          const timeSlot = format(bookingDate, 'H:mm');
+          const timeSlot = format(bookingDate, 'HH:mm');
           bookedSlots.push(timeSlot);
         }
       });
@@ -178,6 +178,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
       return [];
     }
   };
+
   useEffect(() => {
     const loadTimeSlots = async () => {
       if (!therapistAvailability) return;
@@ -283,8 +284,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
           ) : (
             <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto">
               {timeSlots.map((slot) => {
-                const isSelected = selectedTime && isSameDay(slot.startTime, selectedTime) && 
-                                 slot.startTime.getHours() === selectedTime.getHours();
+                const isSelected = selectedTime && slot.startTime.getTime() === selectedTime.getTime();
                 
                 return (
                   <button
