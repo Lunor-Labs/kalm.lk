@@ -215,10 +215,10 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
               <div className="relative">
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center space-x-3 bg-black/20 backdrop-blur-sm rounded-full px-4 py-2 hover:bg-black/30 transition-colors duration-200"
+                  className="flex items-center space-x-3 bg-black backdrop-blur-sm rounded-full px-4 py-2 hover:bg-black/70 transition-colors duration-200"
                 >
-                  <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold text-sm">
+                  <div className="w-8 h-8 bg-fixes-accent-purple rounded-full flex items-center justify-center">
+                    <span className="text-black font-semibold text-sm">
                       {user.displayName?.charAt(0) || 'U'}
                     </span>
                   </div>
@@ -238,21 +238,21 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                       <p className="text-neutral-300 text-sm">
                         {user.isAnonymous ? 'Anonymous Account' : user.email}
                       </p>
-                      <p className="text-primary-500 text-xs capitalize mt-1">
+                      <p className="text-fixes-accent-purple text-xs capitalize mt-1">
                         {user.role}
                       </p>
                     </div>
                     <div className="p-2">
                       <button
                         onClick={goToDashboard}
-                        className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-white hover:bg-neutral-800 transition-colors duration-200"
+                        className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-fixes-heading-dark bg-fixes-accent-purple hover:bg-fixes-accent-blue transition-colors duration-200"
                       >
                         <User className="w-4 h-4" />
                         <span>Go to Dashboard</span>
                       </button>
                       <button
                         onClick={handleSignOut}
-                        className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors duration-200"
+                        className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-neutral-300 hover:bg-fixes-accent-purple hover:text-fixes-heading-dark transition-colors duration-200"
                       >
                         <LogOut className="w-4 h-4" />
                         <span>Sign Out</span>
@@ -274,7 +274,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                   <>
                   <a
                     href={`tel:${phoneNumberForCall}`}
-                    className="inline-flex items-center gap-1 text-primary-500 hover:text-primary-600 transition-colors duration-200 font-medium text-sm"
+                    className="inline-flex items-center gap-1 text-fixes-accent-purple hover:text-primary-600 transition-colors duration-200 font-medium text-sm"
                   >
                     <div className="w-7 h-7 rounded-full border border-black flex items-center justify-center">
                       <Phone className="w-4 h-4 text-black" />
@@ -294,7 +294,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             ) : (
               <>
           {/* Profile Initial */}
-            <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-sm font-semibold text-white shrink-0">
+            <div className="w-8 h-8 bg-fixes-accent-purple rounded-full flex items-center justify-center text-sm font-semibold text-white shrink-0">
               {user.displayName?.charAt(0) || 'U'}
             </div>
           
@@ -304,7 +304,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                 goToDashboard();
                 setIsMenuOpen(false);
               }}
-              className="bg-primary-500 text-white px-3 py-1 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-xs whitespace-nowrap"
+              className="bg-fixes-accent-purple text-white px-3 py-1 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-xs whitespace-nowrap"
             >
               Dashboard
             </button> */}
@@ -315,7 +315,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                 handleSignOut();
                 setIsMenuOpen(false);
               }}
-              className="text-neutral-300 hover:text-white transition-colors duration-200 text-xs whitespace-nowrap"
+              className="text-fixes-heading-dark hover:text-black transition-colors duration-200 text-xs whitespace-nowrap"
             >
               Sign Out
             </button>
@@ -349,7 +349,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                     key={item.label}
                     href={item.href}
                     onClick={e => handleNavClick(e, item.href)}
-                    className="block text-white hover:text-primary-500 transition-colors duration-200 font-normal py-2 text-sm"
+                    className="block text-white hover:text-fixes-accent-purple transition-colors duration-200 font-normal py-2 text-sm"
                   >
                     {item.label}
                   </a>
@@ -361,7 +361,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                   <>
                     {/* <a
                       href={`tel:${phoneNumberForCall}`}
-                      className="inline-flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200 font-medium py-2 text-sm"
+                      className="inline-flex items-center space-x-2 text-fixes-accent-purple hover:text-primary-600 transition-colors duration-200 font-medium py-2 text-sm"
                     >
                       <Phone className="w-4 h-4" />
                       <span>Call Us</span>
@@ -372,7 +372,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                           onOpenAuth('login');
                           setIsMenuOpen(false);
                         }}
-                        className="bg-primary-500 text-white px-6 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm"
+                        className="bg-fixes-accent-purple text-white px-6 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm"
                       >
                         Login
                       </button>
@@ -381,7 +381,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                 ) : (
                   <>
                     <div className="bg-black/30 rounded-2xl p-4 text-center">
-                      <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <div className="w-12 h-12 bg-fixes-accent-purple rounded-full flex items-center justify-center mx-auto mb-2">
                         <span className="text-white font-semibold">
                           {user.displayName?.charAt(0) || 'U'}
                         </span>
@@ -390,7 +390,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                       <p className="text-neutral-300 text-sm">
                         {user.isAnonymous ? 'Anonymous Account' : user.email}
                       </p>
-                      <p className="text-primary-500 text-xs capitalize mt-1">
+                      <p className="text-fixes-accent-purple text-xs capitalize mt-1">
                         {user.role}
                       </p>
                     </div>
@@ -400,7 +400,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                         goToDashboard();
                         setIsMenuOpen(false);
                       }}
-                      className="w-full bg-primary-500 text-white px-6 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm"
+                      className="w-full bg-fixes-accent-purple text-white px-6 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm"
                     >
                       Go to Dashboard
                     </button>
