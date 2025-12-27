@@ -30,7 +30,7 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
   ];
 
   return (
-    <section className="relative min-h-screen bg-white pt-16">
+    <section className="relative min-h-screen bg-white pt-16 overflow-x-hidden">
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '120px' }}>
 
         {/* TOP ROW*/}
@@ -217,7 +217,7 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
             <img
               src="hero_bg.png"
               alt="Mental wellness"
-              className="absolute bottom-0 z-0 lg:min-w-[800px] min-w-[400px]"
+              className="absolute bottom-0 z-0 w-full max-w-[90vw] lg:min-w-[800px]"
               style={{
                 maxWidth: '920px',
               }}
