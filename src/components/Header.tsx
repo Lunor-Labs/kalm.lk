@@ -263,7 +263,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             )}
           </div>
 
-            <div className="pr-4 pt-3 flex items-center justify-end border-t border-neutral-700 mb-3 lg:hidden">
+            <div className="pr-4 pt-3 flex items-center justify-end mb-3 lg:hidden">
               {/* Adjust the marginRight value below to move this block further from the right edge as you wish */}
               <div
                 className="flex items-center justify-end gap-3 overflow-x-auto px-2 py-2"
