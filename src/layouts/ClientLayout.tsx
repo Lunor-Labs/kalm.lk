@@ -79,7 +79,7 @@ const ClientLayout: React.FC = () => {
               <img
                 src="logo.jpg"
                 alt="Kalm Logo"
-                className="w-10 h-10 lg:w-8 lg:h-8 rounded-lg"
+                className="w-10 h-10 lg:w-8 lg:h-8"
               />
               <span className="text-lg lg:text-xl font-body font-medium text-black">kalm.lk</span>
             </button>
