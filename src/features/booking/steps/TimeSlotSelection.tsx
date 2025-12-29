@@ -212,21 +212,21 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
       <div className="mb-4">
         <button
           onClick={onBack}
-          className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200"
+          className="flex items-center space-x-2 text-fixes-accent-purple hover:text-fixes-accent-blue transition-colors duration-200"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
+          <span className="text-fixes-heading-dark">Back</span>
         </button>
       </div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-white whitespace-nowrap">Select Date & Time</h2>
-        <p className="text-neutral-300">Choose your preferred session time</p>
+        <h2 className="text-2xl font-black text-black whitespace-nowrap">Select Date & Time</h2>
+        <p className="text-fixes-heading-dark">Choose your preferred session time</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Date Selection */}
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+          <h3 className="text-lg font-black text-black mb-4 flex items-center space-x-2">
             <Calendar className="w-5 h-5" />
             <span>Select Date</span>
           </h3>
@@ -240,18 +240,18 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
                 <button
                   key={index}
                   onClick={() => setSelectedDate(date)}
-                  className={`p-4 rounded-2xl border-2 transition-all duration-200 text-left ${
+                  className={`p-4 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md ${
                     isSelected
-                      ? 'border-primary-500 bg-primary-500/10'
-                      : 'border-neutral-800 hover:border-neutral-700 bg-black/30'
+                      ? 'ring-2 ring-fixes-accent-purple bg-white'
+                      : 'bg-white hover:bg-neutral-50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className={`font-semibold ${isSelected ? 'text-primary-500' : 'text-white'}`}>
+                      <p className={`font-black ${isSelected ? 'text-fixes-accent-purple' : 'text-black'}`}>
                         {format(date, 'EEEE')}
                       </p>
-                      <p className="text-neutral-300 text-sm">
+                      <p className="text-fixes-heading-dark text-sm">
                         {format(date, 'MMMM d, yyyy')}
                       </p>
                     </div>
@@ -269,7 +269,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
 
         {/* Time Slot Selection */}
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+          <h3 className="text-lg font-black text-black mb-4 flex items-center space-x-2">
             <Clock className="w-5 h-5" />
             <span>Available Times</span>
           </h3>
@@ -277,8 +277,8 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <div className="text-center">
-                <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                <p className="text-neutral-300 text-sm">Loading slots...</p>
+                <div className="w-8 h-8 border-2 border-fixes-accent-purple border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-fixes-heading-dark text-sm">Loading slots...</p>
               </div>
             </div>
           ) : (
@@ -291,15 +291,15 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
                     key={slot.id}
                     onClick={() => handleTimeSlotSelect(slot)}
                     disabled={!slot.isAvailable || slot.isBooked}
-                    className={`p-3 rounded-2xl border-2 transition-all duration-200 text-center ${
+                    className={`p-3 rounded-xl transition-all duration-200 text-center shadow-sm hover:shadow-md ${
                       !slot.isAvailable || slot.isBooked
-                        ? 'border-neutral-800 bg-neutral-800/30 text-neutral-500 cursor-not-allowed'
+                        ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed'
                         : isSelected
-                        ? 'border-primary-500 bg-primary-500/10 text-primary-500'
-                        : 'border-neutral-800 hover:border-neutral-700 bg-black/30 text-white hover:text-primary-500'
+                        ? 'ring-2 ring-fixes-accent-purple bg-white text-fixes-accent-purple'
+                        : 'bg-white hover:bg-neutral-50 text-black hover:text-fixes-accent-purple'
                     }`}
                   >
-                    <p className="font-semibold text-sm">
+                    <p className="font-black text-sm">
                       {format(slot.startTime, 'h:mm a')}
                     </p>
                     {/* <p className="text-xs opacity-80">
@@ -318,10 +318,10 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
 
           {!loading && timeSlots.length === 0 && (
             <div className="text-center py-16">
-              <Clock className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
-              <p className="text-neutral-300 mb-2">No available slots for this date</p>
-              <p className="text-neutral-400 text-sm">
-                {!therapistAvailability 
+              <Clock className="w-16 h-16 text-fixes-heading-dark mx-auto mb-4" />
+              <p className="text-fixes-heading-dark mb-2">No available slots for this date</p>
+              <p className="text-fixes-heading-dark text-sm">
+                {!therapistAvailability
                   ? 'Therapist availability not configured yet.'
                   : 'Please select a different date or contact the therapist.'}
               </p>

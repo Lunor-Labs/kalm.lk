@@ -148,20 +148,20 @@ const BookingFlow: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-900">
+    <div className="min-h-screen bg-[#F8F9FA]">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => navigate('/client/home')}
-            className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200 mb-6"
+            className="flex items-center space-x-2 text-fixes-accent-purple hover:text-fixes-accent-blue transition-colors duration-200 mb-6"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Back to Home</span>
+            <span className="font-medium text-fixes-heading-dark">Back to Home</span>
           </button>
-          
-          <h1 className="text-3xl font-bold text-white mb-2">Book a Session</h1>
-          <p className="text-neutral-300">Follow the steps below to book your therapy session</p>
+
+          <h1 className="text-3xl font-black text-black mb-2">Book a Session</h1>
+          <p className="text-fixes-heading-dark">Follow the steps below to book your therapy session</p>
         </div>
 
         {/* Progress Steps */}
@@ -171,10 +171,10 @@ const BookingFlow: React.FC = () => {
               <div key={step.step} className="flex items-center">
                 <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors duration-200 ${
                   step.step < currentStep
-                    ? 'bg-primary-500 border-primary-500 text-white'
+                    ? 'bg-fixes-accent-purple border-fixes-accent-purple text-black'
                     : step.step === currentStep
-                    ? 'border-primary-500 text-primary-500 bg-transparent'
-                    : 'border-neutral-600 text-neutral-400 bg-transparent'
+                    ? 'border-fixes-accent-purple text-black bg-transparent'
+                    : 'border-neutral-800 text-neutral-800 bg-transparent'
                 }`}>
                   {step.step < currentStep ? (
                     <Check className="w-5 h-5" />
@@ -185,7 +185,7 @@ const BookingFlow: React.FC = () => {
                 
                 <div className="ml-3 hidden sm:block">
                   <p className={`text-sm font-medium ${
-                    step.step <= currentStep ? 'text-white' : 'text-neutral-400'
+                    step.step <= currentStep ? 'text-black' : 'text-neutral-800'
                   }`}>
                     {step.title}
                   </p>
@@ -193,7 +193,7 @@ const BookingFlow: React.FC = () => {
                 
                 {index < steps.length - 1 && (
                   <div className={`hidden sm:block w-16 h-0.5 ml-6 ${
-                    step.step < currentStep ? 'bg-primary-500' : 'bg-neutral-600'
+                    step.step < currentStep ? 'bg-fixes-accent-purple' : 'bg-neutral-800'
                   }`} />
                 )}
               </div>
@@ -202,7 +202,7 @@ const BookingFlow: React.FC = () => {
         </div>
 
         {/* Step Content */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-3xl border border-neutral-800 overflow-hidden">
+        <div className="bg-transparent border-none rounded-xl overflow-hidden">
           {renderStep()}
         </div>
       </div>
