@@ -43,8 +43,20 @@ service cloud.firestore {
                   exists(/databases/$(database)/documents/users/$(uid)) &&
                   get(/databases/$(database)/documents/users/$(uid)).data.role == 'therapist';
 
+      // Allow anonymous users to read therapist profiles for landing page
+      allow get: if exists(/databases/$(database)/documents/users/$(uid)) &&
+                  get(/databases/$(database)/documents/users/$(uid)).data.role == 'therapist' &&
+                  get(/databases/$(database)/documents/users/$(uid)).data.therapistProfile.isActive != false &&
+                  get(/databases/$(database)/documents/users/$(uid)).data.isActive != false;
+
+      // Allow ANY user (logged in or not) to query therapist list
+      allow list: if request.query.where.size() >= 0 &&
+                   request.query.where[0].field == 'role' &&
+                   request.query.where[0].op == '==' &&
+                   request.query.where[0].value == 'therapist';
+
       // CRITICAL: Allow any authenticated user (including anonymous who just signed in)
-      // to query users collection for username checks and therapist browsing
+      // to query users collection for other operations
       allow list: if request.auth != null;
 
       // Allow creation if user is creating their own document
