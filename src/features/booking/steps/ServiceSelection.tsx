@@ -84,7 +84,7 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ selectedService, on
                   <h3 className="text-xl font-black text-black mb-1">
                     {service.title}
                   </h3>
-                  <p className="text-fixes-accent-purple font-medium text-sm mb-3">
+                  <p className="text-fixes-heading-dark font-medium text-sm mb-3">
                     {service.subtitle}
                   </p>
                   <p className="text-fixes-heading-dark leading-relaxed text-sm mb-4">
@@ -141,7 +141,7 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ selectedService, on
                   <h3 className="text-xl font-black text-black mb-1">
                     {service.title}
                   </h3>
-                  <p className="text-fixes-accent-purple font-medium text-sm mb-3">
+                  <p className="text-fixes-heading-dark font-medium text-sm mb-3">
                     {service.subtitle}
                   </p>
                   <p className="text-fixes-heading-dark leading-relaxed text-sm mb-4">
