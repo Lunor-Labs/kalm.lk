@@ -56,6 +56,7 @@ export default {
           bg: {
             purple: 'var(--fixes-bg-purple)',
             white: 'var(--fixes-bg-white)',
+            offwhite: 'var(--fixes-bg-offwhite)',
           },
           accent: {
             purple: 'var(--fixes-accent-purple)',

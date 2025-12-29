@@ -241,7 +241,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                         {user.role}
                       </p>
                     </div>
-                    <div className="p-2">
+                    <div className="p-2 space-y-2">
                       <button
                         onClick={goToDashboard}
                         className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-fixes-heading-dark bg-fixes-accent-purple hover:bg-fixes-accent-blue transition-colors duration-200"

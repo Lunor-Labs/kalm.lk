@@ -34,7 +34,7 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '120px' }}>
 
         {/* TOP ROW*/}
-        <div className="mb-20">
+        <div className="mb-12 lg:mb-20">
           <h1
             className="text-center leading-tight"
             style={{
@@ -63,9 +63,9 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
         </div>
 
         {/* BOTTOM ROW */}
-        <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-12 items-stretch min-h-[500px]">
+        <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-12 items-stretch min-h-[500px]">
           {/* ACCOUNT COMPARISON */}
-          <div className='relative z-10 pb-[60px] flex flex-col justify-end order-3 lg:order-1'>
+          <div className='relative z-10 pb-[40px] lg:pb-[60px] flex flex-col justify-end order-3 lg:order-1'>
             <h2
               className="text-center lg:text-left"
               style={{
@@ -225,7 +225,7 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
           </div>
 
           {/* Stats */}
-          <div className='relative z-10 pb-[80px] flex flex-col justify-end order-2 lg:order-3'>
+          <div className='relative z-10 pb-[45px] lg:pb-[80px] flex flex-col justify-end order-2 lg:order-3'>
             <p
               className="text-center lg:text-right mb-10"
               style={{

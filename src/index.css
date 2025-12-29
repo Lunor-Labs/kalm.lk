@@ -52,6 +52,7 @@
     --fixes-heading-dark: #535353;
     --fixes-bg-purple: #E1E3FC;
     --fixes-bg-white: #ffffff;
+    --fixes-bg-offwhite: #F8F9Fa;
     --fixes-accent-purple: #D2CCF2;
     --fixes-accent-black: #1E1E1E;
     --fixes-accent-blue: #839CF9;
@@ -61,6 +62,7 @@
     --fixes-box-pink: #F68BA2;
     --fixes-box-yellow: #F5E29E;
     --fixes-box-aqua: #C8EBEF;
+
 
     /* Semantic Feature Colors */
     --feature-care-bg: #D1FAE5;
