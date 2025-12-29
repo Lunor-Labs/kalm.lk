@@ -46,17 +46,27 @@ const Comparison: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 lg:py-24 bg-fixes-bg-purple relative font-body">
+    <section className="py-16 lg:py-24 bg-fixes-bg-purple relative font-body">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="font-display font-medium text-5xl lg:text-6xl text-fixes-heading-dark mb-6">
+          {/* Desktop heading */}
+          <h2 className="hidden lg:block font-display font-medium text-6xl text-fixes-heading-dark mb-6">
             Kalm.lk vs Traditional Therapy
           </h2>
+
+          {/* Mobile heading */}
+          <h2 className="block lg:hidden font-display font-medium text-5xl text-fixes-heading-dark mb-6 leading-tight">
+            <div>Kalm.lk</div>
+            <div className="text-4xl font-light">vs</div>
+            <div>Traditional Therapy</div>
+          </h2>
+
           <p className="mt-6 text-lg font-light text-fixes-heading-dark">
             See how our platform offers advantages over traditional in-person therapy.
           </p>
         </div>
+
 
         {/* Table-like structure with adjusted spacing */}
         <div className="max-w-4xl mx-auto">
@@ -82,12 +92,12 @@ const Comparison: React.FC = () => {
             >
               <div className="lg:pl-10 md:pl-5 py-8 font-medium">{item.feature}</div>
 
-              <div className="bg-white lg:pl-10 md:pl-5 py-8 flex items-start gap-2">
+              <div className="bg-white lg:pl-10 pl-4 py-8 flex items-start gap-2">
                 <Check className="w-4 h-4 text-green-500" />
                 <span>{item.kalm}</span>
               </div>
 
-              <div className="lg:pl-10 md:pl-5 py-8 flex items-start gap-2">
+              <div className="lg:pl-10 pl-4 py-8 flex items-start gap-2">
                 <X className="w-4 h-4 text-red-500" />
                 <span>{item.traditional}</span>
               </div>

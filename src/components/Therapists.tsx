@@ -47,7 +47,7 @@ const Therapists: React.FC<TherapistsProps> = ({ onViewAllTherapists, onOpenAuth
   };
 
   return (
-    <section id="therapists" className="py-20 lg:py-24 bg-fixes-bg-white relative font-body">
+    <section id="therapists" className="py-16 lg:py-24 bg-fixes-bg-white relative font-body">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-12">
           <div className="flex items-center justify-center space-x-4 mb-4">
