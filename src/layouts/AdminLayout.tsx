@@ -59,7 +59,7 @@ const AdminLayout: React.FC = () => {
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-black/50 backdrop-blur-sm border-r border-neutral-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-black border-r border-neutral-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex flex-col h-full">
@@ -147,7 +147,7 @@ const AdminLayout: React.FC = () => {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top bar */}
-        <div className="sticky top-0 z-30 bg-neutral-900/95 backdrop-blur-sm border-b border-neutral-800">
+        <div className="sticky top-0 z-30 bg-neutral-900 border-b border-neutral-800">
           <div className="flex items-center justify-between px-6 py-4">
             <button
               onClick={() => setSidebarOpen(true)}

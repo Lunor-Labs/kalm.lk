@@ -175,9 +175,9 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       <div className="p-8">
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-            <h3 className="text-xl font-semibold text-white mb-2">Processing Payment</h3>
-            <p className="text-neutral-300 mb-4">Please wait while we process your payment and create your session...</p>
+            <div className="w-16 h-16 border-4 border-fixes-accent-purple border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+            <h3 className="text-xl font-black text-black mb-2">Processing Payment</h3>
+            <p className="text-fixes-heading-dark mb-4">Please wait while we process your payment and create your session...</p>
             <div className="mt-6 p-4 bg-accent-green/10 border border-accent-green/20 rounded-2xl">
               <p className="text-accent-green text-sm">
                 <Shield className="w-4 h-4 inline mr-2" />
@@ -196,22 +196,22 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       <div className="mb-4">
         <button
           onClick={onBack}
-          className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200"
+          className="flex items-center space-x-2 text-fixes-accent-purple hover:text-fixes-accent-blue transition-colors duration-200"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
+          <span className="text-fixes-heading-dark">Back</span>
         </button>
       </div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-white whitespace-nowrap">Complete Payment</h2>
-        {/* <p className="text-neutral-300">Secure payment powered by PayHere</p> */}
+        <h2 className="text-2xl font-black text-black whitespace-nowrap">Complete Payment</h2>
+        {/* <p className="text-fixes-heading-dark">Secure payment powered by PayHere</p> */}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Payment Methods */}
         <div className="space-y-6">
-          <div className="bg-accent-orange/10 border border-accent-orange/20 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-black text-black mb-4 flex items-center space-x-2">
               <Clock className="w-5 h-5" />
               <span>Cancellation Policy</span>
             </h3>
@@ -220,24 +220,24 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-accent-green rounded-full mt-2 flex-shrink-0"></div>
                 <div>
-                  <p className="text-white font-medium">100% Refund</p>
-                  <p className="text-neutral-300">Cancel more than 24 hours before session</p>
+                  <p className="text-black font-black">100% Refund</p>
+                  <p className="text-fixes-heading-dark">Cancel more than 24 hours before session</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-accent-yellow rounded-full mt-2 flex-shrink-0"></div>
                 <div>
-                  <p className="text-white font-medium">50% Refund</p>
-                  <p className="text-neutral-300">Cancel 12-24 hours before session</p>
+                  <p className="text-black font-black">50% Refund</p>
+                  <p className="text-fixes-heading-dark">Cancel 12-24 hours before session</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
                 <div>
-                  <p className="text-white font-medium">No Refund</p>
-                  <p className="text-neutral-300">Cancel less than 12 hours before session or no-show</p>
+                  <p className="text-black font-black">No Refund</p>
+                  <p className="text-fixes-heading-dark">Cancel less than 12 hours before session or no-show</p>
                 </div>
               </div>
             </div>
@@ -388,21 +388,21 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
         {/* Order Summary */}
         <div className="space-y-6">
-          <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
-            <h3 className="text-lg font-semibold text-white mb-4">Order Summary</h3>
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-black text-black mb-4">Order Summary</h3>
             
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-neutral-300">Base Session Fee</span>
-                <span className="text-white">LKR {(bookingData.amount || 0).toLocaleString()}</span>
+                <span className="text-fixes-heading-dark">Base Session Fee</span>
+                <span className="text-black">LKR {(bookingData.amount || 0).toLocaleString()}</span>
               </div>
               
               {sessionTypeDiscount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-accent-green">
+                  <span className="text-fixes-heading-dark">
                     {sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Session Discount
                   </span>
-                  <span className="text-accent-green">-LKR {sessionTypeDiscount.toLocaleString()}</span>
+                  <span className="text-fixes-heading-dark">-LKR {sessionTypeDiscount.toLocaleString()}</span>
                 </div>
               )}
               
@@ -415,8 +415,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               
               <div className="border-t border-neutral-700 pt-4">
                 <div className="flex justify-between">
-                  <span className="text-xl font-semibold text-white">Total</span>
-                  <span className="text-xl font-semibold text-primary-500">
+                  <span className="text-xl font-black text-black">Total</span>
+                  <span className="text-xl font-black text-fixes-accent-purple">
                     LKR {totalAmount.toLocaleString()}
                   </span>
                 </div>
@@ -426,14 +426,14 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
 
           {/* Disclaimer */}
-          <div className=" text-neutral-400 text-xs">
+          <div className=" text-fixes-heading-dark text-xs">
             “I understand that cancelling a session less than 48 hours before will result in a partial refund. I also understand that my chat history is stored only for my personal reference, and that Kalm has no access to private conversations. All sessions are confidential.”
           </div>
 
           {/* Payment Button */}
           <button
             onClick={handlePayment}
-            className="w-full bg-primary-500 text-white py-4 rounded-2xl hover:bg-primary-600 transition-colors duration-200 font-semibold text-lg flex items-center justify-center space-x-2"
+            className="w-full bg-fixes-accent-purple text-black py-4 rounded-2xl hover:bg-fixes-accent-blue transition-colors duration-200 font-black text-lg flex items-center justify-center space-x-2"
           >
             <CreditCard className="w-5 h-5" />
             <span>Pay LKR {totalAmount.toLocaleString()}</span>
@@ -441,15 +441,15 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
           {/* Payment Features */}
           <div className="space-y-3">
-            <div className="flex items-center space-x-3 text-sm text-neutral-300">
+            <div className="flex items-center space-x-3 text-sm text-fixes-heading-dark">
               <CheckCircle className="w-4 h-4 text-accent-green" />
               <span>Instant session creation</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-neutral-300">
+            <div className="flex items-center space-x-3 text-sm text-fixes-heading-dark">
               <CheckCircle className="w-4 h-4 text-accent-green" />
               <span>24/7 customer support</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-neutral-300">
+            <div className="flex items-center space-x-3 text-sm text-fixes-heading-dark">
               <CheckCircle className="w-4 h-4 text-accent-green" />
               <span>Easy cancellation policy</span>
             </div>
@@ -457,11 +457,11 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
           {/* Terms */}
           <div className="text-center">
-            <p className="text-neutral-400 text-xs">
+            <p className="text-fixes-heading-dark text-xs">
               By completing this payment, you agree to our{' '}
               <button
                 type="button"
-                className="text-primary-500 hover:text-primary-600 underline"
+                className="text-fixes-accent-purple hover:text-fixes-accent-blue underline"
                 onClick={() => setShowTerms(true)}
               >
                 Terms of Service
@@ -469,7 +469,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               {' '}and{' '}
               <button
                 type="button"
-                className="text-primary-500 hover:text-primary-600 underline"
+                className="text-fixes-accent-purple hover:text-fixes-accent-blue underline"
                 onClick={() => setShowCancellation(true)}
               >
                 Cancellation Policy
