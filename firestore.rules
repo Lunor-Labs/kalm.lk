@@ -35,17 +35,8 @@ service cloud.firestore {
 
     // Users collection - Strict access control
     match /users/{uid} {
-      // Users can read their own data (single document)
-      allow get: if isOwner(uid);
-
-      // Allow authenticated users to read therapist profiles (for booking/payment)
-      allow get: if request.auth != null &&
-                  exists(/databases/$(database)/documents/users/$(uid)) &&
-                  get(/databases/$(database)/documents/users/$(uid)).data.role == 'therapist';
-
-      // CRITICAL: Allow any authenticated user (including anonymous who just signed in)
-      // to query users collection for username checks and therapist browsing
-      allow list: if request.auth != null;
+      // TEMPORARY: Allow all read operations for debugging
+      allow read: if true;
 
       // Allow creation if user is creating their own document
       // OR if user is anonymous and creating their first profile
