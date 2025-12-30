@@ -9,6 +9,35 @@ import { db } from '../../../lib/firebase';
 import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from 'firebase/firestore';
 import { logPaymentError, logUserError } from '../../../lib/errorLogger';
 
+// Function to check therapist availability before payment
+const checkTherapistAvailability = async (therapistId: string): Promise<boolean> => {
+  try {
+    const therapistRef = doc(db, 'users', therapistId);
+    const therapistSnap = await getDoc(therapistRef);
+
+    if (!therapistSnap.exists()) {
+      throw new Error('Therapist not found');
+    }
+
+    const tdata: any = therapistSnap.data();
+    const tprofile = tdata?.therapistProfile;
+
+    // Check therapist availability conditions
+    if (tdata && (tdata.isActive === false)) {
+      return false;
+    }
+
+    if (tprofile && (tprofile.isActive === false || tprofile.isAvailable === false)) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error checking therapist availability:', error);
+    throw error;
+  }
+};
+
 interface PaymentStepProps {
   bookingData: BookingData;
   onPaymentComplete: () => void;
@@ -47,6 +76,16 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     setProcessing(true);
 
     try {
+      // Check therapist availability BEFORE payment processing
+      console.log('Checking therapist availability before payment...');
+      const isTherapistAvailable = await checkTherapistAvailability(bookingData.therapistId);
+
+      if (!isTherapistAvailable) {
+        toast.error('Sorry, this therapist is no longer available for booking. Please select a different therapist.');
+        setProcessing(false);
+        return;
+      }
+
       // Calculate final amount with session type discount
       const sessionTypeDiscount = sessionType === 'audio' ? 500 : sessionType === 'chat' ? 1000 : 0;
       const finalAmount = totalAmount - sessionTypeDiscount;
@@ -135,7 +174,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         error,
         user?.uid || 'unknown',
         finalAmount,
-        'payhere'
+        'payhere',
+        user?.role || 'unknown'
       );
 
       // Provide user-friendly error messages

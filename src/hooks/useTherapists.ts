@@ -33,8 +33,8 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
 
             if (!therapistProfile) return null;
 
-            // Skip therapists explicitly marked inactive (either at user level or inside profile)
-            if (userData.isActive === false || therapistProfile.isActive === false) return null;
+            // Skip therapists explicitly marked inactive or unavailable (either at user level or inside profile)
+            if (userData.isActive === false || therapistProfile.isActive === false || therapistProfile.isAvailable === false) return null;
 
             // Convert Firebase therapist to TherapistData format
             return {

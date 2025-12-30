@@ -150,10 +150,12 @@ class ErrorLogger {
     error: Error | string,
     userId: string,
     amount?: number,
-    paymentMethod?: string
+    paymentMethod?: string,
+    userRole?: string
   ) {
     await this.logError(error, {
       userId,
+      userRole,
       errorType: 'payment',
       additionalData: {
         amount,
@@ -199,9 +201,10 @@ export const logPaymentError = (
   error: Error | string,
   userId: string,
   amount?: number,
-  paymentMethod?: string
+  paymentMethod?: string,
+  userRole?: string
 ) =>
-  errorLogger.logPaymentError(error, userId, amount, paymentMethod);
+  errorLogger.logPaymentError(error, userId, amount, paymentMethod, userRole);
 
 export const logNetworkError = (error: Error | string, userId?: string, operation?: string) =>
   errorLogger.logNetworkError(error, userId, operation);

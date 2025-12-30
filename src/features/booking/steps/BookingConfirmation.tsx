@@ -4,6 +4,9 @@ import { format } from 'date-fns';
 import { BookingData } from '../../../types/booking';
 import { getTherapistById } from '../../../data/therapists';
 import { useTherapists } from '../../../hooks/useTherapists';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../../lib/firebase';
+import toast from 'react-hot-toast';
 
 interface BookingConfirmationProps {
   bookingData: BookingData;
@@ -26,6 +29,35 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   /* const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [discount, setDiscount] = useState(0); */
   const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>('video');
+
+  // Function to check therapist availability
+  const checkTherapistAvailability = async (therapistId: string): Promise<boolean> => {
+    try {
+      const therapistRef = doc(db, 'users', therapistId);
+      const therapistSnap = await getDoc(therapistRef);
+
+      if (!therapistSnap.exists()) {
+        return false;
+      }
+
+      const tdata: any = therapistSnap.data();
+      const tprofile = tdata?.therapistProfile;
+
+      // Check therapist availability conditions
+      if (tdata && (tdata.isActive === false)) {
+        return false;
+      }
+
+      if (tprofile && (tprofile.isActive === false || tprofile.isAvailable === false)) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error checking therapist availability:', error);
+      return false;
+    }
+  };
 
   // Get therapists from both sources to find the selected one
   const { therapists: firebaseTherapists } = useTherapists({ useFirebase: true });
@@ -427,7 +459,21 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           */}
 
           <button
-            onClick={() => onConfirm(sessionType)}
+            onClick={async () => {
+              if (!bookingData.therapistId) {
+                toast.error('No therapist selected');
+                return;
+              }
+
+              // Check therapist availability before confirming
+              const isAvailable = await checkTherapistAvailability(bookingData.therapistId);
+              if (!isAvailable) {
+                toast.error('Sorry, this therapist is no longer available. Please go back and select a different therapist.');
+                return;
+              }
+
+              onConfirm(sessionType);
+            }}
             disabled={availableSessionTypes.length === 0}
             className="w-full bg-fixes-accent-purple text-black py-4 rounded-2xl hover:bg-fixes-accent-blue disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-black text-lg"
           >
