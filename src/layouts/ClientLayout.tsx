@@ -167,7 +167,8 @@ const ClientLayout: React.FC = () => {
               </div>
             </div> */}
           </div>
-        </div>
+          <div style={{ borderBottom: '1px solid var(--neutral-200)', marginTop: '2.95rem' }}></div>
+          </div>
 
         {/* Page content */}
         <main className="p-6">
