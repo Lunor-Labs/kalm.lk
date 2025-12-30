@@ -268,8 +268,8 @@ const ClientHome: React.FC = () => {
 
 
 <div className="block md:hidden lg:block">
-  <div className="bg-transparent rounded-3xl p-8">
-    <div className="flex items-center justify-between">
+<div className="space-y-8 bg-[#F8F9FA] pt-4 pb-6 px-6 -mt-16">
+      <div className="flex items-center justify-between">
       <div>
         <h1 className="text-3xl font-black text-black mb-2">
           Welcome to Kalm

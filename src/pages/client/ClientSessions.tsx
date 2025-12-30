@@ -315,59 +315,31 @@ const ClientSessions: React.FC = () => {
           <span>Book Session</span>
         </button>
       
-      {/* Filters Desktop*/}
-      <div className="hidden md:flex items-center">
-      <div className="flex items-center gap-2">
-        <span className="text-fixes-heading-dark text-sm shrink-0">Filter:</span>
-        <div className="flex bg-white border border-fixes-heading-dark rounded-xl p-1 gap-1 overflow-x-auto shadow-sm">
-          {[
-            { key: 'all', label: 'All' },
-            { key: 'upcoming', label: 'Upcoming' },
-            { key: 'completed', label: 'Completed' },
-            { key: 'missed', label: 'Missed' }
-          ].map((option) => (
-            <button
-              key={option.key}
-              onClick={() => setFilter(option.key as any)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 min-w-[70px] min-h-[40px] ${
-                filter === option.key
-                  ? 'bg-fixes-accent-purple text-black'
-                  : 'text-fixes-heading-dark hover:text-black hover:bg-neutral-100'
-              }`}
-              aria-label={`Filter by ${option.label} sessions`}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <span className="text-fixes-heading-dark text-sm font-medium shrink-0">Filter by:</span>
+          
+          <div className="flex flex-wrap gap-2 justify-start">
+            {[
+              { key: 'all', label: 'All' },
+              { key: 'upcoming', label: 'Upcoming' },
+              { key: 'completed', label: 'Completed' },
+              { key: 'missed', label: 'Missed' }
+            ].map((option) => (
+              <button
+                key={option.key}
+                onClick={() => setFilter(option.key as any)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 min-h-[44px] whitespace-nowrap ${
+                  filter === option.key
+                    ? 'bg-fixes-accent-purple text-black shadow-md'
+                    : 'bg-white border border-fixes-heading-dark text-fixes-heading-dark hover:bg-neutral-100 hover:border-neutral-500'
+                }`}
+                aria-label={`Filter by ${option.label} sessions`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-      </div>
-
-      {/* Filters Mobile*/}
-      <div className="flex items-center gap-2 block md:hidden">
-        <span className="text-fixes-heading-dark text-sm shrink-0">Filter:</span>
-        <div className="flex bg-white border border-fixes-heading-dark rounded-xl p-1 gap-1 overflow-x-auto w-full shadow-sm">
-          {[
-            { key: 'all', label: 'All' },
-            { key: 'upcoming', label: 'Upcoming' },
-            { key: 'completed', label: 'Completed' },
-            { key: 'missed', label: 'Missed' }
-          ].map((option) => (
-            <button
-              key={option.key}
-              onClick={() => setFilter(option.key as any)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 min-w-[70px] min-h-[40px] ${
-                filter === option.key
-                  ? 'bg-fixes-accent-purple text-black'
-                  : 'text-fixes-heading-dark hover:text-black hover:bg-neutral-100'
-              }`}
-              aria-label={`Filter by ${option.label} sessions`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Sessions List */}
       <div className="space-y-3">
