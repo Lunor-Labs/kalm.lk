@@ -4,6 +4,8 @@ export interface TimeSlot {
   endTime: string; // HH:mm format
   isAvailable: boolean;
   isRecurring: boolean;
+  isBooked?: boolean;
+  bookingId?: string;
   price?: number;
   sessionType?: 'video' | 'audio' | 'chat';
 }

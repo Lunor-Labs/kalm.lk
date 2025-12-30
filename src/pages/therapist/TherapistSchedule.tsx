@@ -5,6 +5,8 @@ import { format, addDays, startOfWeek, isSameDay, startOfDay, endOfDay, startOfW
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
+import { canJoinSessionByTime } from '../../lib/sessions';
+
 import toast from 'react-hot-toast';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -31,6 +33,7 @@ const TherapistSchedule: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
+
   const [viewMode, setViewMode] = useState<'week' | 'day'>('week');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [selectedDaySessions, setSelectedDaySessions] = useState<Session[]>([]);
@@ -38,6 +41,8 @@ const TherapistSchedule: React.FC = () => {
   const [showDayModal, setShowDayModal] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [joinableSessions, setJoinableSessions] = useState<Set<string>>(new Set());
+
   const [stats, setStats] = useState({
     todaysSessions: 0,
     thisWeekSessions: 0,
@@ -52,6 +57,32 @@ const TherapistSchedule: React.FC = () => {
     }
   }, [user, selectedDate]);
 
+  // Compute which sessions are currently joinable based on timing rules
+  useEffect(() => {
+    const updateJoinableSessions = async () => {
+      const joinable = new Set<string>();
+      for (const session of sessions) {
+        try {
+          const canJoin = await canJoinSessionByTime(session as any);
+          if (canJoin) {
+            joinable.add(session.id);
+          }
+        } catch (error) {
+          // Be conservative in schedule view: on error, do not assume joinable
+        }
+      }
+      setJoinableSessions(joinable);
+    };
+
+    updateJoinableSessions();
+  }, [sessions]);
+
+  const canJoinSession = (session: Session) => joinableSessions.has(session.id);
+
+  const handleJoinSession = (session: Session) => {
+    navigate(`/therapist/session/${session.id}`);
+  };
+
   const loadSessions = async () => {
     if (!user) return;
 
@@ -63,7 +94,8 @@ const TherapistSchedule: React.FC = () => {
       const q = query(
         sessionsRef,
         where('therapistId', '==', user.uid),
-        where('status', 'in', ['scheduled', 'confirmed']),
+        // Include active sessions so they remain visible after joining
+        where('status', 'in', ['scheduled', 'confirmed', 'active']),
         orderBy('scheduledTime', 'asc')
       );
 
@@ -283,7 +315,9 @@ const TherapistSchedule: React.FC = () => {
         <div className="p-4 sm:p-6 border-b border-neutral-800">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h2 className="text-lg sm:text-xl font-semibold text-white">
-              {format(selectedDate, 'MMMM yyyy')}
+              {viewMode === 'day'
+                ? format(selectedDate, 'MMMM d, yyyy')
+                : format(selectedDate, 'MMMM yyyy')}
             </h2>
             <div className="flex items-center justify-between sm:justify-end gap-2">
 
@@ -379,26 +413,35 @@ const TherapistSchedule: React.FC = () => {
                   className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-neutral-800/50 rounded-xl sm:rounded-2xl gap-3"
                 >
                   <div className="flex items-center gap-3 sm:gap-4">
-                    <div className={`w-10 sm:w-12 h-10 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center ${
-                      session.status === 'confirmed' ? 'bg-accent-green/20' : 'bg-accent-yellow/20'
-                    }`}>
+                    <div
+                      className={`w-10 sm:w-12 h-10 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center ${
+                        session.status === 'confirmed' ? 'bg-accent-green/20' : 'bg-accent-yellow/20'
+                      }`}
+                    >
                       {getSessionIcon(session.type)}
                     </div>
                     <div>
                       <p className="text-white font-medium text-sm sm:text-base">{session.clientName}</p>
-                      <p className="text-neutral-300 text-xs sm:text-sm">{session.time} • {session.duration} min</p>
+                      <p className="text-neutral-300 text-xs sm:text-sm">
+                        {session.time} • {session.duration} min
+                      </p>
                     </div>
                   </div>
-                  
-                  <button className="bg-primary-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl hover:bg-primary-600 text-xs sm:text-sm">
-                    Join
-                  </button>
+
+                  {canJoinSession(session) && (
+                    <button
+                      onClick={() => handleJoinSession(session)}
+                      className="bg-primary-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl hover:bg-primary-600 text-xs sm:text-sm"
+                    >
+                      Join
+                    </button>
+                  )}
                 </div>
               ))}
-              
+
               {getSessionsForDate(selectedDate).length === 0 && (
                 <div className="text-center py-8 sm:py-16">
-                  <CalendarIcon className="w-12 sm:w-16 h-12 sm:h-16 text-neutral-600 mx-auto mb-3 sm:mb-4" />
+                  <CalendarIcon className="w-12 sm:w-16 h-12 text-neutral-600 mx-auto mb-3 sm:mb-4" />
                   <p className="text-neutral-300 mb-1 sm:mb-2 text-sm sm:text-base">No sessions scheduled</p>
                   <p className="text-neutral-400 text-xs sm:text-sm">Add availability to accept bookings</p>
                 </div>
@@ -454,10 +497,15 @@ const TherapistSchedule: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
-              <button className="w-full bg-primary-500 text-white py-2 sm:py-3 rounded-xl hover:bg-primary-600">
-                Join Session
-              </button>
+
+              {canJoinSession(selectedSession) && (
+                <button
+                  onClick={() => handleJoinSession(selectedSession)}
+                  className="w-full bg-primary-500 text-white py-2 sm:py-3 rounded-xl hover:bg-primary-600"
+                >
+                  Join Session
+                </button>
+              )}
             </div>
           </div>
         </div>
