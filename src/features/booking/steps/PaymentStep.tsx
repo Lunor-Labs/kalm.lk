@@ -6,8 +6,88 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { initiatePayHerePayment } from '../../../lib/payhere';
 import toast from 'react-hot-toast';
 import { db } from '../../../lib/firebase';
-import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import { logPaymentError, logUserError } from '../../../lib/errorLogger';
+import { getTherapistAvailability } from '../../../lib/availability';
+import { format } from 'date-fns';
+
+// Function to check if a specific time slot is still available
+const checkTimeSlotAvailability = async (therapistId: string, scheduledTime: Date): Promise<boolean> => {
+  try {
+    // Check if therapist has availability for this time slot
+    const availability = await getTherapistAvailability(therapistId);
+    if (!availability) {
+      console.log('No availability found for therapist');
+      return false;
+    }
+
+    const dateString = format(scheduledTime, 'yyyy-MM-dd');
+    const timeString = format(scheduledTime, 'HH:mm');
+
+    // Check if the date has availability
+    let availableTimeSlots: any[] = [];
+    const specialDate = availability.specialDates?.find((sd: any) => sd.date === dateString);
+
+    if (specialDate) {
+      availableTimeSlots = specialDate.timeSlots || [];
+    } else {
+      const dayOfWeek = scheduledTime.getDay();
+      const weeklySchedule = availability.weeklySchedule?.find((day: any) => day.dayOfWeek === dayOfWeek);
+      if (weeklySchedule) {
+        availableTimeSlots = weeklySchedule.timeSlots || [];
+      }
+    }
+
+    // Check if the specific time slot exists and is available
+    const slotExists = availableTimeSlots.some((slot: any) => {
+      if (!slot.isAvailable) return false;
+
+      // Handle different time formats
+      let slotStartTime: string;
+      if (typeof slot.startTime === 'string' && slot.startTime.includes(':')) {
+        slotStartTime = slot.startTime;
+      } else if (slot.startTime instanceof Date) {
+        slotStartTime = format(slot.startTime, 'HH:mm');
+      } else {
+        return false;
+      }
+
+      return slotStartTime === timeString;
+    });
+
+    if (!slotExists) {
+      console.log('Time slot not found in therapist availability');
+      return false;
+    }
+
+    // Check if the time slot is already booked by another session
+    const sessionsRef = collection(db, 'sessions');
+    const q = query(
+      sessionsRef,
+      where('therapistId', '==', therapistId),
+      where('status', 'in', ['scheduled', 'active'])
+    );
+
+    const sessionsSnapshot = await getDocs(q);
+    const isBooked = sessionsSnapshot.docs.some(doc => {
+      const sessionData = doc.data();
+      if (!sessionData.scheduledTime) return false;
+
+      const sessionTime = sessionData.scheduledTime.toDate();
+      return sessionTime.getTime() === scheduledTime.getTime();
+    });
+
+    if (isBooked) {
+      console.log('Time slot is already booked');
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error checking time slot availability:', error);
+    return false;
+  }
+};
 
 interface PaymentStepProps {
   bookingData: BookingData;
@@ -47,10 +127,20 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     setProcessing(true);
 
     try {
+      // Check time slot availability BEFORE payment processing
+      console.log('Checking time slot availability before payment...');
+      const isSlotAvailable = await checkTimeSlotAvailability(bookingData.therapistId, bookingData.sessionTime);
+
+      if (!isSlotAvailable) {
+        toast.error('Sorry, this time slot is no longer available. Please go back and select a different time.');
+        setProcessing(false);
+        return;
+      }
+
       // Calculate final amount with session type discount
       const sessionTypeDiscount = sessionType === 'audio' ? 500 : sessionType === 'chat' ? 1000 : 0;
       const finalAmount = totalAmount - sessionTypeDiscount;
-      
+
       // Prepare payment data for PayHere
       const paymentData = {
         amount: finalAmount,
