@@ -18,10 +18,9 @@ import { logAuthError } from './errorLogger';
 // Enhanced login function that supports both email and username
 export const signIn = async (credentials: LoginCredentials): Promise<User> => {
   let tempAuthUser: FirebaseUser | null = null; // Track temp anonymous auth for cleanup
+  let firebaseUser: FirebaseUser | null = null; // Initialize firebaseUser
   
   try {
-    let firebaseUser: FirebaseUser;
-    
     // Check if the input looks like an email (contains @)
     const isEmail = credentials.email.includes('@');
     
