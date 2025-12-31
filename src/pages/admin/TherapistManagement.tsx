@@ -416,11 +416,6 @@ const TherapistManagement: React.FC = () => {
         updatedAt: serverTimestamp()
       };
 
-      // If deactivating, also mark them unavailable for new bookings
-      if (!newStatus) {
-        updates['therapistProfile.isAvailable'] = false;
-      }
-
       // Therapist availability is controlled by user.isActive only
 
       await updateDoc(userRef, updates);
