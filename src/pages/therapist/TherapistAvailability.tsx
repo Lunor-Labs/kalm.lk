@@ -38,6 +38,13 @@ const TherapistAvailability = () => {
 
   // Populate form when editing a slot
   useEffect(() => {
+    if (editingTimeSlot && (editingTimeSlot.isBooked || editingTimeSlot.isAvailable === false)) {
+      toast.error('You cannot edit this time slot because it is already booked.');
+      setShowTimeSlotModal(false);
+      setEditingTimeSlot(null);
+      return;
+    }
+
     if (editingTimeSlot && showTimeSlotModal) {
       setNewTimeSlot({
         startTime: editingTimeSlot.startTime,
@@ -65,8 +72,8 @@ const TherapistAvailability = () => {
 
       const availability = await getTherapistAvailability(user.uid);
       if (availability) {
-      setWeeklySchedule((availability.weeklySchedule || getDefaultWeeklySchedule()) as any);
-      setSpecialDates((availability.specialDates || []) as any);
+        setWeeklySchedule((availability.weeklySchedule || getDefaultWeeklySchedule()) as any);
+        setSpecialDates((availability.specialDates || []) as any);
       } else {
         setWeeklySchedule(getDefaultWeeklySchedule());
         setSpecialDates([]);
@@ -113,126 +120,175 @@ const TherapistAvailability = () => {
     };
   };
 
-const handleAddTimeSlot = async () => {
-  if (!newTimeSlot.startTime || !newTimeSlot.endTime) {
-    toast.error('Please select start and end times');
-    return;
-  }
-  if (newTimeSlot.startTime >= newTimeSlot.endTime) {
-    toast.error('End time must be after start time');
-    return;
-  }
+  const handleAddTimeSlot = async () => {
+    if (editingTimeSlot && (editingTimeSlot.isBooked || editingTimeSlot.isAvailable === false)) {
+      toast.error('Booked time slots cannot be edited.');
+      return;
+    }
 
-  // Parse times into minutes for easy calculation
-  const parseTime = (time: string) => {
-    const [h, m] = time.split(':').map(Number);
-    return h * 60 + m;
-  };
+    if (!newTimeSlot.startTime || !newTimeSlot.endTime) {
+      toast.error('Please select start and end times');
+      return;
+    }
+    if (newTimeSlot.startTime >= newTimeSlot.endTime) {
+      toast.error('End time must be after start time');
+      return;
+    }
 
-  const startMinutes = parseTime(newTimeSlot.startTime);
-  const endMinutes = parseTime(newTimeSlot.endTime);
+    // Parse times into minutes for easy calculation
+    const parseTime = (time: string) => {
+      const [h, m] = time.split(':').map(Number);
+      return h * 60 + m;
+    };
 
-  // Generate hourly slots
-  const generatedSlots: any[] = [];
-  let currentStart = startMinutes;
+    const startMinutes = parseTime(newTimeSlot.startTime);
+    const endMinutes = parseTime(newTimeSlot.endTime);
 
-  while (currentStart + 60 <= endMinutes) {
-    const startHour = Math.floor(currentStart / 60).toString().padStart(2, '0');
-    const startMin = (currentStart % 60).toString().padStart(2, '0');
-    const endHour = Math.floor((currentStart + 60) / 60).toString().padStart(2, '0');
-    const endMin = ((currentStart + 60) % 60).toString().padStart(2, '0');
+    // Generate hourly slots
+    const generatedSlots: any[] = [];
+    let currentStart = startMinutes;
 
-    const timeSlotId = editingTimeSlot?.id || `slot-${Date.now()}-${generatedSlots.length}`;
+    while (currentStart + 60 <= endMinutes) {
+      const startHour = Math.floor(currentStart / 60).toString().padStart(2, '0');
+      const startMin = (currentStart % 60).toString().padStart(2, '0');
+      const endHour = Math.floor((currentStart + 60) / 60).toString().padStart(2, '0');
+      const endMin = ((currentStart + 60) % 60).toString().padStart(2, '0');
 
-    generatedSlots.push({
-      id: timeSlotId,
-      startTime: `${startHour}:${startMin}`,
-      endTime: `${endHour}:${endMin}`,
-      isAvailable: true,
-      isRecurring: newTimeSlot.isRecurring,
-      sessionType: newTimeSlot.sessionType,
-      price: newTimeSlot.price,
-    });
+      const timeSlotId = editingTimeSlot?.id || `slot-${Date.now()}-${generatedSlots.length}`;
 
-    currentStart += 60;
-  }
+      generatedSlots.push({
+        id: timeSlotId,
+        startTime: `${startHour}:${startMin}`,
+        endTime: `${endHour}:${endMin}`,
+        isAvailable: true,
+        isRecurring: newTimeSlot.isRecurring,
+        sessionType: newTimeSlot.sessionType,
+        price: newTimeSlot.price,
+      });
 
-  if (generatedSlots.length === 0) {
-    toast.error('The selected time range must allow at least one full hour slot');
-    return;
-  }
+      currentStart += 60;
+    }
 
-  const dateString = format(selectedDate, 'yyyy-MM-dd');
-  let updatedSchedule = [...weeklySchedule];
-  let updatedSpecialDates = [...specialDates];
+    if (generatedSlots.length === 0) {
+      toast.error('The selected time range must allow at least one full hour slot');
+      return;
+    }
 
-  if (newTimeSlot.isRecurring) {
-    // Add all generated hourly slots to the weekly schedule for this day
+    // Prevent overlapping with existing slots for this date/day
+    const dateString = format(selectedDate, 'yyyy-MM-dd');
     const dayOfWeek = selectedDate.getDay();
 
-    updatedSchedule = weeklySchedule.map(day =>
-      day.dayOfWeek === dayOfWeek
-        ? {
+    const existingWeeklyDay = weeklySchedule.find((day: any) => day.dayOfWeek === dayOfWeek);
+    const existingWeeklySlots: any[] = existingWeeklyDay?.timeSlots || [];
+
+    const existingSpecialDate = specialDates.find((sd: any) => sd.date === dateString);
+    const existingSpecialSlots: any[] = existingSpecialDate?.timeSlots || [];
+
+    const existingSlotsForContext: any[] = newTimeSlot.isRecurring
+      ? existingWeeklySlots
+      : existingSpecialSlots;
+
+    const hasOverlap = generatedSlots.some((newSlot) => {
+      const newStart = parseTime(newSlot.startTime);
+      const newEnd = parseTime(newSlot.endTime);
+
+      return existingSlotsForContext.some((slot: any) => {
+        if (editingTimeSlot && slot.id === editingTimeSlot.id) {
+          return false; // ignore the slot currently being edited
+        }
+
+        const existingStart = parseTime(slot.startTime);
+        const existingEnd = parseTime(slot.endTime);
+
+        // Overlap if ranges intersect at all
+        return newStart < existingEnd && newEnd > existingStart;
+      });
+    });
+
+    if (hasOverlap) {
+      toast.error('This time range overlaps with an existing time slot. Please choose a different time.');
+      return;
+    }
+
+    let updatedSchedule = [...weeklySchedule];
+    let updatedSpecialDates = [...specialDates];
+
+    if (newTimeSlot.isRecurring) {
+      // Add all generated hourly slots to the weekly schedule for this day
+      const dayOfWeek = selectedDate.getDay();
+
+      updatedSchedule = weeklySchedule.map(day =>
+        day.dayOfWeek === dayOfWeek
+          ? {
             ...day,
             timeSlots: editingTimeSlot
               ? day.timeSlots
-                  .filter((ts: any) => ts.id !== editingTimeSlot.id) // remove old if editing
-                  .concat(generatedSlots)
+                .filter((ts: any) => ts.id !== editingTimeSlot.id) // remove old if editing
+                .concat(generatedSlots)
               : [...day.timeSlots, ...generatedSlots]
           }
-        : day
-    );
-  } else {
-    // Add to special date
-    const existingSpecialDateIndex = updatedSpecialDates.findIndex(
-      (sd: any) => sd.date === dateString
-    );
+          : day
+      );
+    } else {
+      // Add to special date
+      const existingSpecialDateIndex = updatedSpecialDates.findIndex(
+        (sd: any) => sd.date === dateString
+      );
 
-    if (existingSpecialDateIndex >= 0) {
-      const existing = updatedSpecialDates[existingSpecialDateIndex];
-      updatedSpecialDates[existingSpecialDateIndex] = {
-        ...existing,
-        timeSlots: editingTimeSlot
-          ? existing.timeSlots
+      if (existingSpecialDateIndex >= 0) {
+        const existing = updatedSpecialDates[existingSpecialDateIndex];
+        updatedSpecialDates[existingSpecialDateIndex] = {
+          ...existing,
+          timeSlots: editingTimeSlot
+            ? existing.timeSlots
               .filter((ts: any) => ts.id !== editingTimeSlot.id)
               .concat(generatedSlots)
-          : [...existing.timeSlots, ...generatedSlots]
-      };
-    } else {
-      updatedSpecialDates.push({
-        date: dateString,
-        timeSlots: generatedSlots,
-        reason: 'One-time availability'
-      });
+            : [...existing.timeSlots, ...generatedSlots]
+        };
+      } else {
+        updatedSpecialDates.push({
+          date: dateString,
+          timeSlots: generatedSlots,
+          reason: 'One-time availability'
+        });
+      }
     }
-  }
 
-  setWeeklySchedule(updatedSchedule as any);
-  setSpecialDates(updatedSpecialDates);
+    setWeeklySchedule(updatedSchedule as any);
+    setSpecialDates(updatedSpecialDates);
 
-  // Save to DB
-  try {
-    if (user?.uid) {
-      await saveTherapistAvailability(user.uid, updatedSchedule, updatedSpecialDates);
-      toast.success(
-        editingTimeSlot
-          ? `Updated ${generatedSlots.length} hourly slot(s)`
-          : `Added ${generatedSlots.length} hourly slot(s)`
-      );
+    // Save to DB
+    try {
+      if (user?.uid) {
+        await saveTherapistAvailability(user.uid, updatedSchedule, updatedSpecialDates);
+        toast.success(
+          editingTimeSlot
+            ? `Updated ${generatedSlots.length} hourly slot(s)`
+            : `Added ${generatedSlots.length} hourly slot(s)`
+        );
+      }
+    } catch (error: any) {
+      toast.error('Failed to save time slots');
+      // Revert changes on error
+      setWeeklySchedule(weeklySchedule);
+      setSpecialDates(specialDates);
     }
-  } catch (error: any) {
-    toast.error('Failed to save time slots');
-    // Revert changes on error
-    setWeeklySchedule(weeklySchedule);
-    setSpecialDates(specialDates);
-  }
 
-  // Reset modal
-  setEditingTimeSlot(null);
-  setShowTimeSlotModal(false);
-};
+    // Reset modal
+    setEditingTimeSlot(null);
+    setShowTimeSlotModal(false);
+  };
 
   const handleDeleteTimeSlot = async (timeSlotId: string) => {
+    const bookedSlot = selectedDateData.timeSlots.find(
+      (ts: any) => ts.id === timeSlotId && (ts.isBooked || ts.isAvailable === false)
+    );
+
+    if (bookedSlot) {
+      toast.error('Booked time slots cannot be deleted.');
+      return;
+    }
+
     const dateString = format(selectedDate, 'yyyy-MM-dd');
     const dayOfWeek = selectedDate.getDay();
 
@@ -414,7 +470,6 @@ const handleAddTimeSlot = async () => {
               <button onClick={() => setShowDateDetailsModal(false)}><X size={28} /></button>
             </div>
 
-
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">Time Slots</h3>
@@ -438,24 +493,44 @@ const handleAddTimeSlot = async () => {
                         </div>
                         <div className="text-right">
                           <div className="font-bold">LKR {slot.price.toLocaleString()}</div>
-                          <div className="text-primary-400">
-                            Available
+                          <div className={slot.isBooked ? 'text-red-400' : 'text-primary-400'}>
+                            {slot.isBooked ? 'Booked' : 'Available'}
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => {
+                            if (slot.isBooked || slot.isAvailable === false) {
+                              toast.error('You cannot edit this time slot because it is already booked.');
+                              return;
+                            }
+
                             setEditingTimeSlot(slot);
                             setShowTimeSlotModal(true);
                           }}
-                          className="flex-1 py-2 border border-gray-600 rounded-lg text-sm flex items-center justify-center gap-1"
+                          className={`flex-1 py-2 border rounded-lg text-sm flex items-center justify-center gap-1 ${
+                            slot.isBooked || slot.isAvailable === false
+                              ? 'border-gray-600 text-gray-500 cursor-not-allowed'
+                              : 'border-gray-600'
+                          }`}
                         >
                           <Edit3 size={16} /> Edit
                         </button>
                         <button
-                          onClick={() => handleDeleteTimeSlot(slot.id)}
-                          className="flex-1 py-2 border border-red-600 text-red-400 rounded-lg text-sm flex items-center justify-center gap-1"
+                          onClick={() => {
+                            if (slot.isBooked || slot.isAvailable === false) {
+                              toast.error('You cannot delete this time slot because it is already booked.');
+                              return;
+                            }
+
+                            handleDeleteTimeSlot(slot.id);
+                          }}
+                          className={`flex-1 py-2 border rounded-lg text-sm flex items-center justify-center gap-1 ${
+                            slot.isBooked || slot.isAvailable === false
+                              ? 'border-red-600 text-red-800 cursor-not-allowed'
+                              : 'border-red-600 text-red-400'
+                          }`}
                         >
                           <Trash2 size={16} /> Delete
                         </button>
