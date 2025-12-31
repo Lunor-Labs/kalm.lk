@@ -18,8 +18,18 @@ const Login: React.FC = () => {
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  setLoading(true);
-  setError(null);
++  setError(null);
+    if (!identifier.trim()) {
+      setError('Please enter your email or username');
+      return;
+    }
+
+    if (!password.trim()) {
+      setError('Please enter your password');
+      return;
+    }
+
+    setLoading(true);
   try {
     const user = await signIn({ email: identifier, password });
     
