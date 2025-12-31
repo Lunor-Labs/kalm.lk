@@ -149,8 +149,8 @@ const TherapistSessions: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-base">Loading sessions...</p>
+          <div className="w-12 h-12 border-4 border-fixes-accent-purple border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-black text-base">Loading sessions...</p>
         </div>
       </div>
     );
@@ -161,47 +161,47 @@ const TherapistSessions: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">My Sessions</h1>
-          <p className="text-neutral-300 text-sm">Manage Your Therapy Appointments</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-black mb-1">My Sessions</h1>
+          <p className="text-fixes-heading-dark text-sm">Manage Your Therapy Appointments</p>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20">
+        <div className="bg-white rounded-xl p-3 border border-neutral-200 shadow-sm">
           <div className="flex items-center gap-2 mb-1">
-            <Calendar className="w-5 h-5 text-primary-500" />
-            <span className="text-neutral-300 text-sm">Total</span>
+            <Calendar className="w-5 h-5 text-fixes-accent-purple" />
+            <span className="text-fixes-heading-dark text-sm">Total</span>
           </div>
-          <p className="text-lg font-bold text-white">{sessions.length}</p>
+          <p className="text-lg font-black text-black">{sessions.length}</p>
         </div>
-        
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20">
+
+        <div className="bg-white rounded-xl p-3 border border-neutral-200 shadow-sm">
           <div className="flex items-center gap-2 mb-1">
             <Clock className="w-5 h-5 text-accent-yellow" />
-            <span className="text-neutral-300 text-sm">Today</span>
+            <span className="text-fixes-heading-dark text-sm">Today</span>
           </div>
-          <p className="text-lg font-bold text-white">
+          <p className="text-lg font-black text-black">
             {sessions.filter(s => isToday(s.scheduledTime)).length}
           </p>
         </div>
-        
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20">
+
+        <div className="bg-white rounded-xl p-3 border border-neutral-200 shadow-sm">
           <div className="flex items-center gap-2 mb-1">
             <Users className="w-5 h-5 text-accent-green" />
-            <span className="text-neutral-300 text-sm">Upcoming</span>
+            <span className="text-fixes-heading-dark text-sm">Upcoming</span>
           </div>
-          <p className="text-lg font-bold text-white">
+          <p className="text-lg font-black text-black">
             {sessions.filter(s => s.status === 'scheduled' || s.status === 'active').length}
           </p>
         </div>
-        
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-primary-500/20">
+
+        <div className="bg-white rounded-xl p-3 border border-neutral-200 shadow-sm">
           <div className="flex items-center gap-2 mb-1">
             <Video className="w-5 h-5 text-accent-orange" />
-            <span className="text-neutral-300 text-sm">Completed</span>
+            <span className="text-fixes-heading-dark text-sm">Completed</span>
           </div>
-          <p className="text-lg font-bold text-white">
+          <p className="text-lg font-black text-black">
             {sessions.filter(s => s.status === 'completed').length}
           </p>
         </div>
@@ -209,8 +209,8 @@ const TherapistSessions: React.FC = () => {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-        <span className="text-neutral-300 text-sm shrink-0">Filter:</span>
-        <div className="w-full sm:w-auto flex bg-neutral-800 rounded-xl p-1 gap-1 overflow-x-auto">
+        <span className="text-fixes-heading-dark text-sm shrink-0">Filter:</span>
+        <div className="w-full sm:w-auto flex bg-neutral-100 rounded-xl p-1 gap-1 overflow-x-auto">
           {[
             { key: 'all', label: 'All' },
             { key: 'today', label: 'Today' },
@@ -222,8 +222,8 @@ const TherapistSessions: React.FC = () => {
               onClick={() => setFilter(option.key as any)}
               className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors duration-200 min-h-[40px] whitespace-nowrap flex-1 sm:flex-none ${
                 filter === option.key
-                  ? 'bg-primary-500 text-white'
-                  : 'text-neutral-300 hover:text-white'
+                  ? 'bg-fixes-accent-purple text-black'
+                  : 'text-fixes-heading-dark hover:text-black'
               }`}
               aria-label={`Filter by ${option.label} sessions`}
             >
@@ -239,13 +239,13 @@ const TherapistSessions: React.FC = () => {
           paginatedSessions.map((session) => (
             <div
               key={session.id}
-              className="bg-black/50 backdrop-blur-sm rounded-xl p-4 border border-primary-500/20 hover:border-primary-500/40 transition-colors duration-200"
+              className="bg-white rounded-xl p-4 border border-neutral-200 shadow-sm hover:shadow-md transition-shadow duration-200"
               aria-label={`${session.sessionType} session with ${session.clientName || 'client'}`}
             >
               <div className="flex flex-col sm:flex-row sm:items-start gap-2.5">
                 {/* Icon and Status */}
                 <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 bg-primary-500/10 rounded-md flex items-center justify-center">
+                  <div className="w-10 h-10 bg-fixes-accent-purple/10 rounded-md flex items-center justify-center">
                     {getSessionIcon(session.sessionType)}
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(session)}`}>
@@ -255,10 +255,10 @@ const TherapistSessions: React.FC = () => {
 
                 {/* Details */}
                 <div className="flex-1 space-y-1">
-                  <h3 className="text-white font-semibold text-base truncate">
+                  <h3 className="text-black font-semibold text-base truncate">
                     {session.sessionType.charAt(0).toUpperCase() + session.sessionType.slice(1)} Session
                   </h3>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-neutral-300">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-fixes-heading-dark">
                     <span className="truncate max-w-[150px] sm:max-w-[200px]">
                       Client: {session.clientName || 'Anonymous'}
                     </span>
@@ -284,7 +284,7 @@ const TherapistSessions: React.FC = () => {
                   {canJoinSession(session) && (
                     <button
                       onClick={() => handleJoinSession(session)}
-                      className="bg-primary-500 text-white px-3 py-2 rounded-xl hover:bg-primary-600 transition-colors duration-200 flex items-center gap-1.5 min-h-[44px] text-sm"
+                      className="bg-fixes-accent-purple text-black px-3 py-2 rounded-xl hover:bg-fixes-accent-blue transition-colors duration-200 flex items-center gap-1.5 min-h-[44px] text-sm"
                       aria-label={`Join ${session.sessionType} session with ${session.clientName || 'client'}`}
                     >
                       <Play className="w-4 h-4" />
@@ -296,16 +296,16 @@ const TherapistSessions: React.FC = () => {
             </div>
           ))
         ) : (
-          <div className="bg-black/50 backdrop-blur-sm rounded-xl p-4 text-center border border-primary-500/20">
-            <div className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Calendar className="w-5 h-5 text-neutral-400" />
+          <div className="bg-white rounded-xl p-4 text-center border border-neutral-200 shadow-sm">
+            <div className="w-10 h-10 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Calendar className="w-5 h-5 text-fixes-heading-dark" />
             </div>
-            <h3 className="text-base font-semibold text-white mb-2">
-              {filter === 'today' ? 'No sessions today' : 
-               filter === 'upcoming' ? 'No upcoming sessions' : 
+            <h3 className="text-base font-semibold text-black mb-2">
+              {filter === 'today' ? 'No sessions today' :
+               filter === 'upcoming' ? 'No upcoming sessions' :
                filter === 'completed' ? 'No completed sessions' : 'No sessions found'}
             </h3>
-            <p className="text-neutral-300 text-sm mb-4">
+            <p className="text-fixes-heading-dark text-sm mb-4">
               {filter === 'today' ? 'Your schedule is clear for today' : 
                filter === 'upcoming' ? 'No upcoming appointments scheduled' : 
                filter === 'completed' ? 'Complete some sessions to see them here' : 
@@ -322,8 +322,8 @@ const TherapistSessions: React.FC = () => {
           disabled={currentPage === 1}
           className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-2 rounded-xl text-sm min-h-[44px] ${
             currentPage === 1
-              ? 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
-              : 'bg-primary-500 text-white hover:bg-primary-600'
+              ? 'bg-neutral-200 text-fixes-heading-dark cursor-not-allowed'
+              : 'bg-fixes-accent-purple text-black hover:bg-fixes-accent-blue'
           } transition-colors duration-200`}
           aria-label="Go to previous page"
         >
@@ -338,8 +338,8 @@ const TherapistSessions: React.FC = () => {
               onClick={() => handlePageChange(page)}
               className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm min-w-[32px] sm:min-w-[40px] min-h-[40px] ${
                 currentPage === page
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+                  ? 'bg-fixes-accent-purple text-black'
+                  : 'bg-neutral-100 text-fixes-heading-dark hover:bg-neutral-200'
               } transition-colors duration-200`}
               aria-label={`Go to page ${page}`}
             >
@@ -353,8 +353,8 @@ const TherapistSessions: React.FC = () => {
           disabled={currentPage === totalPages}
           className={`flex items-center justify-center gap-1.5 px-2 sm:px-3 py-2 rounded-xl text-sm min-h-[44px] ${
             currentPage === totalPages
-              ? 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
-              : 'bg-primary-500 text-white hover:bg-primary-600'
+              ? 'bg-neutral-200 text-fixes-heading-dark cursor-not-allowed'
+              : 'bg-fixes-accent-purple text-black hover:bg-fixes-accent-blue'
           } transition-colors duration-200`}
           aria-label="Go to next page"
         >

@@ -349,24 +349,25 @@ const TherapistAvailability = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-        <div className="text-xl">Loading availability...</div>
+      <div className="min-h-screen bg-fixes-bg-offwhite flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-fixes-accent-purple border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-black text-base">Loading availability...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-fixes-bg-offwhite text-black p-4 md:p-8">
       {/* Header */}
       <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-4xl font-bold mb-2">Availability Management</h1>
-        <p className="text-gray-400 text-sm md:text-base">Manage your schedule and time slots</p>
+        <h1 className="text-2xl md:text-4xl font-black mb-2 text-black">Availability Management</h1>
+        <p className="text-fixes-heading-dark text-sm md:text-base">Manage your schedule and time slots</p>
       </div>
 
       {/* View Toggle */}
       <div className="flex gap-2 mb-6 flex-wrap items-center">
         <button
-          className="flex items-center space-x-2 px-3 md:px-4 py-2 rounded-2xl text-xs md:text-sm font-medium transition-colors duration-200 bg-primary-500 text-white"
+          className="flex items-center space-x-2 px-3 md:px-4 py-2 rounded-2xl text-xs md:text-sm font-medium transition-colors duration-200 bg-fixes-accent-purple text-black"
         >
           <Calendar size={18} />
           <span className="hidden sm:inline">Calendar</span>
@@ -383,20 +384,20 @@ const TherapistAvailability = () => {
                 {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </h2>
               <div className="flex items-center gap-2">
-                <button onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))} className="p-2 rounded-lg hover:bg-gray-700">
+                <button onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))} className="p-2 rounded-lg hover:bg-neutral-100">
                   <ChevronLeft size={20} />
                 </button>
-                <button onClick={() => setSelectedDate(new Date())} className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg">
+                <button onClick={() => setSelectedDate(new Date())} className="px-4 py-2 text-sm bg-neutral-100 hover:bg-neutral-200 rounded-lg text-black">
                   Today
                 </button>
-                <button onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))} className="p-2 rounded-lg hover:bg-gray-700">
+                <button onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))} className="p-2 rounded-lg hover:bg-neutral-100">
                   <ChevronRight size={20} />
                 </button>
               </div>
             </div>
 
             {/* Weekdays */}
-            <div className="grid grid-cols-7 gap-2 md:gap-4 mb-3 text-center text-xs md:text-sm text-gray-400 font-medium">
+            <div className="grid grid-cols-7 gap-2 md:gap-4 mb-3 text-center text-xs md:text-sm text-fixes-heading-dark font-medium">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d}>{d}</div>)}
             </div>
 
@@ -440,12 +441,12 @@ const TherapistAvailability = () => {
                       }}
                       className={`w-full h-16 md:h-24 lg:h-28 rounded-lg flex items-center justify-center text-sm md:text-lg lg:text-xl font-medium relative transition-all ${
                         !item.current
-                          ? 'text-gray-600'
+                          ? 'text-fixes-heading-dark/50'
                           : isSelected
-                          ? 'bg-primary-500 text-white scale-110 shadow-lg'
+                          ? 'bg-fixes-accent-purple text-black scale-110 shadow-lg'
                           : isToday
-                          ? 'border-2 border-primary-500 text-primary-400'
-                          : 'bg-gray-700 hover:bg-gray-600'
+                          ? 'border-2 border-fixes-accent-purple text-fixes-accent-purple'
+                          : 'bg-white hover:bg-neutral-50 border border-neutral-200'
                       }`}
                     >
                       {item.date.getDate()}
@@ -463,8 +464,8 @@ const TherapistAvailability = () => {
 
       {/* Date Details Modal */}
       {showDateDetailsModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-50" onClick={() => setShowDateDetailsModal(false)}>
-          <div className="bg-gray-800 w-full md:max-w-md rounded-t-3xl md:rounded-2xl p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50" onClick={() => setShowDateDetailsModal(false)}>
+          <div className="bg-white w-full md:max-w-md rounded-t-3xl md:rounded-2xl p-6 max-h-[90vh] overflow-y-auto shadow-xl border border-neutral-200" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">{dateString}</h2>
               <button onClick={() => setShowDateDetailsModal(false)}><X size={28} /></button>
@@ -473,7 +474,7 @@ const TherapistAvailability = () => {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">Time Slots</h3>
-                <button onClick={() => { setEditingTimeSlot(null); setShowTimeSlotModal(true); }} className="bg-primary-500 text-white p-2 rounded-lg p-2">
+                <button onClick={() => { setEditingTimeSlot(null); setShowTimeSlotModal(true); }} className="bg-fixes-accent-purple text-black p-2 rounded-lg">
                   <Plus size={20} />
                 </button>
               </div>
@@ -546,8 +547,8 @@ const TherapistAvailability = () => {
 
       {/* Time Slot Modal */}
       {showTimeSlotModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-50" onClick={() => setShowTimeSlotModal(false)}>
-          <div className="bg-gray-800 w-full md:max-w-md rounded-t-3xl md:rounded-2xl p-6" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50" onClick={() => setShowTimeSlotModal(false)}>
+          <div className="bg-white w-full md:max-w-md rounded-t-3xl md:rounded-2xl p-6 shadow-xl border border-neutral-200" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">{editingTimeSlot ? 'Edit' : 'Add'} Time Slot</h2>
               <button onClick={() => setShowTimeSlotModal(false)}><X size={28} /></button>
@@ -577,7 +578,7 @@ const TherapistAvailability = () => {
                         onChange={() => setNewTimeSlot(prev => ({ ...prev, sessionType: t }))}
                         className="hidden"
                       />
-                      <div className={`p-3 text-center rounded-lg font-medium ${newTimeSlot.sessionType === t ? 'bg-primary-500 text-white' : 'bg-gray-700'}`}>
+                      <div className={`p-3 text-center rounded-lg font-medium ${newTimeSlot.sessionType === t ? 'bg-fixes-accent-purple text-black' : 'bg-neutral-100'}`}>
                         {t.charAt(0).toUpperCase() + t.slice(1)}
                       </div>
                     </label>
@@ -618,7 +619,7 @@ const TherapistAvailability = () => {
                 </button>
                 <button
                   onClick={handleAddTimeSlot}
-                  className="flex-1 py-3 bg-primary-500 text-white rounded-xl font-medium"
+                  className="flex-1 py-3 bg-fixes-accent-purple text-black rounded-xl font-medium hover:bg-fixes-accent-blue"
                 >
                   {editingTimeSlot ? 'Update' : 'Add'} Slot
                 </button>
