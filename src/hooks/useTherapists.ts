@@ -33,8 +33,8 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
 
             if (!therapistProfile) return null;
 
-            // Skip therapists explicitly marked inactive (either at user level or inside profile)
-            if (userData.isActive === false || therapistProfile.isActive === false) return null;
+            // Skip therapists explicitly marked inactive
+            if (userData.isActive === false) return null;
 
             // Convert Firebase therapist to TherapistData format
             return {
@@ -44,7 +44,7 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
               image: therapistProfile.profilePhoto,
               languages: therapistProfile.languages,
               credentials: therapistProfile.credentials.join(', '),
-              availability: therapistProfile.isAvailable ? 'Available Today' : therapistProfile.nextAvailableSlot || 'Not Available',
+              availability: therapistProfile.nextAvailableSlot || 'Check Availability',
               rating: therapistProfile.rating,
               reviewCount: therapistProfile.reviewCount,
               hourlyRate: therapistProfile.hourlyRate,
@@ -52,8 +52,8 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
               serviceCategory: determineServiceCategory(therapistProfile.services),
               experience: therapistProfile.experience,
               bio: therapistProfile.bio,
-              isAvailable: therapistProfile.isAvailable,
-              isActive: therapistProfile.isActive === undefined ? true : therapistProfile.isActive
+              isAvailable: userData.isActive !== false,
+              isActive: userData.isActive === undefined ? true : userData.isActive
             } as TherapistData;
           }).filter(Boolean) as TherapistData[];
 

@@ -15,7 +15,6 @@ export interface User {
     specializations: string[];
     languages: string[];
     services: string[];
-    isAvailable: boolean;
     sessionFormats: ('video' | 'audio' | 'chat')[];
     bio: string;
     experience: number; // years

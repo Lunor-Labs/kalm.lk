@@ -222,9 +222,9 @@ const TherapistProfile: React.FC<TherapistProfileProps> = ({ therapist, onClose,
 
                 <button
                   onClick={() => onBookNow(therapist)}
-                  disabled={!therapist.isAvailable || therapist.isActive === false}
+                  disabled={therapist.isActive === false}
                   className={`w-full py-4 rounded-2xl font-semibold text-lg transition-colors duration-200 flex items-center justify-center space-x-2 ${
-                    (therapist.isAvailable && therapist.isActive !== false)
+                    (therapist.isActive !== false)
                       ? 'bg-primary-500 text-white hover:bg-primary-600'
                       : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
                   }`}

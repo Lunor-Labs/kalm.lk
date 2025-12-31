@@ -387,7 +387,6 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
         specializations: ['General Counseling'],
         languages: ['English'],
         services: ['Individual Therapy'],
-        isAvailable: false,
         sessionFormats: ['video' as const],
         bio: 'Professional therapist ready to help you on your wellness journey.',
         experience: 1,

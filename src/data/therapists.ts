@@ -14,7 +14,6 @@ export interface TherapistData {
   serviceCategory: string;
   experience: number;
   bio: string;
-  isAvailable: boolean;
   isActive?: boolean;
 }
 
@@ -175,7 +174,7 @@ export const getTherapistsByCategory = (category: string): TherapistData[] => {
 };
 
 export const getAvailableTherapists = (): TherapistData[] => {
-  return therapistsData.filter(therapist => therapist.isAvailable && (therapist.isActive !== false));
+  return therapistsData.filter(therapist => therapist.isActive !== false);
 };
 
 export const getTherapistsBySpecialty = (specialty: string): TherapistData[] => {

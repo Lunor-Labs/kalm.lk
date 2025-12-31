@@ -58,7 +58,7 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
         throw new Error('Therapist is not available for booking.');
       }
 
-      if (tprofile && (tprofile.isActive === false || tprofile.isAvailable === false)) {
+      if (tdata && tdata.isActive === false) {
         throw new Error('Therapist is not available for booking.');
       }
     } catch (err: any) {

@@ -34,7 +34,6 @@ interface Therapist {
   specializations: string[];
   languages: string[];
   services: string[];
-  isAvailable: boolean;
   isActive: boolean;
   sessionFormats: string[];
   bio: string;
@@ -346,7 +345,6 @@ const TherapistManagement: React.FC = () => {
             specializations: formData.specializations,
             languages: formData.languages,
             services: formData.services,
-            isAvailable: false,
             sessionFormats: formData.sessionFormats,
             bio: formData.bio,
             experience: formData.experience,
@@ -423,8 +421,7 @@ const TherapistManagement: React.FC = () => {
         updates['therapistProfile.isAvailable'] = false;
       }
 
-      // Always set therapistProfile.isActive so client lists respect the flag
-      updates['therapistProfile.isActive'] = newStatus;
+      // Therapist availability is controlled by user.isActive only
 
       await updateDoc(userRef, updates);
 
@@ -639,7 +636,7 @@ const TherapistManagement: React.FC = () => {
           </div>
           <div className="md:text-left text-center">
             <h3 className="text-2xl font-bold text-white mb-1">
-              {therapists.filter(t => t.isAvailable && t.isActive).length}
+              {therapists.filter(t => t.isActive).length}
             </h3>
             <p className="text-neutral-400 text-sm mb-2">Available Now</p>
             <p className="text-accent-green text-sm">Ready for sessions</p>
@@ -677,7 +674,7 @@ const TherapistManagement: React.FC = () => {
                     />
                     <div className={`absolute bottom-0 right-0
  w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-neutral-800 ${
-                      therapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-500'
+                      therapist.isActive ? 'bg-accent-green' : 'bg-neutral-500'
                     }`}></div>
                   </div>
                 </div>
@@ -840,7 +837,7 @@ const TherapistManagement: React.FC = () => {
                           : 'bg-neutral-700 text-neutral-300'
                       }`}>
                         <div className={`w-2 h-2 rounded-full ${
-                          therapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-400'
+                          therapist.isActive ? 'bg-accent-green' : 'bg-neutral-400'
                         }`}></div>
                         <span>{therapist.isAvailable ? 'Available' : 'Unavailable'}</span>
                       </span>
@@ -974,7 +971,7 @@ const TherapistManagement: React.FC = () => {
                     className="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover border-2 sm:border-4 border-neutral-700 mx-auto"
                   />
                   <div className={`absolute bottom-0 right-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 sm:border-4 border-neutral-800 ${
-                    viewingTherapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-500'
+                    viewingTherapist.isActive ? 'bg-accent-green' : 'bg-neutral-500'
                   }`}></div>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold text-white mt-3 sm:mt-4">
@@ -1098,10 +1095,10 @@ const TherapistManagement: React.FC = () => {
               </button>
             </div>
             <div className="p-4 space-y-2">
-              {therapists.filter(t => t.isAvailable).length === 0 && (
+              {therapists.filter(t => t.isActive).length === 0 && (
                 <p className="text-neutral-400 text-sm">No therapists are available right now.</p>
               )}
-              {therapists.filter(t => t.isAvailable).map((t) => (
+              {therapists.filter(t => t.isActive).map((t) => (
                 <div key={t.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-neutral-800/50">
                   <div className="flex items-center gap-3">
                     <img src={t.profilePhoto} alt={`${t.firstName} ${t.lastName}`} className="w-10 h-10 rounded-full object-cover" />
