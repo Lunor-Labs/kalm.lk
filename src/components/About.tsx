@@ -1,7 +1,16 @@
 import React from 'react';
-import { Heart, Shield, Users } from 'lucide-react';
+import { Volume2, VolumeX } from 'lucide-react';
 
 const About: React.FC = () => {
+  const [isMuted, setIsMuted] = React.useState(true);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
   return (
     <section id="about" className="bg-fixes-bg-white relative font-body">
       {/* About stripe */}
@@ -109,10 +118,11 @@ const About: React.FC = () => {
 
           {/* Replace this image with the promo video */}
           <div className="relative animate-fade-in h-full">
-            <div className="relative z-10 w-full h-full overflow-hidden">
+            <div className="relative z-10 w-full h-full overflow-hidden group">
               <video
+                ref={videoRef}
                 autoPlay
-                muted
+                muted={isMuted}
                 loop
                 playsInline
                 className="w-full h-full object-cover"
@@ -127,6 +137,19 @@ const About: React.FC = () => {
                   className="w-full h-full object-cover"
                 />
               </video>
+
+              {/* Sound Toggle Button */}
+              <button
+                onClick={toggleMute}
+                className="absolute bottom-4 right-4 z-20 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white backdrop-blur-sm transition-all duration-300 opacity-0 group-hover:opacity-100"
+                aria-label={isMuted ? "Unmute video" : "Mute video"}
+              >
+                {isMuted ? (
+                  <VolumeX size={20} />
+                ) : (
+                  <Volume2 size={20} />
+                )}
+              </button>
             </div>
           </div>
 
