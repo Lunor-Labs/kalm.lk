@@ -11,6 +11,16 @@ const About: React.FC = () => {
       setIsMuted(!isMuted);
     }
   };
+  // Force autoplay on mount for mobile support
+  React.useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(error => {
+        // Autoplay was prevented
+        console.log("Autoplay prevented:", error);
+      });
+    }
+  }, []);
+
   return (
     <section id="about" className="bg-fixes-bg-white relative font-body">
       {/* About stripe */}
