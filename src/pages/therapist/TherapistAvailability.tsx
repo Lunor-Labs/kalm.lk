@@ -377,8 +377,7 @@ const TherapistAvailability = () => {
       {/* Calendar View */}
       {activeView === 'calendar' && (
         <div className="space-y-6 max-w-6xl mx-auto">
-          <div className="bg-gray-800 rounded-2xl p-4 md:p-6 shadow-lg">
-            {/* Calendar Header */}
+          <div className="bg-[#F8F9FA] rounded-2xl p-4 md:p-6 shadow-lg border border-[#E1E3FC]/60">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg md:text-xl font-semibold">
                 {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
@@ -486,7 +485,7 @@ const TherapistAvailability = () => {
               ) : (
                 <div className="space-y-3">
                   {selectedDateData.timeSlots.map((slot: any) => (
-                    <div key={slot.id} className="bg-gray-700 rounded-lg p-4">
+                    <div key={slot.id} className="bg-[#F8F9FA]-700 rounded-lg p-4">
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <div className="font-bold">{slot.startTime} – {slot.endTime}</div>
@@ -558,11 +557,36 @@ const TherapistAvailability = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Start Time</label>
-                  <input type="time" value={newTimeSlot.startTime} onChange={e => setNewTimeSlot(prev => ({ ...prev, startTime: e.target.value }))} className="w-full p-3 bg-gray-700 rounded-lg" />
-                </div>
+                  <input
+                    type="time"
+                    value={newTimeSlot.startTime}
+                    onChange={e => setNewTimeSlot(prev => ({ ...prev, startTime: e.target.value }))}
+                    className="
+                      w-full p-3 
+                      bg-white 
+                      border border-neutral-300 
+                      rounded-lg 
+                      text-fixes-heading-dark 
+                      focus:ring-2 focus:ring-fixes-accent-purple/30 
+                      focus:border-fixes-accent-purple
+                      outline-none
+                      transition-all
+                    "
+                  /></div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">End Time</label>
-                  <input type="time" value={newTimeSlot.endTime} onChange={e => setNewTimeSlot(prev => ({ ...prev, endTime: e.target.value }))} className="w-full p-3 bg-gray-700 rounded-lg" />
+                  <input type="time" value={newTimeSlot.endTime} onChange={e => setNewTimeSlot(prev => ({ ...prev, endTime: e.target.value }))} className="
+                      w-full p-3 
+                      bg-white 
+                      border border-neutral-300 
+                      rounded-lg 
+                      text-fixes-heading-dark 
+                      focus:ring-2 focus:ring-fixes-accent-purple/30 
+                      focus:border-fixes-accent-purple
+                      outline-none
+                      transition-all
+                    "
+                   />
                 </div>
               </div>
 {/* 
@@ -611,12 +635,12 @@ const TherapistAvailability = () => {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <button
-                  onClick={() => setShowTimeSlotModal(false)}
-                  className="flex-1 py-3 bg-gray-700 rounded-xl"
-                >
-                  Cancel
-                </button>
+              <button
+                onClick={() => setShowTimeSlotModal(false)}
+                className="flex-1 py-3 bg-fixes-bg-offwhite hover:bg-neutral-200 text-fixes-heading-dark font-medium rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
                 <button
                   onClick={handleAddTimeSlot}
                   className="flex-1 py-3 bg-fixes-accent-purple text-black rounded-xl font-medium hover:bg-fixes-accent-blue"
