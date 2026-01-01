@@ -479,7 +479,7 @@ const TherapistProfile: React.FC = () => {
                 onClick={() => toggleSection('credentials')}
                 className="w-full flex items-center justify-between p-4"
               >
-                <span className="text-sm font-medium text-neutral-300">
+                <span className="text-sm font-medium text-fixes-heading-dark">
                   Credentials * (Select or add at least one)
                 </span>
                 {expandedSections.credentials ? (
@@ -489,46 +489,70 @@ const TherapistProfile: React.FC = () => {
                 )}
               </button>
               {expandedSections.credentials && (
-                <div className="p-4 pt-0 grid grid-cols-1 gap-2">
+                <div className="p-4 pt-0 grid grid-cols-1 gap-3">
                   {credentialOptions.map((credential) => (
                     <div key={credential}>
-                      <label className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                      <label className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors duration-200 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={formData.credentials.includes(credential)}
                           onChange={(e) => handleArrayFieldChange('credentials', credential, e.target.checked)}
-                          className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
+                          className="rounded border-neutral-300 text-fixes-accent-purple focus:ring-fixes-accent-purple"
                         />
-                        <span className="text-neutral-300 text-xs">{credential}</span>
+                        <span className="text-neutral-700 text-xs">{credential}</span>
                       </label>
+
                       {credential === 'Other' && formData.credentials.includes('Other') && (
-                        <div className="mt-2">
-                          <input
-                            type="text"
-                            value={customCredential}
-                            onChange={(e) => setCustomCredential(e.target.value)}
-                            onKeyPress={handleCredentialKeyPress}
-                            className="w-full px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
-                            placeholder="Enter custom credential and press Enter"
-                          />
+                        <div className="mt-3 pl-1">
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={customCredential}
+                              onChange={(e) => setCustomCredential(e.target.value)}
+                              onKeyPress={handleCredentialKeyPress}
+                              className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent bg-white text-black placeholder-neutral-400 text-sm"
+                              placeholder="Type custom credential..."
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (customCredential.trim()) {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    credentials: [...prev.credentials, customCredential.trim()]
+                                  }));
+                                  setCustomCredential('');
+                                }
+                              }}
+                              disabled={!customCredential.trim()}
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors min-w-[60px] ${
+                                customCredential.trim()
+                                  ? 'bg-fixes-accent-purple text-black hover:bg-fixes-accent-blue'
+                                  : 'bg-neutral-200 text-neutral-500 cursor-not-allowed'
+                              }`}
+                            >
+                              Add
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
                   ))}
+
                   {formData.credentials.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="flex flex-wrap gap-2 mt-4">
                       {formData.credentials.filter(c => c !== 'Other').map((credential, index) => (
                         <div
                           key={index}
-                          className="flex items-center px-2 py-1 bg-primary-500/20 text-primary-500 rounded-full text-xs"
+                          className="flex items-center px-3 py-1.5 bg-fixes-accent-purple/20 text-fixes-accent-purple rounded-full text-xs"
                         >
                           {credential}
                           <button
                             type="button"
                             onClick={() => removeCredential(credential)}
-                            className="ml-2 text-primary-500 hover:text-primary-600"
+                            className="ml-2 text-fixes-accent-purple hover:text-fixes-accent-purple/80"
                           >
-                            <X className="w-3 h-3" />
+                            <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       ))}
@@ -539,13 +563,13 @@ const TherapistProfile: React.FC = () => {
             </>
           ) : (
             <>
-              <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3">
                 Credentials * (Select or add at least one)
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {credentialOptions.map((credential) => (
                   <div key={credential}>
-                    <label className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                    <label className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.credentials.includes(credential)}
@@ -561,7 +585,7 @@ const TherapistProfile: React.FC = () => {
                           value={customCredential}
                           onChange={(e) => setCustomCredential(e.target.value)}
                           onKeyPress={handleCredentialKeyPress}
-                          className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-sm"
+                          className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white placeholder-neutral-400 text-sm"
                           placeholder="Enter custom credential and press Enter"
                         />
                       </div>
@@ -593,7 +617,7 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Specializations */}
-     <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           {isMobile ? (
             <>
               <button
@@ -601,7 +625,7 @@ const TherapistProfile: React.FC = () => {
                 onClick={() => toggleSection('specializations')}
                 className="w-full flex items-center justify-between p-4"
               >
-                <span className="text-sm font-medium text-neutral-300">
+                <span className="text-sm font-medium text-fixes-heading-dark">
                   Specializations * (Add at least one)
                 </span>
                 {expandedSections.specializations ? (
@@ -618,7 +642,7 @@ const TherapistProfile: React.FC = () => {
                       value={customSpecialization}
                       onChange={(e) => setCustomSpecialization(e.target.value)}
                       onKeyPress={handleSpecializationKeyPress}
-                      className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
+                      className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white placeholder-neutral-400 text-xs"
                       placeholder="Enter specialization"
                     />
                     <button
@@ -662,7 +686,7 @@ const TherapistProfile: React.FC = () => {
             </>
           ) : (
             <>
-              <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3">
                 Specializations * (Add at least one)
               </label>
               <div>
@@ -671,7 +695,7 @@ const TherapistProfile: React.FC = () => {
                   value={customSpecialization}
                   onChange={(e) => setCustomSpecialization(e.target.value)}
                   onKeyPress={handleSpecializationKeyPress}
-                  className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-sm"
+                  className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white placeholder-neutral-400 text-sm"
                   placeholder="Enter specialization and press Enter"
                 />
                 {formData.specializations.length > 0 && (
@@ -707,7 +731,7 @@ const TherapistProfile: React.FC = () => {
                 onClick={() => toggleSection('languages')}
                 className="w-full flex items-center justify-between p-4"
               >
-                <span className="text-sm font-medium text-neutral-300">
+                <span className="text-sm font-medium text-fixes-heading-dark">
                   Languages * (Select at least one)
                 </span>
                 {expandedSections.languages ? (
@@ -719,7 +743,7 @@ const TherapistProfile: React.FC = () => {
               {expandedSections.languages && (
                 <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                   {languageOptions.map((language) => (
-                    <label key={language} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                    <label key={language} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.languages.includes(language)}
@@ -734,12 +758,12 @@ const TherapistProfile: React.FC = () => {
             </>
           ) : (
             <>
-              <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3">
                 Languages * (Select at least one)
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                 {languageOptions.map((language) => (
-                  <label key={language} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                  <label key={language} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.languages.includes(language)}
@@ -763,7 +787,7 @@ const TherapistProfile: React.FC = () => {
                 onClick={() => toggleSection('services')}
                 className="w-full flex items-center justify-between p-4"
               >
-                <span className="text-sm font-medium text-neutral-300">
+                <span className="text-sm font-medium text-fixes-heading-dark">
                   Services * (Select at least one)
                 </span>
                 {expandedSections.services ? (
@@ -775,7 +799,7 @@ const TherapistProfile: React.FC = () => {
               {expandedSections.services && (
                 <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                   {serviceOptions.map((service) => (
-                    <label key={service} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                    <label key={service} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.services.includes(service)}
@@ -790,12 +814,12 @@ const TherapistProfile: React.FC = () => {
             </>
           ) : (
             <>
-              <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3">
                 Services * (Select at least one)
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {serviceOptions.map((service) => (
-                  <label key={service} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                  <label key={service} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.services.includes(service)}
@@ -819,7 +843,7 @@ const TherapistProfile: React.FC = () => {
                 onClick={() => toggleSection('sessionFormats')}
                 className="w-full flex items-center justify-between p-4"
               >
-                <span className="text-sm font-medium text-neutral-300">
+                <span className="text-sm font-medium text-fixes-heading-dark">
                   Session Formats * (Select at least one)
                 </span>
                 {expandedSections.sessionFormats ? (
@@ -831,7 +855,7 @@ const TherapistProfile: React.FC = () => {
               {expandedSections.sessionFormats && (
                 <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                   {sessionFormatOptions.map((format) => (
-                    <label key={format} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                    <label key={format} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.sessionFormats.includes(format)}
@@ -851,12 +875,12 @@ const TherapistProfile: React.FC = () => {
             </>
           ) : (
             <>
-              <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3">
                 Session Formats * (Select at least one)
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                 {sessionFormatOptions.map((format) => (
-                  <label key={format} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                  <label key={format} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.sessionFormats.includes(format)}
@@ -885,7 +909,7 @@ const TherapistProfile: React.FC = () => {
             value={formData.bio}
             onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
             rows={4}
-            className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 resize-none text-sm sm:text-base"
+            className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white placeholder-neutral-400 resize-none text-sm sm:text-base"
             placeholder="Enter your professional bio..."
           />
         </div>
@@ -907,4 +931,3 @@ const TherapistProfile: React.FC = () => {
 };
 
 export default TherapistProfile;
-
