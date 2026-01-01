@@ -29,7 +29,6 @@ interface Therapist {
   specializations: string[];
   languages: string[];
   services: string[];
-  isAvailable: boolean;
   sessionFormats: string[];
   bio: string;
   experience: number;
@@ -324,8 +323,8 @@ const TherapistProfile: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white">Loading profile...</p>
+          <div className="w-16 h-16 border-4 border-fixes-accent-purple border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-black">Loading profile...</p>
         </div>
       </div>
     );
@@ -334,9 +333,9 @@ const TherapistProfile: React.FC = () => {
   if (!therapist) {
     return (
       <div className="text-center py-16">
-        <User className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-white mb-2">Profile Not Found</h3>
-        <p className="text-neutral-300">Your therapist profile could not be loaded. Please contact support.</p>
+        <User className="w-16 h-16 text-fixes-heading-dark mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-black mb-2">Profile Not Found</h3>
+        <p className="text-fixes-heading-dark">Your therapist profile could not be loaded. Please contact support.</p>
       </div>
     );
   }
@@ -344,14 +343,14 @@ const TherapistProfile: React.FC = () => {
   return (
     <div className="space-y-6 px-4 sm:px-0">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">My Profile</h1>
-        <p className="text-neutral-300 text-sm sm:text-base">Update your professional information and profile details</p>
+        <h1 className="text-2xl sm:text-3xl font-black text-black mb-1 sm:mb-2">My Profile</h1>
+        <p className="text-fixes-heading-dark text-sm sm:text-base">Update your professional information and profile details</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Profile Photo */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3 text-center">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
+          <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3 text-center">
             Profile Photo
           </label>
           <div className="flex flex-col items-center space-y-3 sm:space-y-4">
@@ -380,7 +379,7 @@ const TherapistProfile: React.FC = () => {
               />
               <label
                 htmlFor="profile-photo"
-                className={`inline-flex items-center space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-primary-500 text-white rounded-lg sm:rounded-xl hover:bg-primary-600 transition-colors duration-200 cursor-pointer text-sm sm:text-base ${
+                className={`inline-flex items-center space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-fixes-accent-purple text-black rounded-lg sm:rounded-xl hover:bg-fixes-accent-blue transition-colors duration-200 cursor-pointer text-sm sm:text-base ${
                   uploading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
@@ -395,53 +394,53 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Basic Information */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Basic Information</h2>
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-semibold text-black mb-4 sm:mb-6">Basic Information</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-1 sm:mb-2">
                 First Name *
               </label>
               <input
                 type="text"
                 value={formData.firstName}
                 onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
                 placeholder="Enter first name"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-1 sm:mb-2">
                 Last Name *
               </label>
               <input
                 type="text"
                 value={formData.lastName}
                 onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
                 placeholder="Enter last name"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-1 sm:mb-2">
                 Email Address *
               </label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
                 placeholder="Enter email address"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-1 sm:mb-2">
                 Experience (Years)
               </label>
               <input
@@ -450,12 +449,12 @@ const TherapistProfile: React.FC = () => {
                 max="50"
                 value={formData.experience}
                 onChange={(e) => setFormData(prev => ({ ...prev, experience: parseInt(e.target.value) || 1 }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-1 sm:mb-2">
                 Hourly Rate (LKR)
               </label>
               <input
@@ -465,14 +464,14 @@ const TherapistProfile: React.FC = () => {
                 step="500"
                 value={formData.hourlyRate}
                 onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseInt(e.target.value) || 4500 }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
               />
             </div>
           </div>
         </div>
 
         {/* Credentials */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           {isMobile ? (
             <>
               <button
@@ -700,7 +699,7 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Languages */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           {isMobile ? (
             <>
               <button
@@ -756,7 +755,7 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Services */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           {isMobile ? (
             <>
               <button
@@ -812,7 +811,7 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Session Formats */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           {isMobile ? (
             <>
               <button
@@ -878,8 +877,8 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Bio */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
+          <label className="block text-sm font-medium text-fixes-heading-dark mb-1 sm:mb-2">
             Bio
           </label>
           <textarea
@@ -896,7 +895,7 @@ const TherapistProfile: React.FC = () => {
           <button
             type="submit"
             disabled={saving || uploading}
-            className="px-4 py-2 sm:px-6 sm:py-3 bg-primary-500 text-white rounded-xl sm:rounded-2xl hover:bg-primary-600 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+            className="px-4 py-2 sm:px-6 sm:py-3 bg-fixes-accent-purple text-black rounded-xl sm:rounded-2xl hover:bg-fixes-accent-blue transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
           >
             <Save className="w-4 h-4" />
             <span>{saving ? 'Saving...' : 'Save Changes'}</span>
