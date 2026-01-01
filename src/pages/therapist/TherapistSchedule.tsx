@@ -238,7 +238,7 @@ const TherapistSchedule: React.FC = () => {
         
         <div className="flex flex-col xs:flex-row items-stretch sm:items-center gap-3">
           {/* View Toggle */}
-          <div className="flex bg-neutral-800 rounded-2xl p-1">
+          <div className="flex bg-fixes-bg-purple rounded-2xl p-1">
             <button
               onClick={() => setViewMode('week')}
               className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl text-sm font-medium ${
@@ -354,7 +354,7 @@ const TherapistSchedule: React.FC = () => {
                     <button 
                       onClick={() => handleDayClick(day)}
                       className={`w-full p-1 sm:p-2 rounded-lg flex flex-col items-center ${
-                        isSameDay(day, new Date()) ? 'bg-primary-500 text-white' : 'text-neutral-300'
+                        isSameDay(day, new Date()) ? 'bg-primary-100 text-black' : 'text-black'
                       }`}
                     >
                       <p className="text-xs sm:text-sm font-medium">{format(day, 'EEE')}</p>
@@ -395,7 +395,7 @@ const TherapistSchedule: React.FC = () => {
                             {getSessionIcon(session.type)}
                             <span className="font-medium text-white truncate">{session.time}</span>
                           </div>
-                          <p className="text-neutral-300 truncate">{session.clientName}</p>
+                          <p className="text-neutral-500 truncate">{session.clientName}</p>
                         </button>
                       ))}
                     </div>
