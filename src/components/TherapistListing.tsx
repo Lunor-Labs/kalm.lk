@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTherapists } from '../hooks/useTherapists';
 import { TherapistData } from '../data/therapists';
 import TherapistCard from './TherapistCard';
+import { getTherapistAvailability } from '../lib/availability';
 
 interface TherapistListingProps {
   onBack: () => void;
@@ -88,6 +89,8 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
   const [filters, setFilters] = useState<SimpleFilters>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'specialty' | 'availability'>('name');
+  const [todayAvailability, setTodayAvailability] = useState<Record<string, boolean>>({});
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
   // Use the custom hook to fetch therapists
   const { therapists: allTherapists, loading, error, refetch } = useTherapists({
@@ -117,6 +120,54 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
   ];
   const languages = [...new Set(allTherapists.flatMap(t => t.languages))];
   const serviceCategories = [...new Set(allTherapists.map(t => t.serviceCategory))];
+
+  // Compute which therapists have a special date for today with at least one available time slot
+  useEffect(() => {
+    const updateTodayAvailability = async () => {
+      if (filters.availability !== 'available' || allTherapists.length === 0) {
+        setTodayAvailability({});
+        setAvailabilityLoading(false);
+        return;
+      }
+
+      setAvailabilityLoading(true);
+
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      const availabilityMap: Record<string, boolean> = {};
+
+      await Promise.all(
+        allTherapists.map(async (therapist) => {
+          try {
+            const availability = await getTherapistAvailability(therapist.id);
+            if (!availability || !availability.isActive) {
+              availabilityMap[therapist.id] = false;
+            } else {
+              const specialDate = availability.specialDates.find((sd) => sd.date === todayStr);
+              const isAvailableToday = !!specialDate && (
+                // If specialDate.isAvailable exists, respect it
+                (typeof specialDate.isAvailable === 'boolean'
+                  ? specialDate.isAvailable
+                  // Otherwise, fall back to any available timeslot under this date
+                  : (Array.isArray(specialDate.timeSlots) &&
+                     specialDate.timeSlots.some((slot) => slot.isAvailable)))
+              );
+
+              availabilityMap[therapist.id] = isAvailableToday;
+            }
+          } catch (e) {
+            availabilityMap[therapist.id] = false;
+          }
+        })
+      );
+
+      setTodayAvailability(availabilityMap);
+      setAvailabilityLoading(false);
+    };
+
+    updateTodayAvailability();
+  }, [filters.availability, allTherapists]);
 
   // Filter and search therapists
   const filteredTherapists = useMemo(() => {
@@ -160,9 +211,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
     }
 
     if (filters.availability === 'available') {
-      filtered = filtered.filter(therapist => 
-        therapist.availability.toLowerCase().includes('today')
-      );
+      filtered = filtered.filter(therapist => todayAvailability[therapist.id]);
     }
 
     // Sort therapists
@@ -179,7 +228,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
           return a.name.localeCompare(b.name);
       }
     });
-  }, [allTherapists, filters, searchQuery, sortBy]);
+  }, [allTherapists, filters, searchQuery, sortBy, todayAvailability]);
 
   const clearFilters = () => {
     setFilters({});
@@ -385,7 +434,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
         </div>
 
         {/* Loading State */}
-        {loading && (
+        {(loading || availabilityLoading) && (
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-fixes-box-purple border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -398,28 +447,28 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
         )}
 
         {/* Therapist Slider with Arrows */}
-        {!loading && filteredTherapists.length > 0 ? (
+        {!loading && !availabilityLoading && filteredTherapists.length > 0 ? (
           <div className="relative">
             {/* Slider Arrows - Desktop/Tablet Only */}
-        <div className="hidden sm:block">
-          <button
-            type="button"
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-fixes-box-purple text-white rounded-full p-2 shadow-lg transition-all duration-200"
-            style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
-            onClick={() => scrollSlider('left')}
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
+            <div className="hidden sm:block">
+              <button
+                type="button"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-fixes-box-purple text-white rounded-full p-2 shadow-lg transition-all duration-200"
+                style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
+                onClick={() => scrollSlider('left')}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
 
-          <button
-            type="button"
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-fixes-box-purple text-white rounded-full p-2 shadow-lg transition-all duration-200"
-            style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
-            onClick={() => scrollSlider('right')}
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
-        </div>
+              <button
+                type="button"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-fixes-box-purple text-white rounded-full p-2 shadow-lg transition-all duration-200"
+                style={{ display: filteredTherapists.length > 1 ? 'block' : 'none' }}
+                onClick={() => scrollSlider('right')}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
 
             {/* Slider */}
             <div
@@ -440,14 +489,15 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
               ))}
             </div>
           </div>
-        ) : !loading ? (
+        ) : !loading && !availabilityLoading ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
               <Users className="w-8 h-8 text-neutral-400" />
             </div>
             <h3 className="text-xl font-semibold text-fixes-heading-dark mb-2">No therapists found</h3>
             <p className="text-fixes-heading-dark mb-6">
-              {'No therapists have been added to Firebase yet. Add therapists through the admin panel.'}
+              {/* {'No therapists have been added to Firebase yet. Add therapists through the admin panel.'} */}
+              {'Try Different Filters'}
             </p>
             <div className="flex items-center justify-center space-x-4">
               <button

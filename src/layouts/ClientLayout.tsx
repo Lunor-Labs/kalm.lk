@@ -148,27 +148,17 @@ const ClientLayout: React.FC = () => {
       <div className="lg:pl-64">
         {/* Top bar */}
         <div className="sticky top-0 z-30 bg-fixes-bg-white border-b border-neutral-200">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center justify-between px-4 py-2 lg:px-6 lg:py-4">
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden text-fixes-heading-dark hover:text-black"
             >
               <Menu className="w-6 h-6" />
             </button>
-
-            {/* <div className="flex items-center space-x-4">
-              <div className="text-black">
-                <h1 className="text-xl font-body font-semibold">
-                 Welcome back, {user?.displayName || 'User'}
-                </h1>
-                {user?.isAnonymous && (
-                  <p className="text-sm text-accent-green">Anonymous Account</p>
-                )}
-              </div>
-            </div> */}
           </div>
-          <div style={{ borderBottom: '1px solid var(--neutral-200)', marginTop: '2.95rem' }}></div>
-          </div>
+          {/* Extra spacer only on desktop to visually match previous header height */}
+          <div className="hidden lg:block" style={{ borderBottom: '1px solid var(--neutral-200)', marginTop: '2.95rem' }}></div>
+        </div>
 
         {/* Page content */}
         <main className="p-6">
