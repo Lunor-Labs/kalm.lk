@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Users, Search, Filter, MoreVertical, Shield, UserCheck, Crown, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { updateUserRole } from '../../lib/auth';
 import { UserManagement, UserRole } from '../../types/auth';
@@ -255,7 +255,7 @@ const UserManagementPage: React.FC = () => {
     try {
       setLoading(true);
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, orderBy('createdAt', 'desc'));
+      const q = query(usersRef, where('role', '!=', 'superadmin'),orderBy('role'), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
       
       const usersData = snapshot.docs.map(doc => ({

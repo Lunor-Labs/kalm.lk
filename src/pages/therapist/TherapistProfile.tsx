@@ -4,12 +4,13 @@ import {
   User, Upload, Save, X, Video, Phone, MessageCircle,
   ChevronDown, ChevronUp,
 } from 'lucide-react';
-import { 
-  collection, 
-  getDocs, 
-  updateDoc, 
-  doc, 
-  query, 
+import {
+  collection,
+  getDocs,
+  getDoc,
+  updateDoc,
+  doc,
+  query,
   where,
   serverTimestamp
 } from 'firebase/firestore';
@@ -28,7 +29,6 @@ interface Therapist {
   specializations: string[];
   languages: string[];
   services: string[];
-  isAvailable: boolean;
   sessionFormats: string[];
   bio: string;
   experience: number;
@@ -130,21 +130,28 @@ const TherapistProfile: React.FC = () => {
 
     try {
       setLoading(true);
-      const therapistsRef = collection(db, 'therapists');
-      const q = query(therapistsRef, where('userId', '==', user.uid));
-      const snapshot = await getDocs(q);
-      
-      if (snapshot.empty) {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+
+      if (!userDoc.exists()) {
+        toast.error('User profile not found');
+        setLoading(false);
+        return;
+      }
+
+      const userData = userDoc.data();
+      if (!userData.therapistProfile) {
         toast.error('Therapist profile not found');
         setLoading(false);
         return;
       }
 
       const therapistData = {
-        id: snapshot.docs[0].id,
-        ...snapshot.docs[0].data(),
-        createdAt: snapshot.docs[0].data().createdAt?.toDate(),
-        updatedAt: snapshot.docs[0].data().updatedAt?.toDate()
+        id: userDoc.id,
+        ...userData.therapistProfile,
+        email: userData.email,
+        isActive: userData.isActive === undefined ? true : userData.isActive,
+        createdAt: userData.createdAt?.toDate(),
+        updatedAt: userData.updatedAt?.toDate()
       } as Therapist;
 
       setTherapist(therapistData);
@@ -282,20 +289,23 @@ const TherapistProfile: React.FC = () => {
 
     setSaving(true);
     try {
-      const therapistRef = doc(db, 'therapists', therapist.id);
-      await updateDoc(therapistRef, {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+      const userRef = doc(db, 'users', therapist.id);
+      await updateDoc(userRef, {
         email: formData.email,
-        credentials: formData.credentials.filter(c => c !== 'Other'),
-        specializations: formData.specializations,
-        languages: formData.languages,
-        services: formData.services,
-        sessionFormats: formData.sessionFormats,
-        bio: formData.bio,
-        experience: formData.experience,
-        hourlyRate: formData.hourlyRate,
-        profilePhoto: formData.profilePhoto,
+        therapistProfile: {
+          ...therapist.therapistProfile,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          credentials: formData.credentials.filter(c => c !== 'Other'),
+          specializations: formData.specializations,
+          languages: formData.languages,
+          services: formData.services,
+          sessionFormats: formData.sessionFormats,
+          bio: formData.bio,
+          experience: formData.experience,
+          hourlyRate: formData.hourlyRate,
+          profilePhoto: formData.profilePhoto,
+        },
         updatedAt: serverTimestamp()
       });
       
@@ -313,8 +323,8 @@ const TherapistProfile: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white">Loading profile...</p>
+          <div className="w-16 h-16 border-4 border-fixes-accent-purple border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-black">Loading profile...</p>
         </div>
       </div>
     );
@@ -323,9 +333,9 @@ const TherapistProfile: React.FC = () => {
   if (!therapist) {
     return (
       <div className="text-center py-16">
-        <User className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-white mb-2">Profile Not Found</h3>
-        <p className="text-neutral-300">Your therapist profile could not be loaded. Please contact support.</p>
+        <User className="w-16 h-16 text-fixes-heading-dark mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-black mb-2">Profile Not Found</h3>
+        <p className="text-fixes-heading-dark">Your therapist profile could not be loaded. Please contact support.</p>
       </div>
     );
   }
@@ -333,14 +343,14 @@ const TherapistProfile: React.FC = () => {
   return (
     <div className="space-y-6 px-4 sm:px-0">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">My Profile</h1>
-        <p className="text-neutral-300 text-sm sm:text-base">Update your professional information and profile details</p>
+        <h1 className="text-2xl sm:text-3xl font-black text-black mb-1 sm:mb-2">My Profile</h1>
+        <p className="text-fixes-heading-dark text-sm sm:text-base">Update your professional information and profile details</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Profile Photo */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3 text-center">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
+          <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3 text-center">
             Profile Photo
           </label>
           <div className="flex flex-col items-center space-y-3 sm:space-y-4">
@@ -369,7 +379,7 @@ const TherapistProfile: React.FC = () => {
               />
               <label
                 htmlFor="profile-photo"
-                className={`inline-flex items-center space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-primary-500 text-white rounded-lg sm:rounded-xl hover:bg-primary-600 transition-colors duration-200 cursor-pointer text-sm sm:text-base ${
+                className={`inline-flex items-center space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-fixes-accent-purple text-black rounded-lg sm:rounded-xl hover:bg-fixes-accent-blue transition-colors duration-200 cursor-pointer text-sm sm:text-base ${
                   uploading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
@@ -384,53 +394,53 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Basic Information */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Basic Information</h2>
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-semibold text-black mb-4 sm:mb-6">Basic Information</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-1 sm:mb-2">
                 First Name *
               </label>
               <input
                 type="text"
                 value={formData.firstName}
                 onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
                 placeholder="Enter first name"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-1 sm:mb-2">
                 Last Name *
               </label>
               <input
                 type="text"
                 value={formData.lastName}
                 onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
                 placeholder="Enter last name"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-1 sm:mb-2">
                 Email Address *
               </label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
                 placeholder="Enter email address"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-1 sm:mb-2">
                 Experience (Years)
               </label>
               <input
@@ -439,12 +449,12 @@ const TherapistProfile: React.FC = () => {
                 max="50"
                 value={formData.experience}
                 onChange={(e) => setFormData(prev => ({ ...prev, experience: parseInt(e.target.value) || 1 }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-1 sm:mb-2">
                 Hourly Rate (LKR)
               </label>
               <input
@@ -454,14 +464,14 @@ const TherapistProfile: React.FC = () => {
                 step="500"
                 value={formData.hourlyRate}
                 onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseInt(e.target.value) || 4500 }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
               />
             </div>
           </div>
         </div>
 
         {/* Credentials */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           {isMobile ? (
             <>
               <button
@@ -469,7 +479,7 @@ const TherapistProfile: React.FC = () => {
                 onClick={() => toggleSection('credentials')}
                 className="w-full flex items-center justify-between p-4"
               >
-                <span className="text-sm font-medium text-neutral-300">
+                <span className="text-sm font-medium text-fixes-heading-dark">
                   Credentials * (Select or add at least one)
                 </span>
                 {expandedSections.credentials ? (
@@ -479,46 +489,70 @@ const TherapistProfile: React.FC = () => {
                 )}
               </button>
               {expandedSections.credentials && (
-                <div className="p-4 pt-0 grid grid-cols-1 gap-2">
+                <div className="p-4 pt-0 grid grid-cols-1 gap-3">
                   {credentialOptions.map((credential) => (
                     <div key={credential}>
-                      <label className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                      <label className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors duration-200 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={formData.credentials.includes(credential)}
                           onChange={(e) => handleArrayFieldChange('credentials', credential, e.target.checked)}
-                          className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
+                          className="rounded border-neutral-300 text-fixes-accent-purple focus:ring-fixes-accent-purple"
                         />
-                        <span className="text-neutral-300 text-xs">{credential}</span>
+                        <span className="text-neutral-700 text-xs">{credential}</span>
                       </label>
+
                       {credential === 'Other' && formData.credentials.includes('Other') && (
-                        <div className="mt-2">
-                          <input
-                            type="text"
-                            value={customCredential}
-                            onChange={(e) => setCustomCredential(e.target.value)}
-                            onKeyPress={handleCredentialKeyPress}
-                            className="w-full px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
-                            placeholder="Enter custom credential and press Enter"
-                          />
+                        <div className="mt-3 pl-1">
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={customCredential}
+                              onChange={(e) => setCustomCredential(e.target.value)}
+                              onKeyPress={handleCredentialKeyPress}
+                              className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent bg-white text-black placeholder-neutral-400 text-sm"
+                              placeholder="Type custom credential..."
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (customCredential.trim()) {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    credentials: [...prev.credentials, customCredential.trim()]
+                                  }));
+                                  setCustomCredential('');
+                                }
+                              }}
+                              disabled={!customCredential.trim()}
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors min-w-[60px] ${
+                                customCredential.trim()
+                                  ? 'bg-fixes-accent-purple text-black hover:bg-fixes-accent-blue'
+                                  : 'bg-neutral-200 text-neutral-500 cursor-not-allowed'
+                              }`}
+                            >
+                              Add
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
                   ))}
+
                   {formData.credentials.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="flex flex-wrap gap-2 mt-4">
                       {formData.credentials.filter(c => c !== 'Other').map((credential, index) => (
                         <div
                           key={index}
-                          className="flex items-center px-2 py-1 bg-primary-500/20 text-primary-500 rounded-full text-xs"
+                          className="flex items-center px-3 py-1.5 bg-fixes-accent-purple/20 text-fixes-accent-purple rounded-full text-xs"
                         >
                           {credential}
                           <button
                             type="button"
                             onClick={() => removeCredential(credential)}
-                            className="ml-2 text-primary-500 hover:text-primary-600"
+                            className="ml-2 text-fixes-accent-purple hover:text-fixes-accent-purple/80"
                           >
-                            <X className="w-3 h-3" />
+                            <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       ))}
@@ -529,13 +563,13 @@ const TherapistProfile: React.FC = () => {
             </>
           ) : (
             <>
-              <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3">
                 Credentials * (Select or add at least one)
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {credentialOptions.map((credential) => (
                   <div key={credential}>
-                    <label className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                    <label className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.credentials.includes(credential)}
@@ -551,7 +585,7 @@ const TherapistProfile: React.FC = () => {
                           value={customCredential}
                           onChange={(e) => setCustomCredential(e.target.value)}
                           onKeyPress={handleCredentialKeyPress}
-                          className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-sm"
+                          className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white placeholder-neutral-400 text-sm"
                           placeholder="Enter custom credential and press Enter"
                         />
                       </div>
@@ -583,7 +617,7 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Specializations */}
-     <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           {isMobile ? (
             <>
               <button
@@ -591,7 +625,7 @@ const TherapistProfile: React.FC = () => {
                 onClick={() => toggleSection('specializations')}
                 className="w-full flex items-center justify-between p-4"
               >
-                <span className="text-sm font-medium text-neutral-300">
+                <span className="text-sm font-medium text-fixes-heading-dark">
                   Specializations * (Add at least one)
                 </span>
                 {expandedSections.specializations ? (
@@ -608,7 +642,7 @@ const TherapistProfile: React.FC = () => {
                       value={customSpecialization}
                       onChange={(e) => setCustomSpecialization(e.target.value)}
                       onKeyPress={handleSpecializationKeyPress}
-                      className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
+                      className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white placeholder-neutral-400 text-xs"
                       placeholder="Enter specialization"
                     />
                     <button
@@ -652,7 +686,7 @@ const TherapistProfile: React.FC = () => {
             </>
           ) : (
             <>
-              <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3">
                 Specializations * (Add at least one)
               </label>
               <div>
@@ -661,7 +695,7 @@ const TherapistProfile: React.FC = () => {
                   value={customSpecialization}
                   onChange={(e) => setCustomSpecialization(e.target.value)}
                   onKeyPress={handleSpecializationKeyPress}
-                  className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-sm"
+                  className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white placeholder-neutral-400 text-sm"
                   placeholder="Enter specialization and press Enter"
                 />
                 {formData.specializations.length > 0 && (
@@ -689,7 +723,7 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Languages */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           {isMobile ? (
             <>
               <button
@@ -697,7 +731,7 @@ const TherapistProfile: React.FC = () => {
                 onClick={() => toggleSection('languages')}
                 className="w-full flex items-center justify-between p-4"
               >
-                <span className="text-sm font-medium text-neutral-300">
+                <span className="text-sm font-medium text-fixes-heading-dark">
                   Languages * (Select at least one)
                 </span>
                 {expandedSections.languages ? (
@@ -709,7 +743,7 @@ const TherapistProfile: React.FC = () => {
               {expandedSections.languages && (
                 <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                   {languageOptions.map((language) => (
-                    <label key={language} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                    <label key={language} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.languages.includes(language)}
@@ -724,12 +758,12 @@ const TherapistProfile: React.FC = () => {
             </>
           ) : (
             <>
-              <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3">
                 Languages * (Select at least one)
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                 {languageOptions.map((language) => (
-                  <label key={language} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                  <label key={language} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.languages.includes(language)}
@@ -745,7 +779,7 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Services */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           {isMobile ? (
             <>
               <button
@@ -753,7 +787,7 @@ const TherapistProfile: React.FC = () => {
                 onClick={() => toggleSection('services')}
                 className="w-full flex items-center justify-between p-4"
               >
-                <span className="text-sm font-medium text-neutral-300">
+                <span className="text-sm font-medium text-fixes-heading-dark">
                   Services * (Select at least one)
                 </span>
                 {expandedSections.services ? (
@@ -765,7 +799,7 @@ const TherapistProfile: React.FC = () => {
               {expandedSections.services && (
                 <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                   {serviceOptions.map((service) => (
-                    <label key={service} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                    <label key={service} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.services.includes(service)}
@@ -780,12 +814,12 @@ const TherapistProfile: React.FC = () => {
             </>
           ) : (
             <>
-              <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3">
                 Services * (Select at least one)
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {serviceOptions.map((service) => (
-                  <label key={service} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                  <label key={service} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.services.includes(service)}
@@ -801,7 +835,7 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Session Formats */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           {isMobile ? (
             <>
               <button
@@ -809,7 +843,7 @@ const TherapistProfile: React.FC = () => {
                 onClick={() => toggleSection('sessionFormats')}
                 className="w-full flex items-center justify-between p-4"
               >
-                <span className="text-sm font-medium text-neutral-300">
+                <span className="text-sm font-medium text-fixes-heading-dark">
                   Session Formats * (Select at least one)
                 </span>
                 {expandedSections.sessionFormats ? (
@@ -821,7 +855,7 @@ const TherapistProfile: React.FC = () => {
               {expandedSections.sessionFormats && (
                 <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                   {sessionFormatOptions.map((format) => (
-                    <label key={format} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                    <label key={format} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.sessionFormats.includes(format)}
@@ -841,12 +875,12 @@ const TherapistProfile: React.FC = () => {
             </>
           ) : (
             <>
-              <label className="block text-sm font-medium text-neutral-300 mb-2 sm:mb-3">
+              <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3">
                 Session Formats * (Select at least one)
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                 {sessionFormatOptions.map((format) => (
-                  <label key={format} className="flex items-center space-x-2 p-3 bg-neutral-800 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                  <label key={format} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.sessionFormats.includes(format)}
@@ -867,15 +901,15 @@ const TherapistProfile: React.FC = () => {
         </div>
 
         {/* Bio */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
+          <label className="block text-sm font-medium text-fixes-heading-dark mb-1 sm:mb-2">
             Bio
           </label>
           <textarea
             value={formData.bio}
             onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
             rows={4}
-            className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 resize-none text-sm sm:text-base"
+            className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white placeholder-neutral-400 resize-none text-sm sm:text-base"
             placeholder="Enter your professional bio..."
           />
         </div>
@@ -885,7 +919,7 @@ const TherapistProfile: React.FC = () => {
           <button
             type="submit"
             disabled={saving || uploading}
-            className="px-4 py-2 sm:px-6 sm:py-3 bg-primary-500 text-white rounded-xl sm:rounded-2xl hover:bg-primary-600 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+            className="px-4 py-2 sm:px-6 sm:py-3 bg-fixes-accent-purple text-black rounded-xl sm:rounded-2xl hover:bg-fixes-accent-blue transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
           >
             <Save className="w-4 h-4" />
             <span>{saving ? 'Saving...' : 'Save Changes'}</span>
@@ -897,4 +931,3 @@ const TherapistProfile: React.FC = () => {
 };
 
 export default TherapistProfile;
-

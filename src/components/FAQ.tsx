@@ -40,55 +40,51 @@ const FAQ: React.FC = () => {
   ];
 
   return (
-    <section id="faq" className="py-8 lg:py-12 bg-neutral-900 relative">
+    <section id="faq" className="py-16 lg:py-24 bg-fixes-bg-purple relative font-body">
       {/* Grain texture overlay */}
       <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2227%22 cy=%2247%22 r=%221%22/%3E%3Ccircle cx=%2247%22 cy=%2247%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4">
+        <div className="text-center mb-12">
+          <h2 className="font-display font-medium text-5xl lg:text-6xl text-fixes-heading-dark mb-6">
             Frequently Asked Questions
           </h2>
-          <p className="text-base lg:text-lg text-neutral-300 leading-relaxed">
+          <p className="mt-6 text-lg font-light text-fixes-heading-dark">
             Get answers to common questions about our platform and services.
           </p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-6">
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className={`bg-black/50 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border ${
-                openIndex === index 
-                  ? 'border-primary-500' 
-                  : 'border-neutral-800'
-              }`}
+              className={`bg-background-purple border-b border-fixes-heading-dark transition-all duration-200`}
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className={`w-full px-5 py-3 text-left flex items-center justify-between ${
+                className={`w-full px-5 py-5 text-left flex items-center justify-between ${
                   openIndex === index 
-                    ? 'bg-neutral-800/50' 
-                    : 'hover:bg-neutral-800/50'
+                    ? 'bg-fixes-heading-dark/50' 
+                    : 'hover:bg-fixes-heading-dark/50'
                 } rounded-2xl transition-colors duration-200`}
               >
-                <h3 className={`text-sm font-semibold ${
-                  openIndex === index ? 'text-white' : 'text-neutral-300'
+                <h3 className={`text-base font-light ${
+                  openIndex === index ? 'text-black' : 'text-black'
                 } pr-4`}>
                   {faq.question}
                 </h3>
                 <div className="flex-shrink-0">
                   {openIndex === index ? (
-                    <Minus className="w-4 h-4 text-primary-500" />
+                    <Minus className="w-4 h-4 text-fixes-heading-dark" />
                   ) : (
-                    <Plus className="w-4 h-4 text-neutral-400" />
+                    <Plus className="w-4 h-4 text-fixes-heading-dark" />
                   )}
                 </div>
               </button>
               
               {openIndex === index && (
-                <div className="px-5 pb-3 bg-neutral-800 rounded-b-2xl">
-                  <p className="text-neutral-300 leading-relaxed text-sm pt-3">
+                <div className="px-5 pb-3 bg-fixes-accent-purple">
+                  <p className="text-base font-light text-black leading-relaxed pt-3">
                     {faq.answer}
                   </p>
                 </div>

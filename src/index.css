@@ -45,8 +45,24 @@
     --neutral-500: #737373;
     --neutral-600: #464440;
     --neutral-700: #404040;
-    --neutral-800: #202020;
+    --neutral-800: #535353;
     --neutral-900: #171717;
+
+    /* New text colors */
+    --fixes-heading-dark: #535353;
+    --fixes-bg-purple: #E1E3FC;
+    --fixes-bg-white: #ffffff;
+    --fixes-bg-offwhite: #F8F9Fa;
+    --fixes-accent-purple: #D2CCF2;
+    --fixes-accent-black: #1E1E1E;
+    --fixes-accent-blue: #839CF9;
+    --fixes-box-blue: #A9E8E8;
+    --fixes-box-purple: #CBC4F5;
+    --fixes-box-green: #B2EAD3;
+    --fixes-box-pink: #F68BA2;
+    --fixes-box-yellow: #F5E29E;
+    --fixes-box-aqua: #C8EBEF;
+
 
     /* Semantic Feature Colors */
     --feature-care-bg: #D1FAE5;
@@ -65,8 +81,10 @@
     --bg-card-glass: rgba(255, 255, 255, 0.05);
 
     /* Fonts */
-    --font-display: 'Inter', system-ui, -apple-system, sans-serif;
-    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    /* --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif; */
+    --font-display: 'Reem Kufi', system-ui, -apple-system, sans-serif;
+    --font-body: 'Poppins', system-ui, -apple-system, sans-serif;
     --font-mono: 'Menlo', 'Monaco', 'Consolas', monospace;
 
     /* Border Radius */

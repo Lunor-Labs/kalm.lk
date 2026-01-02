@@ -47,16 +47,10 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
   useEffect(() => {
     const loadTherapistAvailability = async () => {
       try {
-        // First, get the therapist document to find the userId
-        const therapistDoc = await getDoc(doc(db, 'therapists', therapistId));
-        if (!therapistDoc.exists()) {
-          throw new Error('Therapist not found');
-        }
+        // Therapist ID is now directly the user ID
+        const therapistUserId = therapistId;
 
-        const therapistData = therapistDoc.data();
-        const therapistUserId = therapistData?.userId || therapistId; // Fallback to document ID if userId not found
-
-        // Now get availability using the correct userId
+        // Get availability using the userId
         const availability = await getTherapistAvailability(therapistUserId);
         setTherapistAvailability(availability);
       } catch (error: any) {
@@ -112,43 +106,43 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
     
     // Convert availability time slots to TimeSlot format
     const slots: TimeSlot[] = [];
-    
+
     for (const availSlot of availableTimeSlots) {
       if (!availSlot.isAvailable) continue;
-      
-      // Parse start and end times
-      const [startHour, startMinute] = availSlot.startTime.split(':').map(Number);
-      const [endHour, endMinute] = availSlot.endTime.split(':').map(Number);
-      
-      // Generate hourly slots within the available time range
-      for (let hour = startHour; hour < endHour; hour++) {
-        const startTime = new Date(date);
-        startTime.setHours(hour, 0, 0, 0);
-        
-        const endTime = new Date(date);
-        endTime.setHours(hour + 1, 0, 0, 0);
-        
-        // Check if this slot is already booked
-        const slotKey = `${hour}:00`;
-        const isBooked = bookedSlots.includes(slotKey);
 
-        // Only show slots that start in the future (with 15-minute buffer)
-        const now = new Date();
-        const bufferTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
-        if (startTime <= bufferTime) {
-          continue; // Skip past and imminent time slots
-        }
+      const parseSlotTime = (timeStr: string) => {
+        const [hour, minute] = timeStr.split(':').map(Number);
+        const slotTime = new Date(date);
+        slotTime.setHours(hour, minute ?? 0, 0, 0);
+        return slotTime;
+      };
 
-        slots.push({
-          id: `${therapistId}-${dateString}-${hour}`,
-          startTime,
-          endTime,
-          isAvailable: !isBooked,
-          isBooked,
-          price: availSlot.price || 4500,
-          sessionType: availSlot.sessionType || 'video'
-        });
+      const startTime = parseSlotTime(availSlot.startTime);
+      const endTime = parseSlotTime(availSlot.endTime);
+
+      // Skip invalid ranges
+      if (endTime <= startTime) continue;
+
+      // Check if this slot is already booked
+      const slotKey = format(startTime, 'HH:mm');
+      const isBooked = bookedSlots.includes(slotKey);
+
+      // Only show slots that start in the future (with 15-minute buffer)
+      const now = new Date();
+      const bufferTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
+      if (startTime <= bufferTime) {
+        continue; // Skip past and imminent time slots
       }
+
+      slots.push({
+        id: `${therapistId}-${dateString}-${slotKey}`,
+        startTime,
+        endTime,
+        isAvailable: !isBooked,
+        isBooked,
+        price: availSlot.price || 4500,
+        sessionType: availSlot.sessionType || 'video'
+      });
     }
 
     return slots.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
@@ -173,7 +167,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
         const bookingDate = booking.sessionTime?.toDate();
         
         if (bookingDate && format(bookingDate, 'yyyy-MM-dd') === dateString) {
-          const timeSlot = format(bookingDate, 'H:mm');
+          const timeSlot = format(bookingDate, 'HH:mm');
           bookedSlots.push(timeSlot);
         }
       });
@@ -184,6 +178,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
       return [];
     }
   };
+
   useEffect(() => {
     const loadTimeSlots = async () => {
       if (!therapistAvailability) return;
@@ -217,21 +212,21 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
       <div className="mb-4">
         <button
           onClick={onBack}
-          className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200"
+          className="flex items-center space-x-2 text-fixes-accent-purple hover:text-fixes-accent-blue transition-colors duration-200"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
+          <span className="text-fixes-heading-dark">Back</span>
         </button>
       </div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-white whitespace-nowrap">Select Date & Time</h2>
-        <p className="text-neutral-300">Choose your preferred session time</p>
+        <h2 className="text-2xl font-black text-black whitespace-nowrap">Select Date & Time</h2>
+        <p className="text-fixes-heading-dark">Choose your preferred session time</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Date Selection */}
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+          <h3 className="text-lg font-black text-black mb-4 flex items-center space-x-2">
             <Calendar className="w-5 h-5" />
             <span>Select Date</span>
           </h3>
@@ -245,18 +240,18 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
                 <button
                   key={index}
                   onClick={() => setSelectedDate(date)}
-                  className={`p-4 rounded-2xl border-2 transition-all duration-200 text-left ${
+                  className={`p-4 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md ${
                     isSelected
-                      ? 'border-primary-500 bg-primary-500/10'
-                      : 'border-neutral-800 hover:border-neutral-700 bg-black/30'
+                      ? 'ring-2 ring-fixes-accent-purple bg-white'
+                      : 'bg-white hover:bg-neutral-50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className={`font-semibold ${isSelected ? 'text-primary-500' : 'text-white'}`}>
+                      <p className={`font-black ${isSelected ? 'text-fixes-accent-purple' : 'text-black'}`}>
                         {format(date, 'EEEE')}
                       </p>
-                      <p className="text-neutral-300 text-sm">
+                      <p className="text-fixes-heading-dark text-sm">
                         {format(date, 'MMMM d, yyyy')}
                       </p>
                     </div>
@@ -274,7 +269,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
 
         {/* Time Slot Selection */}
         <div>
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+          <h3 className="text-lg font-black text-black mb-4 flex items-center space-x-2">
             <Clock className="w-5 h-5" />
             <span>Available Times</span>
           </h3>
@@ -282,30 +277,29 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <div className="text-center">
-                <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                <p className="text-neutral-300 text-sm">Loading slots...</p>
+                <div className="w-8 h-8 border-2 border-fixes-accent-purple border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-fixes-heading-dark text-sm">Loading slots...</p>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto">
               {timeSlots.map((slot) => {
-                const isSelected = selectedTime && isSameDay(slot.startTime, selectedTime) && 
-                                 slot.startTime.getHours() === selectedTime.getHours();
+                const isSelected = selectedTime && slot.startTime.getTime() === selectedTime.getTime();
                 
                 return (
                   <button
                     key={slot.id}
                     onClick={() => handleTimeSlotSelect(slot)}
                     disabled={!slot.isAvailable || slot.isBooked}
-                    className={`p-3 rounded-2xl border-2 transition-all duration-200 text-center ${
+                    className={`p-3 rounded-xl transition-all duration-200 text-center shadow-sm hover:shadow-md ${
                       !slot.isAvailable || slot.isBooked
-                        ? 'border-neutral-800 bg-neutral-800/30 text-neutral-500 cursor-not-allowed'
+                        ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed'
                         : isSelected
-                        ? 'border-primary-500 bg-primary-500/10 text-primary-500'
-                        : 'border-neutral-800 hover:border-neutral-700 bg-black/30 text-white hover:text-primary-500'
+                        ? 'ring-2 ring-fixes-accent-purple bg-white text-fixes-accent-purple'
+                        : 'bg-white hover:bg-neutral-50 text-black hover:text-fixes-accent-purple'
                     }`}
                   >
-                    <p className="font-semibold text-sm">
+                    <p className="font-black text-sm">
                       {format(slot.startTime, 'h:mm a')}
                     </p>
                     {/* <p className="text-xs opacity-80">
@@ -324,10 +318,10 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
 
           {!loading && timeSlots.length === 0 && (
             <div className="text-center py-16">
-              <Clock className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
-              <p className="text-neutral-300 mb-2">No available slots for this date</p>
-              <p className="text-neutral-400 text-sm">
-                {!therapistAvailability 
+              <Clock className="w-16 h-16 text-fixes-heading-dark mx-auto mb-4" />
+              <p className="text-fixes-heading-dark mb-2">No available slots for this date</p>
+              <p className="text-fixes-heading-dark text-sm">
+                {!therapistAvailability
                   ? 'Therapist availability not configured yet.'
                   : 'Please select a different date or contact the therapist.'}
               </p>

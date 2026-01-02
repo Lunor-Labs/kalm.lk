@@ -103,10 +103,10 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
 
   const getSessionTypeIcon = (type: string) => {
     switch (type) {
-      case 'video': return <Video className="w-5 h-5 text-primary-500" />;
+      case 'video': return <Video className="w-5 h-5 text-fixes-accent-purple" />;
       case 'audio': return <Phone className="w-5 h-5 text-accent-green" />;
       case 'chat': return <MessageCircle className="w-5 h-5 text-accent-yellow" />;
-      default: return <Video className="w-5 h-5 text-primary-500" />;
+      default: return <Video className="w-5 h-5 text-fixes-accent-purple" />;
     }
   };
 
@@ -125,24 +125,24 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
       <div className="mb-4">
         <button
           onClick={onBack}
-          className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200"
+          className="flex items-center space-x-2 text-fixes-accent-purple hover:text-fixes-accent-blue transition-colors duration-200"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
+          <span className="text-fixes-heading-dark">Back</span>
         </button>
       </div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-white whitespace-nowrap">Booking Confirmation</h2>
-        <p className="text-neutral-300">Review your session details and confirm your booking</p>
+        <h2 className="text-2xl font-black text-black whitespace-nowrap">Booking Confirmation</h2>
+        <p className="text-fixes-heading-dark">Review your session details and confirm your booking</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Booking Details */}
         <div className="space-y-6">
           {/* Service */}
-          <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
+          <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Service</h3>
+              <h3 className="text-lg font-black text-black">Service</h3>
               {/* <button
                 onClick={() => onEdit(1)}
                 className="text-primary-500 hover:text-primary-600 transition-colors duration-200"
@@ -153,8 +153,8 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             {/* <p className="text-neutral-300">
               {serviceNames[bookingData.serviceType as keyof typeof serviceNames] || 'Unknown Service'}
             </p> */}
-             <p className="text-neutral-300">
-              {serviceNames[bookingData.serviceType as keyof typeof serviceNames] || 
+             <p className="text-fixes-heading-dark">
+              {serviceNames[bookingData.serviceType as keyof typeof serviceNames] ||
               (therapist?.serviceCategory ? (
                  serviceNames[therapist.serviceCategory as keyof typeof serviceNames] || therapist.serviceCategory) : 'Unknown Service')}
             </p>
@@ -162,9 +162,9 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           </div>
 
           {/* Therapist */}
-          <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
+          <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
+              <h3 className="text-lg font-black text-black flex items-center space-x-2">
                 <User className="w-5 h-5" />
                 <span>Therapist</span>
               </h3>
@@ -184,18 +184,18 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 />
               )}
               <div>
-                <p className="text-neutral-300 font-medium">{therapistName}</p>
+                <p className="text-fixes-heading-dark font-medium">{therapistName}</p>
                 {therapist && (
-                  <p className="text-neutral-400 text-sm">{therapist.specialty}</p>
+                  <p className="text-fixes-heading-dark text-sm">{therapist.specialty}</p>
                 )}
               </div>
             </div>
           </div>
 
           {/* Date & Time */}
-          <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
+          <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white flex items-center space-x-2">
+              <h3 className="text-lg font-black text-black flex items-center space-x-2">
                 <Calendar className="w-5 h-5" />
                 <span>Session Details</span>
               </h3>
@@ -208,13 +208,13 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             </div>
             {bookingData.sessionTime && (
               <div className="space-y-2">
-                <p className="text-neutral-300">
+                <p className="text-fixes-heading-dark">
                   <span className="font-medium">Date:</span> {format(bookingData.sessionTime, 'EEEE, MMMM d, yyyy')}
                 </p>
-                <p className="text-neutral-300">
+                <p className="text-fixes-heading-dark">
                   <span className="font-medium">Time:</span> {format(bookingData.sessionTime, 'h:mm a')}
                 </p>
-                <p className="text-neutral-300">
+                <p className="text-fixes-heading-dark">
                   <span className="font-medium">Duration:</span> {bookingData.duration} minutes
                 </p>
               </div>
@@ -267,15 +267,15 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           </div> */}
 
           {/* Session Type Selection */}
-          <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
-            <h3 className="text-lg font-semibold text-white mb-4">Session Type</h3>
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-black text-black mb-4">Session Type</h3>
             {availableSessionTypes.length === 0 ? (
               <div className="text-center py-8">
                 <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <MessageCircle className="w-8 h-8 text-red-500" />
                 </div>
-                <h4 className="text-lg font-medium text-white mb-2">No Session Types Available</h4>
-                <p className="text-neutral-400 text-sm">
+                <h4 className="text-lg font-black text-black mb-2">No Session Types Available</h4>
+                <p className="text-fixes-heading-dark text-sm">
                   This therapist doesn't have any session types configured. Please contact support.
                 </p>
               </div>
@@ -284,10 +284,10 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 {availableSessionTypes.map((option) => (
                   <label
                     key={option.type}
-                    className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                    className={`flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all duration-200 shadow-sm ${
                       sessionType === option.type
-                        ? 'border-primary-500 bg-primary-500/10'
-                        : 'border-neutral-700 hover:border-neutral-600'
+                        ? 'ring-2 ring-fixes-accent-purple bg-white'
+                        : 'bg-white hover:bg-neutral-50'
                     }`}
                   >
                     <div className="flex items-center space-x-3">
@@ -301,8 +301,8 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                       />
                       {getSessionTypeIcon(option.type)}
                       <div>
-                        <p className="text-white font-medium">{option.label}</p>
-                        <p className="text-neutral-400 text-sm">{getSessionTypeDescription(option.type)}</p>
+                        <p className="text-black font-black">{option.label}</p>
+                        <p className="text-fixes-heading-dark text-sm">{getSessionTypeDescription(option.type)}</p>
                       </div>
                     </div>
                     {/*<div className="text-right">
@@ -429,7 +429,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           <button
             onClick={() => onConfirm(sessionType)}
             disabled={availableSessionTypes.length === 0}
-            className="w-full bg-primary-500 text-white py-4 rounded-2xl hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-semibold text-lg"
+            className="w-full bg-fixes-accent-purple text-black py-4 rounded-2xl hover:bg-fixes-accent-blue disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-black text-lg"
           >
             {availableSessionTypes.length === 0 ? 'No Session Types Available' : 'Proceed to Payment'}
           </button>

@@ -38,6 +38,13 @@ const TherapistAvailability = () => {
 
   // Populate form when editing a slot
   useEffect(() => {
+    if (editingTimeSlot && (editingTimeSlot.isBooked || editingTimeSlot.isAvailable === false)) {
+      toast.error('You cannot edit this time slot because it is already booked.');
+      setShowTimeSlotModal(false);
+      setEditingTimeSlot(null);
+      return;
+    }
+
     if (editingTimeSlot && showTimeSlotModal) {
       setNewTimeSlot({
         startTime: editingTimeSlot.startTime,
@@ -65,8 +72,8 @@ const TherapistAvailability = () => {
 
       const availability = await getTherapistAvailability(user.uid);
       if (availability) {
-      setWeeklySchedule((availability.weeklySchedule || getDefaultWeeklySchedule()) as any);
-      setSpecialDates((availability.specialDates || []) as any);
+        setWeeklySchedule((availability.weeklySchedule || getDefaultWeeklySchedule()) as any);
+        setSpecialDates((availability.specialDates || []) as any);
       } else {
         setWeeklySchedule(getDefaultWeeklySchedule());
         setSpecialDates([]);
@@ -114,6 +121,11 @@ const TherapistAvailability = () => {
   };
 
   const handleAddTimeSlot = async () => {
+    if (editingTimeSlot && (editingTimeSlot.isBooked || editingTimeSlot.isAvailable === false)) {
+      toast.error('Booked time slots cannot be edited.');
+      return;
+    }
+
     if (!newTimeSlot.startTime || !newTimeSlot.endTime) {
       toast.error('Please select start and end times');
       return;
@@ -123,68 +135,141 @@ const TherapistAvailability = () => {
       return;
     }
 
-    const timeSlotId = editingTimeSlot?.id || `slot-${Date.now()}`;
-    const timeSlot = {
-      id: timeSlotId,
-      isAvailable: true, // All time slots are available for booking
-      ...newTimeSlot
+    // Parse times into minutes for easy calculation
+    const parseTime = (time: string) => {
+      const [h, m] = time.split(':').map(Number);
+      return h * 60 + m;
     };
 
-    const dateString = format(selectedDate, 'yyyy-MM-dd');
+    const startMinutes = parseTime(newTimeSlot.startTime);
+    const endMinutes = parseTime(newTimeSlot.endTime);
 
-    let updatedSchedule = weeklySchedule;
+    // Generate hourly slots
+    const generatedSlots: any[] = [];
+    let currentStart = startMinutes;
+
+    while (currentStart + 60 <= endMinutes) {
+      const startHour = Math.floor(currentStart / 60).toString().padStart(2, '0');
+      const startMin = (currentStart % 60).toString().padStart(2, '0');
+      const endHour = Math.floor((currentStart + 60) / 60).toString().padStart(2, '0');
+      const endMin = ((currentStart + 60) % 60).toString().padStart(2, '0');
+
+      const timeSlotId = editingTimeSlot?.id || `slot-${Date.now()}-${generatedSlots.length}`;
+
+      generatedSlots.push({
+        id: timeSlotId,
+        startTime: `${startHour}:${startMin}`,
+        endTime: `${endHour}:${endMin}`,
+        isAvailable: true,
+        isRecurring: newTimeSlot.isRecurring,
+        sessionType: newTimeSlot.sessionType,
+        price: newTimeSlot.price,
+      });
+
+      currentStart += 60;
+    }
+
+    if (generatedSlots.length === 0) {
+      toast.error('The selected time range must allow at least one full hour slot');
+      return;
+    }
+
+    // Prevent overlapping with existing slots for this date/day
+    const dateString = format(selectedDate, 'yyyy-MM-dd');
+    const dayOfWeek = selectedDate.getDay();
+
+    const existingWeeklyDay = weeklySchedule.find((day: any) => day.dayOfWeek === dayOfWeek);
+    const existingWeeklySlots: any[] = existingWeeklyDay?.timeSlots || [];
+
+    const existingSpecialDate = specialDates.find((sd: any) => sd.date === dateString);
+    const existingSpecialSlots: any[] = existingSpecialDate?.timeSlots || [];
+
+    const existingSlotsForContext: any[] = newTimeSlot.isRecurring
+      ? existingWeeklySlots
+      : existingSpecialSlots;
+
+    const hasOverlap = generatedSlots.some((newSlot) => {
+      const newStart = parseTime(newSlot.startTime);
+      const newEnd = parseTime(newSlot.endTime);
+
+      return existingSlotsForContext.some((slot: any) => {
+        if (editingTimeSlot && slot.id === editingTimeSlot.id) {
+          return false; // ignore the slot currently being edited
+        }
+
+        const existingStart = parseTime(slot.startTime);
+        const existingEnd = parseTime(slot.endTime);
+
+        // Overlap if ranges intersect at all
+        return newStart < existingEnd && newEnd > existingStart;
+      });
+    });
+
+    if (hasOverlap) {
+      toast.error('This time range overlaps with an existing time slot. Please choose a different time.');
+      return;
+    }
+
+    let updatedSchedule = [...weeklySchedule];
     let updatedSpecialDates = [...specialDates];
 
     if (newTimeSlot.isRecurring) {
-      // Add to weekly schedule - repeats every week
+      // Add all generated hourly slots to the weekly schedule for this day
       const dayOfWeek = selectedDate.getDay();
+
       updatedSchedule = weeklySchedule.map(day =>
         day.dayOfWeek === dayOfWeek
           ? {
             ...day,
             timeSlots: editingTimeSlot
-              ? day.timeSlots.map((ts: any) => (ts.id === timeSlotId ? timeSlot : ts))
-              : [...day.timeSlots, timeSlot] as any
+              ? day.timeSlots
+                .filter((ts: any) => ts.id !== editingTimeSlot.id) // remove old if editing
+                .concat(generatedSlots)
+              : [...day.timeSlots, ...generatedSlots]
           }
           : day
       );
     } else {
-      // Add to special dates - applies only to this specific date
+      // Add to special date
       const existingSpecialDateIndex = updatedSpecialDates.findIndex(
         (sd: any) => sd.date === dateString
       );
 
       if (existingSpecialDateIndex >= 0) {
-        // Update existing special date
-        const existingSpecialDate = updatedSpecialDates[existingSpecialDateIndex];
+        const existing = updatedSpecialDates[existingSpecialDateIndex];
         updatedSpecialDates[existingSpecialDateIndex] = {
-          ...existingSpecialDate,
+          ...existing,
           timeSlots: editingTimeSlot
-            ? existingSpecialDate.timeSlots.map((ts: any) => ts.id === timeSlotId ? timeSlot : ts)
-            : [...existingSpecialDate.timeSlots, timeSlot]
+            ? existing.timeSlots
+              .filter((ts: any) => ts.id !== editingTimeSlot.id)
+              .concat(generatedSlots)
+            : [...existing.timeSlots, ...generatedSlots]
         };
       } else {
-        // Create new special date
         updatedSpecialDates.push({
           date: dateString,
-          timeSlots: [timeSlot],
+          timeSlots: generatedSlots,
           reason: 'One-time availability'
         });
       }
     }
 
-    setWeeklySchedule(updatedSchedule);
+    setWeeklySchedule(updatedSchedule as any);
     setSpecialDates(updatedSpecialDates);
 
-    // Auto-save to database
+    // Save to DB
     try {
       if (user?.uid) {
         await saveTherapistAvailability(user.uid, updatedSchedule, updatedSpecialDates);
-        toast.success(editingTimeSlot ? 'Time slot updated' : 'Time slot added');
+        toast.success(
+          editingTimeSlot
+            ? `Updated ${generatedSlots.length} hourly slot(s)`
+            : `Added ${generatedSlots.length} hourly slot(s)`
+        );
       }
     } catch (error: any) {
-      toast.error('Failed to save time slot. Please try again.');
-      // Revert on error
+      toast.error('Failed to save time slots');
+      // Revert changes on error
       setWeeklySchedule(weeklySchedule);
       setSpecialDates(specialDates);
     }
@@ -195,6 +280,15 @@ const TherapistAvailability = () => {
   };
 
   const handleDeleteTimeSlot = async (timeSlotId: string) => {
+    const bookedSlot = selectedDateData.timeSlots.find(
+      (ts: any) => ts.id === timeSlotId && (ts.isBooked || ts.isAvailable === false)
+    );
+
+    if (bookedSlot) {
+      toast.error('Booked time slots cannot be deleted.');
+      return;
+    }
+
     const dateString = format(selectedDate, 'yyyy-MM-dd');
     const dayOfWeek = selectedDate.getDay();
 
@@ -255,24 +349,25 @@ const TherapistAvailability = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-        <div className="text-xl">Loading availability...</div>
+      <div className="min-h-screen bg-fixes-bg-offwhite flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-fixes-accent-purple border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-black text-base">Loading availability...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-fixes-bg-offwhite text-black p-4 md:p-8">
       {/* Header */}
       <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-4xl font-bold mb-2">Availability Management</h1>
-        <p className="text-gray-400 text-sm md:text-base">Manage your schedule and time slots</p>
+        <h1 className="text-2xl md:text-4xl font-black mb-2 text-black">Availability Management</h1>
+        <p className="text-fixes-heading-dark text-sm md:text-base">Manage your schedule and time slots</p>
       </div>
 
       {/* View Toggle */}
       <div className="flex gap-2 mb-6 flex-wrap items-center">
         <button
-          className="flex items-center space-x-2 px-3 md:px-4 py-2 rounded-2xl text-xs md:text-sm font-medium transition-colors duration-200 bg-primary-500 text-white"
+          className="flex items-center space-x-2 px-3 md:px-4 py-2 rounded-2xl text-xs md:text-sm font-medium transition-colors duration-200 bg-fixes-accent-purple text-black"
         >
           <Calendar size={18} />
           <span className="hidden sm:inline">Calendar</span>
@@ -282,27 +377,26 @@ const TherapistAvailability = () => {
       {/* Calendar View */}
       {activeView === 'calendar' && (
         <div className="space-y-6 max-w-6xl mx-auto">
-          <div className="bg-gray-800 rounded-2xl p-4 md:p-6 shadow-lg">
-            {/* Calendar Header */}
+          <div className="bg-[#F8F9FA] rounded-2xl p-4 md:p-6 shadow-lg border border-[#E1E3FC]/60">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg md:text-xl font-semibold">
                 {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </h2>
               <div className="flex items-center gap-2">
-                <button onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))} className="p-2 rounded-lg hover:bg-gray-700">
+                <button onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))} className="p-2 rounded-lg hover:bg-neutral-100">
                   <ChevronLeft size={20} />
                 </button>
-                <button onClick={() => setSelectedDate(new Date())} className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg">
+                <button onClick={() => setSelectedDate(new Date())} className="px-4 py-2 text-sm bg-neutral-100 hover:bg-neutral-200 rounded-lg text-black">
                   Today
                 </button>
-                <button onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))} className="p-2 rounded-lg hover:bg-gray-700">
+                <button onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))} className="p-2 rounded-lg hover:bg-neutral-100">
                   <ChevronRight size={20} />
                 </button>
               </div>
             </div>
 
             {/* Weekdays */}
-            <div className="grid grid-cols-7 gap-2 md:gap-4 mb-3 text-center text-xs md:text-sm text-gray-400 font-medium">
+            <div className="grid grid-cols-7 gap-2 md:gap-4 mb-3 text-center text-xs md:text-sm text-fixes-heading-dark font-medium">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d}>{d}</div>)}
             </div>
 
@@ -346,12 +440,12 @@ const TherapistAvailability = () => {
                       }}
                       className={`w-full h-16 md:h-24 lg:h-28 rounded-lg flex items-center justify-center text-sm md:text-lg lg:text-xl font-medium relative transition-all ${
                         !item.current
-                          ? 'text-gray-600'
+                          ? 'text-fixes-heading-dark/50'
                           : isSelected
-                          ? 'bg-primary-500 text-white scale-110 shadow-lg'
+                          ? 'bg-fixes-accent-purple text-black scale-110 shadow-lg'
                           : isToday
-                          ? 'border-2 border-primary-500 text-primary-400'
-                          : 'bg-gray-700 hover:bg-gray-600'
+                          ? 'border-2 border-fixes-accent-purple text-fixes-accent-purple'
+                          : 'bg-white hover:bg-neutral-50 border border-neutral-200'
                       }`}
                     >
                       {item.date.getDate()}
@@ -369,18 +463,17 @@ const TherapistAvailability = () => {
 
       {/* Date Details Modal */}
       {showDateDetailsModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-50" onClick={() => setShowDateDetailsModal(false)}>
-          <div className="bg-gray-800 w-full md:max-w-md rounded-t-3xl md:rounded-2xl p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50" onClick={() => setShowDateDetailsModal(false)}>
+          <div className="bg-white w-full md:max-w-md rounded-t-3xl md:rounded-2xl p-6 max-h-[90vh] overflow-y-auto shadow-xl border border-neutral-200" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">{dateString}</h2>
               <button onClick={() => setShowDateDetailsModal(false)}><X size={28} /></button>
             </div>
 
-
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">Time Slots</h3>
-                <button onClick={() => { setEditingTimeSlot(null); setShowTimeSlotModal(true); }} className="bg-primary-500 text-white p-2 rounded-lg p-2">
+                <button onClick={() => { setEditingTimeSlot(null); setShowTimeSlotModal(true); }} className="bg-fixes-accent-purple text-black p-2 rounded-lg">
                   <Plus size={20} />
                 </button>
               </div>
@@ -392,7 +485,7 @@ const TherapistAvailability = () => {
               ) : (
                 <div className="space-y-3">
                   {selectedDateData.timeSlots.map((slot: any) => (
-                    <div key={slot.id} className="bg-gray-700 rounded-lg p-4">
+                    <div key={slot.id} className="bg-[#F8F9FA]-700 rounded-lg p-4">
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <div className="font-bold">{slot.startTime} – {slot.endTime}</div>
@@ -400,24 +493,44 @@ const TherapistAvailability = () => {
                         </div>
                         <div className="text-right">
                           <div className="font-bold">LKR {slot.price.toLocaleString()}</div>
-                          <div className="text-primary-400">
-                            Available
+                          <div className={slot.isBooked ? 'text-red-400' : 'text-primary-400'}>
+                            {slot.isBooked ? 'Booked' : 'Available'}
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => {
+                            if (slot.isBooked || slot.isAvailable === false) {
+                              toast.error('You cannot edit this time slot because it is already booked.');
+                              return;
+                            }
+
                             setEditingTimeSlot(slot);
                             setShowTimeSlotModal(true);
                           }}
-                          className="flex-1 py-2 border border-gray-600 rounded-lg text-sm flex items-center justify-center gap-1"
+                          className={`flex-1 py-2 border rounded-lg text-sm flex items-center justify-center gap-1 ${
+                            slot.isBooked || slot.isAvailable === false
+                              ? 'border-gray-600 text-gray-500 cursor-not-allowed'
+                              : 'border-gray-600'
+                          }`}
                         >
                           <Edit3 size={16} /> Edit
                         </button>
                         <button
-                          onClick={() => handleDeleteTimeSlot(slot.id)}
-                          className="flex-1 py-2 border border-red-600 text-red-400 rounded-lg text-sm flex items-center justify-center gap-1"
+                          onClick={() => {
+                            if (slot.isBooked || slot.isAvailable === false) {
+                              toast.error('You cannot delete this time slot because it is already booked.');
+                              return;
+                            }
+
+                            handleDeleteTimeSlot(slot.id);
+                          }}
+                          className={`flex-1 py-2 border rounded-lg text-sm flex items-center justify-center gap-1 ${
+                            slot.isBooked || slot.isAvailable === false
+                              ? 'border-red-600 text-red-800 cursor-not-allowed'
+                              : 'border-red-600 text-red-400'
+                          }`}
                         >
                           <Trash2 size={16} /> Delete
                         </button>
@@ -433,8 +546,8 @@ const TherapistAvailability = () => {
 
       {/* Time Slot Modal */}
       {showTimeSlotModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-50" onClick={() => setShowTimeSlotModal(false)}>
-          <div className="bg-gray-800 w-full md:max-w-md rounded-t-3xl md:rounded-2xl p-6" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50" onClick={() => setShowTimeSlotModal(false)}>
+          <div className="bg-white w-full md:max-w-md rounded-t-3xl md:rounded-2xl p-6 shadow-xl border border-neutral-200" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">{editingTimeSlot ? 'Edit' : 'Add'} Time Slot</h2>
               <button onClick={() => setShowTimeSlotModal(false)}><X size={28} /></button>
@@ -444,11 +557,36 @@ const TherapistAvailability = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Start Time</label>
-                  <input type="time" value={newTimeSlot.startTime} onChange={e => setNewTimeSlot(prev => ({ ...prev, startTime: e.target.value }))} className="w-full p-3 bg-gray-700 rounded-lg" />
-                </div>
+                  <input
+                    type="time"
+                    value={newTimeSlot.startTime}
+                    onChange={e => setNewTimeSlot(prev => ({ ...prev, startTime: e.target.value }))}
+                    className="
+                      w-full p-3 
+                      bg-white 
+                      border border-neutral-300 
+                      rounded-lg 
+                      text-fixes-heading-dark 
+                      focus:ring-2 focus:ring-fixes-accent-purple/30 
+                      focus:border-fixes-accent-purple
+                      outline-none
+                      transition-all
+                    "
+                  /></div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">End Time</label>
-                  <input type="time" value={newTimeSlot.endTime} onChange={e => setNewTimeSlot(prev => ({ ...prev, endTime: e.target.value }))} className="w-full p-3 bg-gray-700 rounded-lg" />
+                  <input type="time" value={newTimeSlot.endTime} onChange={e => setNewTimeSlot(prev => ({ ...prev, endTime: e.target.value }))} className="
+                      w-full p-3 
+                      bg-white 
+                      border border-neutral-300 
+                      rounded-lg 
+                      text-fixes-heading-dark 
+                      focus:ring-2 focus:ring-fixes-accent-purple/30 
+                      focus:border-fixes-accent-purple
+                      outline-none
+                      transition-all
+                    "
+                   />
                 </div>
               </div>
 {/* 
@@ -464,7 +602,7 @@ const TherapistAvailability = () => {
                         onChange={() => setNewTimeSlot(prev => ({ ...prev, sessionType: t }))}
                         className="hidden"
                       />
-                      <div className={`p-3 text-center rounded-lg font-medium ${newTimeSlot.sessionType === t ? 'bg-primary-500 text-white' : 'bg-gray-700'}`}>
+                      <div className={`p-3 text-center rounded-lg font-medium ${newTimeSlot.sessionType === t ? 'bg-fixes-accent-purple text-black' : 'bg-neutral-100'}`}>
                         {t.charAt(0).toUpperCase() + t.slice(1)}
                       </div>
                     </label>
@@ -497,15 +635,15 @@ const TherapistAvailability = () => {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <button
-                  onClick={() => setShowTimeSlotModal(false)}
-                  className="flex-1 py-3 bg-gray-700 rounded-xl"
-                >
-                  Cancel
-                </button>
+              <button
+                onClick={() => setShowTimeSlotModal(false)}
+                className="flex-1 py-3 bg-fixes-bg-offwhite hover:bg-neutral-200 text-fixes-heading-dark font-medium rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
                 <button
                   onClick={handleAddTimeSlot}
-                  className="flex-1 py-3 bg-primary-500 text-white rounded-xl font-medium"
+                  className="flex-1 py-3 bg-fixes-accent-purple text-black rounded-xl font-medium hover:bg-fixes-accent-blue"
                 >
                   {editingTimeSlot ? 'Update' : 'Add'} Slot
                 </button>

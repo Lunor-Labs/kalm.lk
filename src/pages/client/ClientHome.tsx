@@ -87,21 +87,21 @@ const ClientHome: React.FC = () => {
       title: 'Book New Session',
       description: 'Find and book a session with a therapist',
       icon: Plus,
-      color: 'bg-primary-500',
+      color: 'bg-fixes-accent-purple',
       action: () => navigate('/client/book')
     },
     {
       title: 'My Sessions',
       description: 'View and join your appointments',
       icon: Calendar,
-      color: 'bg-accent-green',
+      color: 'bg-fixes-box-aqua',
       action: () => navigate('/client/sessions')
     },
     {
       title: 'Find Therapists',
       description: 'Browse our network of professionals',
       icon: Search,
-      color: 'bg-accent-orange',
+      color: 'bg-fixes-box-pink',
       action: () => navigate('/client/therapists')
     }
   ];
@@ -231,7 +231,7 @@ const ClientHome: React.FC = () => {
   const currentTip = wellnessTips[currentTipIndex];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 bg-[#F8F9FA] p-6">
       {/* Welcome Section */}
       {/* <div className="bg-gradient-to-r from-primary-500/20 to-accent-green/20 rounded-3xl p-8 border border-primary-500/20">
         <div className="flex items-center justify-between">
@@ -250,13 +250,13 @@ const ClientHome: React.FC = () => {
       </div> */}
 
       <div className="hidden md:block lg:hidden">
-  <div className="bg-gradient-to-r from-primary-500/20 to-accent-green/20 rounded-3xl p-8 border border-primary-500/20 w-full">
+  <div className="bg-transparent rounded-3xl p-8 w-full">
     <div className="mx-auto text-center max-w-2xl">
-      <h1 className="text-3xl font-bold text-white mb-2">
+      <h1 className="text-3xl font-black text-black mb-2">
         Welcome to Kalm
       </h1>
-      <p className="text-neutral-300 mb-4">
-        {user?.isAnonymous 
+      <p className="text-fixes-heading-dark mb-4">
+        {user?.isAnonymous
           ? 'Continue your anonymous wellness journey with complete privacy.'
           : 'Continue your mental wellness journey with personalized support.'
         }
@@ -268,14 +268,14 @@ const ClientHome: React.FC = () => {
 
 
 <div className="block md:hidden lg:block">
-  <div className="bg-gradient-to-r from-primary-500/20 to-accent-green/20 rounded-3xl p-8 border border-primary-500/20">
-    <div className="flex items-center justify-between">
+<div className="space-y-8 bg-[#F8F9FA] pt-4 pb-6 px-6 -mt-16">
+      <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-black text-black mb-2">
           Welcome to Kalm
         </h1>
-        <p className="text-neutral-300 mb-4">
-          {user?.isAnonymous 
+        <p className="text-fixes-heading-dark mb-4">
+          {user?.isAnonymous
             ? 'Continue your anonymous wellness journey with complete privacy.'
             : 'Continue your mental wellness journey with personalized support.'
           }
@@ -288,7 +288,7 @@ const ClientHome: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="hidden lg:block">
-        <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
+        <h2 className="text-xl font-black text-black mb-6">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {quickActions.map((action, index) => {
             const Icon = action.icon;
@@ -296,13 +296,13 @@ const ClientHome: React.FC = () => {
               <button
                 key={index}
                 onClick={action.action}
-                className="group bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800 hover:border-neutral-700 transition-all duration-300 hover:-translate-y-2 text-left"
+                className="group bg-[#F1F5F9] rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 text-left"
               >
                 <div className={`w-12 h-12 ${action.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{action.title}</h3>
-                <p className="text-neutral-300 text-sm">{action.description}</p>
+                <h3 className="text-lg font-black text-black mb-2">{action.title}</h3>
+                <p className="text-fixes-heading-dark text-sm">{action.description}</p>
               </button>
             );
           })}
@@ -311,7 +311,7 @@ const ClientHome: React.FC = () => {
 
       {/* Mobile and Tab Quick Actions */}
       <div className="block lg:hidden">
-        <h2 className="text-xl font-semibold text-white mb-6">Quick Actions</h2>
+        <h2 className="text-xl font-black text-black mb-6">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickActions.map((action, index) => {
             const Icon = action.icon;
@@ -319,28 +319,28 @@ const ClientHome: React.FC = () => {
               <button
                 key={index}
                 onClick={action.action}
-                className="group bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800 hover:border-neutral-700 transition-all duration-300 hover:-translate-y-2 text-center"
+                className="group bg-[#F1F5F9] rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 text-center"
               >
                 <div className={`w-12 h-12 ${action.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 mx-auto`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{action.title}</h3>
-                <p className="text-neutral-300 text-sm">{action.description}</p>
+                <h3 className="text-lg font-black text-black mb-2">{action.title}</h3>
+                <p className="text-fixes-heading-dark text-sm">{action.description}</p>
               </button>
             );
           })}
         </div>
       </div>
-      
+
       {/* Dashboard Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
         {/* Upcoming Sessions */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-[#F1F5F9] rounded-xl p-4 sm:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-white">Upcoming Sessions</h2>
+            <h2 className="text-lg sm:text-xl font-black text-black">Upcoming Sessions</h2>
             <button
               onClick={() => navigate('/client/sessions')}
-              className="text-primary-500 hover:text-primary-600 transition-colors duration-200 text-xs sm:text-sm"
+              className="text-fixes-accent-purple hover:bg-fixes-accent-purple hover:text-white transition-colors duration-200 text-xs sm:text-sm px-3 py-1 rounded-lg"
             >
               View All
             </button>
@@ -349,7 +349,7 @@ const ClientHome: React.FC = () => {
           {loadingSessions ? (
             <div className="text-center py-6 sm:py-8">
               <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-3 sm:mb-4"></div>
-              <p className="text-neutral-300 text-sm sm:text-base">Loading sessions...</p>
+              <p className="text-fixes-heading-dark text-sm sm:text-base">Loading sessions...</p>
             </div>
           ) : upcomingSessions.length > 0 ? (
             <div className="space-y-3 sm:space-y-4">
@@ -370,8 +370,8 @@ const ClientHome: React.FC = () => {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white font-medium text-sm sm:text-base truncate">{session.therapist}</p>
-                      <p className="text-neutral-300 text-xs sm:text-sm">{session.date} at {session.time}</p>
+                      <p className="text-black font-medium text-sm sm:text-base truncate">{session.therapist}</p>
+                      <p className="text-fixes-heading-dark text-xs sm:text-sm">{session.date} at {session.time}</p>
                       <span className={`flex items-center justify-center px-2 py-0.5 sm:px-3 sm:py-2 rounded-full text-xs h-6 sm:h-8 mt-1 w-20 ${
                         session.status === 'Active' 
                           ? 'bg-accent-green/20 text-accent-green'
@@ -384,9 +384,9 @@ const ClientHome: React.FC = () => {
 
                   {/* Right side */}
                   <div className="flex items-center ml-4">
-                    <button 
+                    <button
                       onClick={() => navigate(`/client/session/${session.id}`)}
-                      className="bg-primary-500 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl hover:bg-primary-600 transition-colors duration-200 text-xs sm:text-sm"
+                      className="bg-fixes-accent-purple text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl hover:bg-fixes-accent-blue transition-colors duration-200 text-xs sm:text-sm"
                     >
                       {session.status === 'Active' ? 'Join' : 'View'}
                     </button>
@@ -396,11 +396,11 @@ const ClientHome: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-6 sm:py-8">
-              <Calendar className="w-12 h-12 sm:w-16 sm:h-16 text-neutral-600 mx-auto mb-3 sm:mb-4" />
-              <p className="text-neutral-300 mb-2 text-sm sm:text-base">No upcoming sessions</p>
+              <Calendar className="w-12 h-12 sm:w-16 sm:h-16 text-fixes-heading-dark mx-auto mb-3 sm:mb-4" />
+              <p className="text-fixes-heading-dark mb-2 text-sm sm:text-base">No upcoming sessions</p>
               <button
                 onClick={() => navigate('/client/book')}
-                className="bg-primary-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-primary-600 transition-colors duration-200 text-sm sm:text-base"
+                className="bg-fixes-accent-purple text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl hover:bg-fixes-accent-blue transition-colors duration-200 text-sm sm:text-base"
               >
                 Book Your First Session
               </button>
@@ -409,24 +409,24 @@ const ClientHome: React.FC = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-black/50 backdrop-blur-sm rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-6 border border-neutral-800">
-          <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Recent Activity</h2>
+        <div className="bg-[#F1F5F9] rounded-xl p-4 sm:p-6 shadow-sm">
+          <h2 className="text-lg sm:text-xl font-black text-black mb-4 sm:mb-6">Recent Activity</h2>
           {recentActivity.length > 0 ? (
             <div className="space-y-3 sm:space-y-4">
               {recentActivity.map((activity) => (
                 <div key={activity.id} className="flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 bg-neutral-800/50 rounded-lg sm:rounded-xl md:rounded-2xl">
                   <div className="w-2 h-2 sm:w-3 sm:h-3 bg-accent-green rounded-full mt-2 sm:mt-2.5 flex-shrink-0"></div>
                   <div className="min-w-0">
-                    <p className="text-white text-sm sm:text-base line-clamp-2">{activity.message}</p>
-                    <p className="text-neutral-400 text-xs sm:text-sm mt-1">{activity.time}</p>
+                    <p className="text-black text-sm sm:text-base line-clamp-2">{activity.message}</p>
+                    <p className="text-fixes-heading-dark text-xs sm:text-sm mt-1">{activity.time}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="text-center py-6 sm:py-8">
-              <MessageCircle className="w-12 h-12 sm:w-16 sm:h-16 text-neutral-600 mx-auto mb-3 sm:mb-4" />
-              <p className="text-neutral-300 text-sm sm:text-base">No recent activity</p>
+              <MessageCircle className="w-12 h-12 sm:w-16 sm:h-16 text-fixes-heading-dark mx-auto mb-3 sm:mb-4" />
+              <p className="text-fixes-heading-dark text-sm sm:text-base">No recent activity</p>
             </div>
           )}
         </div>
@@ -435,27 +435,27 @@ const ClientHome: React.FC = () => {
       {/* Enhanced Auto-Sliding Wellness Tip */}
       <div
         ref={wellnessTipRef}
-        className={`bg-black/50 backdrop-blur-sm rounded-3xl p-6 border border-neutral-800 shadow-2xl relative overflow-hidden
+        className={`bg-[#F1F5F9] rounded-xl p-6 shadow-sm relative overflow-hidden
           transition-all duration-1000 ease-out
           ${showWellnessTip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24'}
         `}
       >
         {/* Header with controls */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">Daily Wellness Tip</h2>
+          <h2 className="text-xl font-black text-black">Daily Wellness Tip</h2>
         </div>
 
         {/* Tip content with slide animation */}
         <div className="relative min-h-[120px]">
           <div className="flex items-start space-x-4 transition-all duration-500 ease-in-out">
-            <div className="w-12 h-12 bg-accent-yellow/20 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <Star className="w-6 h-6 text-accent-yellow" />
+            <div className="w-12 h-12 bg-fixes-accent-blue/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <Star className="w-6 h-6 text-fixes-accent-blue" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-medium text-white mb-2 transition-all duration-300">
+              <h3 className="text-lg font-black text-black mb-2 transition-all duration-300">
                 {currentTip.title}
               </h3>
-              <p className="text-neutral-300 leading-relaxed transition-all duration-300">
+              <p className="text-fixes-heading-dark leading-relaxed transition-all duration-300">
                 {currentTip.text}
               </p>
             </div>
@@ -469,9 +469,9 @@ const ClientHome: React.FC = () => {
               key={index}
               onClick={() => goToSpecificTip(index)}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentTipIndex 
-                  ? 'bg-accent-yellow w-6' 
-                  : 'bg-neutral-600 hover:bg-neutral-500'
+                index === currentTipIndex
+                  ? 'bg-fixes-accent-blue w-6'
+                  : 'bg-fixes-heading-dark hover:bg-fixes-accent-blue/70'
               }`}
               aria-label={`Go to tip ${index + 1}`}
             />
@@ -479,9 +479,9 @@ const ClientHome: React.FC = () => {
         </div>
 
         {/* Progress bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-neutral-800">
-          <div 
-            className="h-full bg-gradient-to-r from-accent-yellow to-accent-green transition-all duration-100 ease-linear"
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-fixes-heading-dark/20">
+          <div
+            className="h-full bg-fixes-accent-blue transition-all duration-100 ease-linear"
             style={{
               width: isAutoPlaying ? '100%' : '0%',
               animation: isAutoPlaying ? 'progress 5s linear infinite' : 'none'

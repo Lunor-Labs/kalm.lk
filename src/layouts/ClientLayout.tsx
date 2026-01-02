@@ -47,22 +47,22 @@ const ClientLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-900">
+    <div className="min-h-screen bg-fixes-bg-offwhite">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-black backdrop-blur-sm border-r border-neutral-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-fixes-bg-white border-r border-neutral-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-neutral-800">
+          <div className="flex items-center justify-between p-6 border-b border-neutral-200">
             <button
               onClick={() => {
                 if (location.pathname === '/') {
@@ -73,15 +73,15 @@ const ClientLayout: React.FC = () => {
                   setSidebarOpen(false);
                 }
               }}
-              className="flex items-center space-x-2 cursor-pointer focus:outline-none"
+              className="flex items-center space-x-3 flex-shrink-0 cursor-pointer focus:outline-none"
               aria-label="Go to homepage"
             >
               <img
                 src="logo.jpg"
                 alt="Kalm Logo"
-                className="w-8 h-8 rounded-lg"
+                className="w-10 h-10 lg:w-8 lg:h-8"
               />
-              <span className="text-xl font-bold text-white">kalm.lk</span>
+              <span className="text-lg lg:text-xl font-body font-medium text-black">kalm.lk</span>
             </button>
             {/* <button
               onClick={() => setSidebarOpen(false)}
@@ -105,12 +105,12 @@ const ClientLayout: React.FC = () => {
                       }}
                       className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-colors duration-200 ${
                         isActive
-                          ? 'bg-primary-500 text-white'
-                          : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
+                          ? 'text-base text-black bg-fixes-accent-purple hover:bg-fixes-accent-blue'
+                          : 'text-fixes-heading-dark hover:bg-neutral-100 hover:text-black'
                       }`}
                     >
                       <item.icon className="w-5 h-5" />
-                      <span className="font-medium">{item.name}</span>
+                      <span className="font-body font-medium">{item.name}</span>
                     </button>
                   </li>
                 );
@@ -119,26 +119,26 @@ const ClientLayout: React.FC = () => {
           </nav>
 
           {/* User Info & Sign Out */}
-          <div className="p-6 border-t border-neutral-800">
+          <div className="p-6 border-t border-neutral-200">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold">
+              <div className="w-10 h-10 bg-fixes-accent-purple rounded-full flex items-center justify-center">
+                <span className="text-black font-body font-semibold">
                   {user?.displayName?.charAt(0) || 'U'}
                 </span>
               </div>
               <div>
-                <p className="text-white text-xs">{user?.displayName || 'User'}</p>
-                <p className="text-neutral-400 text-xs">
+                <p className="text-black text-xs font-body">{user?.displayName || 'User'}</p>
+                <p className="text-neutral-800 text-xs font-body">
                   {user?.isAnonymous ? 'Anonymous User' : user?.email}
                 </p>
               </div>
             </div>
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors duration-200"
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-fixes-heading-dark hover:bg-neutral-100 hover:text-black transition-colors duration-200"
             >
               <LogOut className="w-5 h-5" />
-              <span className="font-medium">Sign Out</span>
+              <span className="font-body font-medium">Sign Out</span>
             </button>
           </div>
         </div>
@@ -147,26 +147,17 @@ const ClientLayout: React.FC = () => {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top bar */}
-        <div className="sticky top-0 z-30 bg-neutral-900/95 backdrop-blur-sm border-b border-neutral-800">
-          <div className="flex items-center justify-between px-6 py-4">
+        <div className="sticky top-0 z-30 bg-fixes-bg-white border-b border-neutral-200">
+          <div className="flex items-center justify-between px-4 py-2 lg:px-6 lg:py-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-neutral-400 hover:text-white"
+              className="lg:hidden text-fixes-heading-dark hover:text-black"
             >
               <Menu className="w-6 h-6" />
             </button>
-            
-            {/* <div className="flex items-center space-x-4">
-              <div className="text-white">
-                <h1 className="text-xl font-semibold">
-                 Welcome back, {user?.displayName || 'User'}
-                </h1>
-                {user?.isAnonymous && (
-                  <p className="text-sm text-accent-green">Anonymous Account</p>
-                )}
-              </div>
-            </div> */}
           </div>
+          {/* Extra spacer only on desktop to visually match previous header height */}
+          <div className="hidden lg:block" style={{ borderBottom: '1px solid var(--neutral-200)', marginTop: '2.95rem' }}></div>
         </div>
 
         {/* Page content */}

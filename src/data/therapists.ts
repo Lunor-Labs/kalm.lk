@@ -14,7 +14,7 @@ export interface TherapistData {
   serviceCategory: string;
   experience: number;
   bio: string;
-  isAvailable: boolean;
+  isActive?: boolean;
 }
 
 export const therapistsData: TherapistData[] = [
@@ -33,7 +33,8 @@ export const therapistsData: TherapistData[] = [
     serviceCategory: 'INDIVIDUALS',
     experience: 8,
     bio: 'Dr. Priya Perera is a licensed clinical psychologist with over 8 years of experience helping individuals overcome anxiety, depression, and stress-related challenges.',
-    isAvailable: true
+    isAvailable: true,
+    isActive: true
   },
   {
     id: '2',
@@ -50,7 +51,8 @@ export const therapistsData: TherapistData[] = [
     serviceCategory: 'FAMILY_COUPLES',
     experience: 6,
     bio: 'Dr. Rohan Silva specializes in relationship and family therapy with 6 years of experience helping couples and families improve communication.',
-    isAvailable: false
+    isAvailable: false,
+    isActive: true
   },
   {
     id: '3',
@@ -67,7 +69,8 @@ export const therapistsData: TherapistData[] = [
     serviceCategory: 'INDIVIDUALS',
     experience: 10,
     bio: 'Dr. Amara Fernando is a trauma specialist with 10 years of experience helping individuals heal from traumatic experiences.',
-    isAvailable: true
+    isAvailable: true,
+    isActive: true
   },
   {
     id: '4',
@@ -84,7 +87,8 @@ export const therapistsData: TherapistData[] = [
     serviceCategory: 'FAMILY_COUPLES',
     experience: 7,
     bio: 'Dr. Kavitha Raj specializes in family dynamics and child psychology with 7 years of experience.',
-    isAvailable: true
+    isAvailable: true,
+    isActive: true
   },
   {
     id: '5',
@@ -101,7 +105,8 @@ export const therapistsData: TherapistData[] = [
     serviceCategory: 'INDIVIDUALS',
     experience: 12,
     bio: 'Dr. Nuwan Jayasinghe is an addiction specialist with 12 years of experience helping individuals overcome various forms of addiction.',
-    isAvailable: false
+    isAvailable: false,
+    isActive: true
   },
   {
     id: '6',
@@ -118,7 +123,8 @@ export const therapistsData: TherapistData[] = [
     serviceCategory: 'TEENS',
     experience: 5,
     bio: 'Dr. Sanduni Wickramasinghe specializes in adolescent mental health with 5 years of experience.',
-    isAvailable: true
+    isAvailable: true,
+    isActive: true
   },
   {
     id: '7',
@@ -135,7 +141,8 @@ export const therapistsData: TherapistData[] = [
     serviceCategory: 'LGBTQIA',
     experience: 6,
     bio: 'Dr. Malini Perera provides affirming and inclusive therapy for LGBTQIA+ individuals and couples.',
-    isAvailable: true
+    isAvailable: true,
+    isActive: true
   },
   {
     id: '8',
@@ -152,7 +159,8 @@ export const therapistsData: TherapistData[] = [
     serviceCategory: 'TEENS',
     experience: 8,
     bio: 'Dr. Chamara Silva specializes in adolescent psychology with 8 years of experience helping teenagers navigate challenges.',
-    isAvailable: false
+    isAvailable: false,
+    isActive: true
   }
 ];
 
@@ -166,7 +174,7 @@ export const getTherapistsByCategory = (category: string): TherapistData[] => {
 };
 
 export const getAvailableTherapists = (): TherapistData[] => {
-  return therapistsData.filter(therapist => therapist.isAvailable);
+  return therapistsData.filter(therapist => therapist.isActive !== false);
 };
 
 export const getTherapistsBySpecialty = (specialty: string): TherapistData[] => {

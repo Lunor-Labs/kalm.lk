@@ -283,7 +283,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
 
   const getRoleRedirectPath = (role: string): string => {
     switch (role) {
-      case 'admin': return '/admin/dashboard';
+      case 'admin':
+      case 'superadmin': return '/admin/dashboard';
       case 'therapist': return '/therapist/schedule';
       case 'client': return '/client/home';
       default: return '/client/home';

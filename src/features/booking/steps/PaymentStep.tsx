@@ -6,9 +6,88 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { initiatePayHerePayment } from '../../../lib/payhere';
 import toast from 'react-hot-toast';
 import { db } from '../../../lib/firebase';
-import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from 'firebase/firestore';
-import { getNextId } from '../../../lib/counters';
+import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import { logPaymentError, logUserError } from '../../../lib/errorLogger';
+import { getTherapistAvailability } from '../../../lib/availability';
+import { format } from 'date-fns';
+
+// Function to check if a specific time slot is still available
+const checkTimeSlotAvailability = async (therapistId: string, scheduledTime: Date): Promise<boolean> => {
+  try {
+    // Check if therapist has availability for this time slot
+    const availability = await getTherapistAvailability(therapistId);
+    if (!availability) {
+      console.log('No availability found for therapist');
+      return false;
+    }
+
+    const dateString = format(scheduledTime, 'yyyy-MM-dd');
+    const timeString = format(scheduledTime, 'HH:mm');
+
+    // Check if the date has availability
+    let availableTimeSlots: any[] = [];
+    const specialDate = availability.specialDates?.find((sd: any) => sd.date === dateString);
+
+    if (specialDate) {
+      availableTimeSlots = specialDate.timeSlots || [];
+    } else {
+      const dayOfWeek = scheduledTime.getDay();
+      const weeklySchedule = availability.weeklySchedule?.find((day: any) => day.dayOfWeek === dayOfWeek);
+      if (weeklySchedule) {
+        availableTimeSlots = weeklySchedule.timeSlots || [];
+      }
+    }
+
+    // Check if the specific time slot exists and is available
+    const slotExists = availableTimeSlots.some((slot: any) => {
+      if (!slot.isAvailable) return false;
+
+      // Handle different time formats
+      let slotStartTime: string;
+      if (typeof slot.startTime === 'string' && slot.startTime.includes(':')) {
+        slotStartTime = slot.startTime;
+      } else if (slot.startTime instanceof Date) {
+        slotStartTime = format(slot.startTime, 'HH:mm');
+      } else {
+        return false;
+      }
+
+      return slotStartTime === timeString;
+    });
+
+    if (!slotExists) {
+      console.log('Time slot not found in therapist availability');
+      return false;
+    }
+
+    // Check if the time slot is already booked by another session
+    const sessionsRef = collection(db, 'sessions');
+    const q = query(
+      sessionsRef,
+      where('therapistId', '==', therapistId),
+      where('status', 'in', ['scheduled', 'active'])
+    );
+
+    const sessionsSnapshot = await getDocs(q);
+    const isBooked = sessionsSnapshot.docs.some(doc => {
+      const sessionData = doc.data();
+      if (!sessionData.scheduledTime) return false;
+
+      const sessionTime = sessionData.scheduledTime.toDate();
+      return sessionTime.getTime() === scheduledTime.getTime();
+    });
+
+    if (isBooked) {
+      console.log('Time slot is already booked');
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error checking time slot availability:', error);
+    return false;
+  }
+};
 
 interface PaymentStepProps {
   bookingData: BookingData;
@@ -48,10 +127,20 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     setProcessing(true);
 
     try {
+      // Check time slot availability BEFORE payment processing
+      console.log('Checking time slot availability before payment...');
+      const isSlotAvailable = await checkTimeSlotAvailability(bookingData.therapistId, bookingData.sessionTime);
+
+      if (!isSlotAvailable) {
+        toast.error('Sorry, this time slot is no longer available. Please go back and select a different time.');
+        setProcessing(false);
+        return;
+      }
+
       // Calculate final amount with session type discount
       const sessionTypeDiscount = sessionType === 'audio' ? 500 : sessionType === 'chat' ? 1000 : 0;
       const finalAmount = totalAmount - sessionTypeDiscount;
-      
+
       // Prepare payment data for PayHere
       const paymentData = {
         amount: finalAmount,
@@ -78,11 +167,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       if (paymentResult.success) {
         const bookingId = paymentResult.orderId || `booking-${Date.now()}`;
         console.log('bookingData.therapistId', bookingData.therapistId);
-        // Get the therapist's userId from the therapist document
-        const therapistDoc = await getDoc(doc(db, 'therapists', bookingData.therapistId));
-        const therapistUserId = therapistDoc.exists()
-          ? therapistDoc.data()?.userId || bookingData.therapistId
-          : bookingData.therapistId;
+        // Therapist ID is now directly the user ID
+        const therapistUserId = bookingData.therapistId;
 
         // Create the session in Firebase after successful payment
         const sessionId = await createSession({
@@ -97,75 +183,28 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
         // Record payment in Firestore for admin reporting & payouts
         try {
-          // Get sequential integer IDs
-          const [clientIdInt, therapistIdInt, bookingIdInt, paymentIdInt] = await Promise.all([
-            // Get client integer ID from user document (should exist from signup, but fallback if missing)
-            (async () => {
-              const userDoc = await getDoc(doc(db, 'users', user.uid));
-              if (userDoc.exists() && userDoc.data().clientIdInt) {
-                return userDoc.data().clientIdInt;
-              }
-              // Fallback: Generate new client ID if somehow missing (shouldn't happen for new signups)
-              console.warn('User missing clientIdInt, generating fallback ID');
-              const newClientIdInt = await getNextId('client');
-              // Try to save it to user document (may fail if not allowed, that's ok)
-              try {
-                await updateDoc(doc(db, 'users', user.uid), { clientIdInt: newClientIdInt });
-              } catch (e) {
-                // Ignore if we can't update user doc
-              }
-              return newClientIdInt;
-            })(),
-            // Get therapist integer ID from therapist document
-            (async () => {
-              try {
-                const therapistDoc = await getDoc(doc(db, 'therapists', bookingData.therapistId));
-                if (therapistDoc.exists() && therapistDoc.data().therapistIdInt) {
-                  return therapistDoc.data().therapistIdInt;
-                }
-                // Generate new therapist ID if not exists
-                const newTherapistId = await getNextId('therapist');
-                // Try to save it to therapist document
-                try {
-                  await updateDoc(doc(db, 'therapists', bookingData.therapistId), { therapistIdInt: newTherapistId });
-                } catch (e) {
-                  // Ignore if we can't update therapist doc
-                }
-                return newTherapistId;
-              } catch (e) {
-                console.warn('Could not get therapist integer ID:', e);
-                return undefined;
-              }
-            })(),
-            getNextId('booking'),
-            getNextId('payment'),
-          ]);
-
-          const paymentsRef = collection(db, 'payments');
-          await addDoc(paymentsRef, {
+          const paymentData = {
             bookingId,
             sessionId,
             clientId: user.uid,
             clientName: user.displayName || user.email || 'Unknown',
             therapistId: bookingData.therapistId,
-            // Sequential integer IDs
-            clientIdInt,
-            therapistIdInt,
-            bookingIdInt,
-            paymentIdInt,
             amount: bookingData.amount || finalAmount,
-            currency: 'LKR',
-            paymentMethod: 'payhere',
-            paymentStatus: 'completed',
+            currency: 'LKR' as const,
+            paymentMethod: 'payhere' as const,
+            paymentStatus: 'completed' as const,
             paymentId: paymentResult.paymentId || null,
             orderId: bookingId,
             couponCode: bookingData.couponCode || null,
             discountAmount: bookingData.discountAmount || 0,
             finalAmount,
-            payoutStatus: 'pending',
+            payoutStatus: 'pending' as const,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
-          });
+          };
+
+          const paymentsRef = collection(db, 'payments');
+          await addDoc(paymentsRef, paymentData);
         } catch (paymentError: any) {
           console.error('Failed to record payment document:', paymentError);
           toast.error(paymentError?.message || 'Session booked, but failed to record payment in admin reports.');
@@ -226,9 +265,9 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       <div className="p-8">
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-            <h3 className="text-xl font-semibold text-white mb-2">Processing Payment</h3>
-            <p className="text-neutral-300 mb-4">Please wait while we process your payment and create your session...</p>
+            <div className="w-16 h-16 border-4 border-fixes-accent-purple border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+            <h3 className="text-xl font-black text-black mb-2">Processing Payment</h3>
+            <p className="text-fixes-heading-dark mb-4">Please wait while we process your payment and create your session...</p>
             <div className="mt-6 p-4 bg-accent-green/10 border border-accent-green/20 rounded-2xl">
               <p className="text-accent-green text-sm">
                 <Shield className="w-4 h-4 inline mr-2" />
@@ -247,22 +286,22 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       <div className="mb-4">
         <button
           onClick={onBack}
-          className="flex items-center space-x-2 text-primary-500 hover:text-primary-600 transition-colors duration-200"
+          className="flex items-center space-x-2 text-fixes-accent-purple hover:text-fixes-accent-blue transition-colors duration-200"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
+          <span className="text-fixes-heading-dark">Back</span>
         </button>
       </div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-white whitespace-nowrap">Complete Payment</h2>
-        {/* <p className="text-neutral-300">Secure payment powered by PayHere</p> */}
+        <h2 className="text-2xl font-black text-black whitespace-nowrap">Complete Payment</h2>
+        {/* <p className="text-fixes-heading-dark">Secure payment powered by PayHere</p> */}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Payment Methods */}
         <div className="space-y-6">
-          <div className="bg-accent-orange/10 border border-accent-orange/20 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center space-x-2">
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-black text-black mb-4 flex items-center space-x-2">
               <Clock className="w-5 h-5" />
               <span>Cancellation Policy</span>
             </h3>
@@ -271,24 +310,24 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-accent-green rounded-full mt-2 flex-shrink-0"></div>
                 <div>
-                  <p className="text-white font-medium">100% Refund</p>
-                  <p className="text-neutral-300">Cancel more than 24 hours before session</p>
+                  <p className="text-black font-black">100% Refund</p>
+                  <p className="text-fixes-heading-dark">Cancel more than 24 hours before session</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-accent-yellow rounded-full mt-2 flex-shrink-0"></div>
                 <div>
-                  <p className="text-white font-medium">50% Refund</p>
-                  <p className="text-neutral-300">Cancel 12-24 hours before session</p>
+                  <p className="text-black font-black">50% Refund</p>
+                  <p className="text-fixes-heading-dark">Cancel 12-24 hours before session</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
                 <div>
-                  <p className="text-white font-medium">No Refund</p>
-                  <p className="text-neutral-300">Cancel less than 12 hours before session or no-show</p>
+                  <p className="text-black font-black">No Refund</p>
+                  <p className="text-fixes-heading-dark">Cancel less than 12 hours before session or no-show</p>
                 </div>
               </div>
             </div>
@@ -439,21 +478,21 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
         {/* Order Summary */}
         <div className="space-y-6">
-          <div className="bg-black/30 rounded-2xl p-6 border border-neutral-800">
-            <h3 className="text-lg font-semibold text-white mb-4">Order Summary</h3>
+          <div className="bg-white rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-black text-black mb-4">Order Summary</h3>
             
             <div className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-neutral-300">Base Session Fee</span>
-                <span className="text-white">LKR {(bookingData.amount || 0).toLocaleString()}</span>
+                <span className="text-fixes-heading-dark">Base Session Fee</span>
+                <span className="text-black">LKR {(bookingData.amount || 0).toLocaleString()}</span>
               </div>
               
               {sessionTypeDiscount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-accent-green">
+                  <span className="text-fixes-heading-dark">
                     {sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Session Discount
                   </span>
-                  <span className="text-accent-green">-LKR {sessionTypeDiscount.toLocaleString()}</span>
+                  <span className="text-fixes-heading-dark">-LKR {sessionTypeDiscount.toLocaleString()}</span>
                 </div>
               )}
               
@@ -466,8 +505,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               
               <div className="border-t border-neutral-700 pt-4">
                 <div className="flex justify-between">
-                  <span className="text-xl font-semibold text-white">Total</span>
-                  <span className="text-xl font-semibold text-primary-500">
+                  <span className="text-xl font-black text-black">Total</span>
+                  <span className="text-xl font-black text-fixes-accent-purple">
                     LKR {totalAmount.toLocaleString()}
                   </span>
                 </div>
@@ -477,14 +516,14 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
 
           {/* Disclaimer */}
-          <div className=" text-neutral-400 text-xs">
+          <div className=" text-fixes-heading-dark text-xs">
             “I understand that cancelling a session less than 48 hours before will result in a partial refund. I also understand that my chat history is stored only for my personal reference, and that Kalm has no access to private conversations. All sessions are confidential.”
           </div>
 
           {/* Payment Button */}
           <button
             onClick={handlePayment}
-            className="w-full bg-primary-500 text-white py-4 rounded-2xl hover:bg-primary-600 transition-colors duration-200 font-semibold text-lg flex items-center justify-center space-x-2"
+            className="w-full bg-fixes-accent-purple text-black py-4 rounded-2xl hover:bg-fixes-accent-blue transition-colors duration-200 font-black text-lg flex items-center justify-center space-x-2"
           >
             <CreditCard className="w-5 h-5" />
             <span>Pay LKR {totalAmount.toLocaleString()}</span>
@@ -492,15 +531,15 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
           {/* Payment Features */}
           <div className="space-y-3">
-            <div className="flex items-center space-x-3 text-sm text-neutral-300">
+            <div className="flex items-center space-x-3 text-sm text-fixes-heading-dark">
               <CheckCircle className="w-4 h-4 text-accent-green" />
               <span>Instant session creation</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-neutral-300">
+            <div className="flex items-center space-x-3 text-sm text-fixes-heading-dark">
               <CheckCircle className="w-4 h-4 text-accent-green" />
               <span>24/7 customer support</span>
             </div>
-            <div className="flex items-center space-x-3 text-sm text-neutral-300">
+            <div className="flex items-center space-x-3 text-sm text-fixes-heading-dark">
               <CheckCircle className="w-4 h-4 text-accent-green" />
               <span>Easy cancellation policy</span>
             </div>
@@ -508,11 +547,11 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
           {/* Terms */}
           <div className="text-center">
-            <p className="text-neutral-400 text-xs">
+            <p className="text-fixes-heading-dark text-xs">
               By completing this payment, you agree to our{' '}
               <button
                 type="button"
-                className="text-primary-500 hover:text-primary-600 underline"
+                className="text-fixes-accent-purple hover:text-fixes-accent-blue underline"
                 onClick={() => setShowTerms(true)}
               >
                 Terms of Service
@@ -520,7 +559,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               {' '}and{' '}
               <button
                 type="button"
-                className="text-primary-500 hover:text-primary-600 underline"
+                className="text-fixes-accent-purple hover:text-fixes-accent-blue underline"
                 onClick={() => setShowCancellation(true)}
               >
                 Cancellation Policy

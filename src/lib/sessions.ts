@@ -44,6 +44,28 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
       dailyRoomName = room.name;
     }
 
+    // Validate therapist is active and available for booking
+    try {
+      const therapistRef = doc(db, 'users', sessionData.therapistId);
+      const therapistSnap = await getDoc(therapistRef);
+      if (!therapistSnap.exists()) {
+        throw new Error('Therapist not found');
+      }
+
+      const tdata: any = therapistSnap.data();
+      const tprofile = tdata?.therapistProfile;
+      if (tdata && (tdata.isActive === false)) {
+        throw new Error('Therapist is not available for booking.');
+      }
+
+      if (tdata && tdata.isActive === false) {
+        throw new Error('Therapist is not available for booking.');
+      }
+    } catch (err: any) {
+      console.error('Error validating therapist availability:', err);
+      throw err;
+    }
+
     // Create session document in Firestore
     const sessionDoc = {
       ...sessionData,
@@ -59,17 +81,10 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
     // Update therapist availability to mark the time slot as booked
     try {
       console.log('sessionData.therapistId', sessionData.therapistId);
-      // Resolve the correct therapist user ID from the therapist document
-      const therapistDoc = await getDoc(doc(db, 'therapists', sessionData.therapistId));
-      if (therapistDoc.exists()) {
-        const therapistData = therapistDoc.data();
-        const therapistUserId = therapistData?.userId || sessionData.therapistId; // Fallback to document ID
-        console.log('therapistUserId', therapistUserId);
-        console.log(therapistData?.userId);
-        await updateTherapistAvailabilityAfterBooking(therapistUserId, sessionData.scheduledTime);
-      } else {
-        console.warn('Therapist document not found, skipping availability update');
-      }
+      // Therapist ID is now directly the user ID
+      const therapistUserId = sessionData.therapistId;
+      console.log('therapistUserId', therapistUserId);
+      await updateTherapistAvailabilityAfterBooking(therapistUserId, sessionData.scheduledTime);
     } catch (availabilityError) {
       // Log error but don't fail the session creation
       console.error('Failed to update therapist availability after booking:', availabilityError);

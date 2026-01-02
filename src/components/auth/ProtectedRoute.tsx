@@ -5,7 +5,7 @@ import { UserRole } from '../../types/auth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: UserRole;
+  requiredRole?: UserRole | UserRole[];
   allowAnonymous?: boolean;
 }
 
@@ -36,8 +36,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/unauthorized" replace />;
   }
 
-  if (requiredRole && user.role !== requiredRole) {
-    return <Navigate to="/unauthorized" replace />;
+  if (requiredRole) {
+    const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    if (!requiredRoles.includes(user.role)) {
+      return <Navigate to="/unauthorized" replace />;
+    }
   }
 
   return <>{children}</>;

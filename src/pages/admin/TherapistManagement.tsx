@@ -1,26 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, Search, Plus, Edit, Trash2, Upload, X, Save,
+  Users, Search, Plus, Edit, Upload, X, Save, ToggleRight,
   Star, Clock, Award, Video, Phone, MessageCircle,
   Eye, EyeOff, ArrowLeft, Calendar, DollarSign, ChevronLeft, ChevronRight, ChevronDown, ChevronUp
 } from 'lucide-react';
-import { 
-  collection, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
   orderBy,
   serverTimestamp,
   setDoc
 } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { db, secondaryAuth } from '../../lib/firebase'; // Import secondaryAuth
-import { uploadTherapistPhoto, deleteTherapistPhoto, getStoragePathFromUrl, validateImageFile } from '../../lib/storage';
-import { getNextId } from '../../lib/counters';
+import { getUserSessions } from '../../lib/sessions';
+import { uploadTherapistPhoto, validateImageFile } from '../../lib/storage';
 import toast from 'react-hot-toast';
 
 interface Therapist {
@@ -33,7 +34,7 @@ interface Therapist {
   specializations: string[];
   languages: string[];
   services: string[];
-  isAvailable: boolean;
+  isActive: boolean;
   sessionFormats: string[];
   bio: string;
   experience: number;
@@ -156,17 +157,24 @@ const TherapistManagement: React.FC = () => {
   const loadTherapists = async () => {
     try {
       setLoading(true);
-      const therapistsRef = collection(db, 'therapists');
-      const q = query(therapistsRef, orderBy('createdAt', 'desc'));
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('role', '==', 'therapist'), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
-      
-      const therapistsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate()
-      } as Therapist));
-      
+
+      const therapistsData = snapshot.docs.map(doc => {
+        const userData = doc.data();
+        if (!userData.therapistProfile) return null;
+
+        return {
+          id: doc.id,
+          ...userData.therapistProfile,
+          email: userData.email,
+          isActive: userData.isActive === undefined ? true : userData.isActive,
+          createdAt: userData.createdAt?.toDate(),
+          updatedAt: userData.updatedAt?.toDate()
+        } as Therapist;
+      }).filter(Boolean) as Therapist[];
+
       setTherapists(therapistsData);
     } catch (error) {
       console.error('Error loading therapists:', error);
@@ -286,21 +294,25 @@ const TherapistManagement: React.FC = () => {
     setLoading(true);
     try {
       if (editingTherapist) {
-        const therapistRef = doc(db, 'therapists', editingTherapist.id);
-        await updateDoc(therapistRef, {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
+        const userRef = doc(db, 'users', editingTherapist.id);
+        await updateDoc(userRef, {
           email: formData.email,
-          credentials: formData.credentials.filter(c => c !== 'Other'),
-          specializations: formData.specializations,
-          languages: formData.languages,
-          services: formData.services,
-          sessionFormats: formData.sessionFormats,
-          bio: formData.bio,
-          experience: formData.experience,
-          hourlyRate: formData.hourlyRate,
-          nextAvailableSlot: formData.nextAvailableSlot,
-          profilePhoto: formData.profilePhoto,
+          displayName: `${formData.firstName} ${formData.lastName}`,
+          therapistProfile: {
+            ...editingTherapist.therapistProfile,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            credentials: formData.credentials.filter(c => c !== 'Other'),
+            specializations: formData.specializations,
+            languages: formData.languages,
+            services: formData.services,
+            sessionFormats: formData.sessionFormats,
+            bio: formData.bio,
+            experience: formData.experience,
+            hourlyRate: formData.hourlyRate,
+            nextAvailableSlot: formData.nextAvailableSlot,
+            profilePhoto: formData.profilePhoto,
+          },
           updatedAt: serverTimestamp()
         });
         
@@ -315,46 +327,34 @@ const TherapistManagement: React.FC = () => {
           displayName: `${formData.firstName} ${formData.lastName}`
         });
         
-        // Generate sequential therapist ID for new therapist first
-        const therapistIdInt = await getNextId('therapist');
 
-        // Create user document in Firestore (include therapistIdInt)
+        // Create user document in Firestore with therapist profile
         await setDoc(doc(db, 'users', user.uid), {
           uid: user.uid,
           email: user.email,
           displayName: `${formData.firstName} ${formData.lastName}`,
           role: 'therapist',
-          therapistIdInt, // Add therapist ID to user document
+          isActive: true,
           isAnonymous: false,
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          updatedAt: serverTimestamp(),
+          therapistProfile: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            credentials: formData.credentials.filter(c => c !== 'Other'),
+            specializations: formData.specializations,
+            languages: formData.languages,
+            services: formData.services,
+            sessionFormats: formData.sessionFormats,
+            bio: formData.bio,
+            experience: formData.experience,
+            rating: 5.0,
+            reviewCount: 0,
+            hourlyRate: formData.hourlyRate,
+            profilePhoto: formData.profilePhoto || 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
+            nextAvailableSlot: formData.nextAvailableSlot,
+          }
         });
-        
-        // Create therapist document
-        const therapistData = {
-          userId: user.uid,
-          therapistIdInt, // Sequential integer ID for easy tracking
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          credentials: formData.credentials.filter(c => c !== 'Other'),
-          specializations: formData.specializations,
-          languages: formData.languages,
-          services: formData.services,
-          isAvailable: false,
-          sessionFormats: formData.sessionFormats,
-          bio: formData.bio,
-          experience: formData.experience,
-          rating: 5.0,
-          reviewCount: 0,
-          hourlyRate: formData.hourlyRate,
-          profilePhoto: formData.profilePhoto || 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
-          nextAvailableSlot: formData.nextAvailableSlot,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        };
-        
-        await addDoc(collection(db, 'therapists'), therapistData);
         
         // Sign out the therapist from secondaryAuth to ensure admin stays logged in
         await secondaryAuth.signOut();
@@ -384,25 +384,47 @@ const TherapistManagement: React.FC = () => {
     }
   };
 
-  const handleDelete = async (therapist: Therapist) => {
-    if (!window.confirm(`Are you sure you want to delete ${therapist.firstName} ${therapist.lastName}?`)) {
-      return;
+  const handleToggleActive = async (therapist: Therapist, newStatus: boolean) => {
+    // If deactivating, check for ongoing sessions first
+    if (!newStatus) {
+      try {
+        const sessions = await getUserSessions(therapist.id, 'therapist');
+        const now = new Date();
+        const ongoing = sessions.filter(s => s.status === 'active' || (s.status === 'scheduled' && s.scheduledTime && s.scheduledTime > now));
+
+        if (ongoing.length > 0) {
+          toast.error(`${therapist.firstName} ${therapist.lastName} has ${ongoing.length} upcoming or active session(s). Deactivate only after they are completed or cancelled.`);
+          return;
+        }
+      } catch (err) {
+        console.error('Error checking therapist sessions before deactivation:', err);
+        toast.error('Failed to verify therapist bookings. Please try again.');
+        return;
+      }
+
+      // Confirm if deactivating
+      if (!window.confirm(`Are you sure you want to deactivate ${therapist.firstName} ${therapist.lastName}? This will make them unavailable for bookings.`)) {
+        return;
+      }
     }
 
     try {
-      if (therapist.profilePhoto && !therapist.profilePhoto.includes('pexels.com')) {
-        const photoPath = getStoragePathFromUrl(therapist.profilePhoto);
-        if (photoPath) {
-          await deleteTherapistPhoto(photoPath);
-        }
-      }
-      
-      await deleteDoc(doc(db, 'therapists', therapist.id));
-      toast.success('Therapist deleted successfully');
+      const userRef = doc(db, 'users', therapist.id);
+
+      const updates: any = {
+        isActive: newStatus,
+        updatedAt: serverTimestamp()
+      };
+
+      // Therapist availability is controlled by user.isActive only
+
+      await updateDoc(userRef, updates);
+
+      toast.success(newStatus ? 'Therapist activated successfully' : 'Therapist deactivated successfully');
       loadTherapists();
     } catch (error: any) {
-      console.error('Error deleting therapist:', error);
-      toast.error('Failed to delete therapist. Please try again.');
+      console.error('Error updating therapist status:', error);
+      toast.error('Failed to update therapist status. Please try again.');
     }
   };
 
@@ -591,7 +613,7 @@ const TherapistManagement: React.FC = () => {
             </div>
           </div>
           <div className="md:text-left text-center">
-            <h3 className="text-2xl font-bold text-white mb-1">{therapists.length}</h3>
+            <h3 className="text-2xl font-bold text-white mb-1">{therapists.filter(t => t.isActive).length}</h3>
             <p className="text-neutral-400 text-sm mb-2">Total Therapists</p>
             <p className="text-accent-green text-sm">Licensed professionals</p>
           </div>
@@ -609,7 +631,7 @@ const TherapistManagement: React.FC = () => {
           </div>
           <div className="md:text-left text-center">
             <h3 className="text-2xl font-bold text-white mb-1">
-              {therapists.filter(t => t.isAvailable).length}
+              {therapists.filter(t => t.isActive).length}
             </h3>
             <p className="text-neutral-400 text-sm mb-2">Available Now</p>
             <p className="text-accent-green text-sm">Ready for sessions</p>
@@ -647,7 +669,7 @@ const TherapistManagement: React.FC = () => {
                     />
                     <div className={`absolute bottom-0 right-0
  w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-neutral-800 ${
-                      therapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-500'
+                      therapist.isActive ? 'bg-accent-green' : 'bg-neutral-500'
                     }`}></div>
                   </div>
                 </div>
@@ -656,6 +678,9 @@ const TherapistManagement: React.FC = () => {
               <div className="p-4 sm:p-6 pt-2 sm:pt-4 text-center">
                 <h3 className="text-base sm:text-lg font-semibold text-white mb-1">
                   {therapist.firstName} {therapist.lastName}
+                  {!therapist.isActive && (
+                    <span className="ml-2 inline-block text-xs px-2 py-0.5 rounded-full bg-red-700 text-white">Inactive</span>
+                  )}
                 </h3>
                 <p className="text-neutral-400 text-xs sm:text-sm mb-2 line-clamp-1">{therapist.email}</p>
 
@@ -712,11 +737,12 @@ const TherapistManagement: React.FC = () => {
                     <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(therapist)}
-                    className="p-1 sm:p-2 bg-neutral-800 text-neutral-300 hover:text-red-500 rounded-lg sm:rounded-xl transition-colors duration-200"
-                    title="Delete therapist"
+                    onClick={() => handleToggleActive(therapist, !therapist.isActive)}
+                    className="p-1 sm:p-2 bg-neutral-800 text-neutral-300 hover:text-white rounded-lg sm:rounded-xl transition-colors duration-200"
+                    title={therapist.isActive ? 'Deactivate therapist' : 'Activate therapist'}
+                    aria-pressed={therapist.isActive}
                   >
-                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <ToggleRight className={`w-3 h-3 sm:w-4 sm:h-4 ${therapist.isActive ? 'text-accent-green' : 'text-neutral-400'}`} />
                   </button>
                 </div>
               </div>
@@ -768,6 +794,9 @@ const TherapistManagement: React.FC = () => {
                         <div>
                           <p className="text-white font-medium text-sm sm:text-base">
                             {therapist.firstName} {therapist.lastName}
+                            {!therapist.isActive && (
+                              <span className="ml-2 inline-block text-xs px-2 py-0.5 rounded-full bg-red-700 text-white">Inactive</span>
+                            )}
                           </p>
                           <p className="text-neutral-400 text-xs sm:text-sm">{therapist.email}</p>
                         </div>
@@ -803,7 +832,7 @@ const TherapistManagement: React.FC = () => {
                           : 'bg-neutral-700 text-neutral-300'
                       }`}>
                         <div className={`w-2 h-2 rounded-full ${
-                          therapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-400'
+                          therapist.isActive ? 'bg-accent-green' : 'bg-neutral-400'
                         }`}></div>
                         <span>{therapist.isAvailable ? 'Available' : 'Unavailable'}</span>
                       </span>
@@ -825,11 +854,11 @@ const TherapistManagement: React.FC = () => {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(therapist)}
-                          className="p-2 text-neutral-400 hover:text-red-500 transition-colors duration-200"
-                          title="Delete therapist"
+                          onClick={() => handleToggleActive(therapist, !therapist.isActive)}
+                          className="p-2 text-neutral-400 hover:text-white transition-colors duration-200"
+                          title={therapist.isActive ? 'Deactivate therapist' : 'Activate therapist'}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <ToggleRight className={`w-4 h-4 ${therapist.isActive ? 'text-accent-green' : 'text-neutral-400'}`} />
                         </button>
                       </div>
                     </td>
@@ -937,11 +966,14 @@ const TherapistManagement: React.FC = () => {
                     className="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover border-2 sm:border-4 border-neutral-700 mx-auto"
                   />
                   <div className={`absolute bottom-0 right-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 sm:border-4 border-neutral-800 ${
-                    viewingTherapist.isAvailable ? 'bg-accent-green' : 'bg-neutral-500'
+                    viewingTherapist.isActive ? 'bg-accent-green' : 'bg-neutral-500'
                   }`}></div>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold text-white mt-3 sm:mt-4">
                   {viewingTherapist.firstName} {viewingTherapist.lastName}
+                  {!viewingTherapist.isActive && (
+                    <span className="ml-2 inline-block text-xs px-2 py-0.5 rounded-full bg-red-700 text-white">Inactive</span>
+                  )}
                 </h3>
                 <p className="text-neutral-400 text-sm sm:text-base">{viewingTherapist.email}</p>
                 
@@ -1058,10 +1090,10 @@ const TherapistManagement: React.FC = () => {
               </button>
             </div>
             <div className="p-4 space-y-2">
-              {therapists.filter(t => t.isAvailable).length === 0 && (
+              {therapists.filter(t => t.isActive).length === 0 && (
                 <p className="text-neutral-400 text-sm">No therapists are available right now.</p>
               )}
-              {therapists.filter(t => t.isAvailable).map((t) => (
+              {therapists.filter(t => t.isActive).map((t) => (
                 <div key={t.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-neutral-800/50">
                   <div className="flex items-center gap-3">
                     <img src={t.profilePhoto} alt={`${t.firstName} ${t.lastName}`} className="w-10 h-10 rounded-full object-cover" />

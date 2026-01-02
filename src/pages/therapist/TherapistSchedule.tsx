@@ -5,6 +5,8 @@ import { format, addDays, startOfWeek, isSameDay, startOfDay, endOfDay, startOfW
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
+import { canJoinSessionByTime } from '../../lib/sessions';
+
 import toast from 'react-hot-toast';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -31,6 +33,7 @@ const TherapistSchedule: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
+
   const [viewMode, setViewMode] = useState<'week' | 'day'>('week');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [selectedDaySessions, setSelectedDaySessions] = useState<Session[]>([]);
@@ -38,6 +41,8 @@ const TherapistSchedule: React.FC = () => {
   const [showDayModal, setShowDayModal] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [joinableSessions, setJoinableSessions] = useState<Set<string>>(new Set());
+
   const [stats, setStats] = useState({
     todaysSessions: 0,
     thisWeekSessions: 0,
@@ -52,6 +57,32 @@ const TherapistSchedule: React.FC = () => {
     }
   }, [user, selectedDate]);
 
+  // Compute which sessions are currently joinable based on timing rules
+  useEffect(() => {
+    const updateJoinableSessions = async () => {
+      const joinable = new Set<string>();
+      for (const session of sessions) {
+        try {
+          const canJoin = await canJoinSessionByTime(session as any);
+          if (canJoin) {
+            joinable.add(session.id);
+          }
+        } catch (error) {
+          // Be conservative in schedule view: on error, do not assume joinable
+        }
+      }
+      setJoinableSessions(joinable);
+    };
+
+    updateJoinableSessions();
+  }, [sessions]);
+
+  const canJoinSession = (session: Session) => joinableSessions.has(session.id);
+
+  const handleJoinSession = (session: Session) => {
+    navigate(`/therapist/session/${session.id}`);
+  };
+
   const loadSessions = async () => {
     if (!user) return;
 
@@ -63,7 +94,8 @@ const TherapistSchedule: React.FC = () => {
       const q = query(
         sessionsRef,
         where('therapistId', '==', user.uid),
-        where('status', 'in', ['scheduled', 'confirmed']),
+        // Include active sessions so they remain visible after joining
+        where('status', 'in', ['scheduled', 'confirmed', 'active']),
         orderBy('scheduledTime', 'asc')
       );
 
@@ -175,8 +207,8 @@ const TherapistSchedule: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white">Loading schedule...</p>
+          <div className="w-16 h-16 border-4 border-fixes-accent-purple border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-black">Loading schedule...</p>
         </div>
       </div>
     );
@@ -187,9 +219,9 @@ const TherapistSchedule: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <CalendarIcon className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
-          <p className="text-white mb-2">Please log in to view your schedule</p>
-          <p className="text-neutral-400">You need to be authenticated as a therapist</p>
+          <CalendarIcon className="w-16 h-16 text-fixes-heading-dark mx-auto mb-4" />
+          <p className="text-black mb-2">Please log in to view your schedule</p>
+          <p className="text-fixes-heading-dark">You need to be authenticated as a therapist</p>
         </div>
       </div>
     );
@@ -200,17 +232,17 @@ const TherapistSchedule: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">My Schedule</h1>
-          <p className="text-neutral-300 text-sm sm:text-base">Manage Your Appointments And Availability</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-black mb-1 sm:mb-2">My Schedule</h1>
+          <p className="text-fixes-heading-dark text-sm sm:text-base">Manage Your Appointments And Availability</p>
         </div>
         
         <div className="flex flex-col xs:flex-row items-stretch sm:items-center gap-3">
           {/* View Toggle */}
-          <div className="flex bg-neutral-800 rounded-2xl p-1">
+          <div className="flex bg-fixes-bg-purple rounded-2xl p-1">
             <button
               onClick={() => setViewMode('week')}
               className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl text-sm font-medium ${
-                viewMode === 'week' ? 'bg-primary-500 text-white' : 'text-neutral-300 hover:text-white'
+                viewMode === 'week' ? 'bg-fixes-accent-purple text-black' : 'text-fixes-heading-dark hover:text-black'
               }`}
             >
               Week
@@ -218,7 +250,7 @@ const TherapistSchedule: React.FC = () => {
             <button
               onClick={() => setViewMode('day')}
               className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl text-sm font-medium ${
-                viewMode === 'day' ? 'bg-primary-500 text-white' : 'text-neutral-300 hover:text-white'
+                viewMode === 'day' ? 'bg-fixes-accent-purple text-black' : 'text-fixes-heading-dark hover:text-black'
               }`}
             >
               Day
@@ -227,7 +259,7 @@ const TherapistSchedule: React.FC = () => {
           
           <button 
             onClick={() => navigate('/therapist/availability')}
-            className="bg-primary-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-2xl hover:bg-primary-600 flex items-center justify-center gap-2"
+            className="bg-fixes-accent-purple text-black px-4 sm:px-6 py-2 sm:py-3 rounded-2xl hover:bg-fixes-accent-blue flex items-center justify-center gap-2"
           >
             <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
             <span className="text-sm sm:text-base">Add Availability</span>
@@ -237,71 +269,73 @@ const TherapistSchedule: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
             <CalendarIcon className="w-4 sm:w-5 h-4 sm:h-5 text-primary-500" />
-            <span className="text-neutral-300 text-xs sm:text-sm">Today's</span>
+            <span className="text-fixes-heading-dark text-xs sm:text-sm">Today's</span>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-white">
+          <p className="text-xl sm:text-2xl font-black text-black">
             {loading ? '...' : stats.todaysSessions}
           </p>
         </div>
         
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
             <Clock className="w-4 sm:w-5 h-4 sm:h-5 text-accent-green" />
-            <span className="text-neutral-300 text-xs sm:text-sm">This Week</span>
+            <span className="text-fixes-heading-dark text-xs sm:text-sm">This Week</span>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-white">
+          <p className="text-xl sm:text-2xl font-black text-black">
             {loading ? '...' : stats.thisWeekSessions}
           </p>
         </div>
         
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
             <Users className="w-4 sm:w-5 h-4 sm:h-5 text-accent-yellow" />
-            <span className="text-neutral-300 text-xs sm:text-sm">Total Clients</span>
+            <span className="text-fixes-heading-dark text-xs sm:text-sm">Total Clients</span>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-white">
+          <p className="text-xl sm:text-2xl font-black text-black">
             {loading ? '...' : stats.totalClients}
           </p>
         </div>
         
-        <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-800">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-neutral-200 shadow-sm">
           <div className="flex items-center gap-2 sm:space-x-3 mb-1 sm:mb-2">
             <Video className="w-4 sm:w-5 h-4 sm:h-5 text-accent-orange" />
-            <span className="text-neutral-300 text-xs sm:text-sm">Next Session</span>
+            <span className="text-fixes-heading-dark text-xs sm:text-sm">Next Session</span>
           </div>
-          <p className="text-base sm:text-lg font-bold text-white">
+          <p className="text-base sm:text-lg font-black text-black">
             {loading ? '...' : stats.nextSessionTime}
           </p>
         </div>
       </div>
 
       {/* Calendar View */}
-      <div className="bg-black/50 backdrop-blur-sm rounded-2xl sm:rounded-3xl border border-neutral-800 overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-neutral-800">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-neutral-200 shadow-sm overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-neutral-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h2 className="text-lg sm:text-xl font-semibold text-white">
-              {format(selectedDate, 'MMMM yyyy')}
+            <h2 className="text-lg sm:text-xl font-semibold text-black">
+              {viewMode === 'day'
+                ? format(selectedDate, 'MMMM d, yyyy')
+                : format(selectedDate, 'MMMM yyyy')}
             </h2>
             <div className="flex items-center justify-between sm:justify-end gap-2">
 
             <button
               onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? -7 : -1))}
-              className="p-2 bg-neutral-800 rounded-xl text-white hover:bg-neutral-700 transition-colors"
+              className="p-2 bg-neutral-100 rounded-xl text-black hover:bg-neutral-200 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setSelectedDate(new Date())}
-              className="px-3 sm:px-4 py-1 sm:py-2 bg-neutral-800 text-white rounded-xl hover:bg-neutral-700 text-xs sm:text-sm"
+              className="px-3 sm:px-4 py-1 sm:py-2 bg-neutral-100 text-black rounded-xl hover:bg-neutral-200 text-xs sm:text-sm"
             >
               Today
             </button>
             <button
               onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? 7 : 1))}
-              className="p-2 bg-neutral-800 rounded-xl text-white hover:bg-neutral-700 transition-colors"
+              className="p-2 bg-neutral-100 rounded-xl text-black hover:bg-neutral-200 transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -320,7 +354,7 @@ const TherapistSchedule: React.FC = () => {
                     <button 
                       onClick={() => handleDayClick(day)}
                       className={`w-full p-1 sm:p-2 rounded-lg flex flex-col items-center ${
-                        isSameDay(day, new Date()) ? 'bg-primary-500 text-white' : 'text-neutral-300'
+                        isSameDay(day, new Date()) ? 'bg-primary-100 text-black' : 'text-black'
                       }`}
                     >
                       <p className="text-xs sm:text-sm font-medium">{format(day, 'EEE')}</p>
@@ -361,7 +395,7 @@ const TherapistSchedule: React.FC = () => {
                             {getSessionIcon(session.type)}
                             <span className="font-medium text-white truncate">{session.time}</span>
                           </div>
-                          <p className="text-neutral-300 truncate">{session.clientName}</p>
+                          <p className="text-neutral-500 truncate">{session.clientName}</p>
                         </button>
                       ))}
                     </div>
@@ -379,26 +413,35 @@ const TherapistSchedule: React.FC = () => {
                   className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-neutral-800/50 rounded-xl sm:rounded-2xl gap-3"
                 >
                   <div className="flex items-center gap-3 sm:gap-4">
-                    <div className={`w-10 sm:w-12 h-10 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center ${
-                      session.status === 'confirmed' ? 'bg-accent-green/20' : 'bg-accent-yellow/20'
-                    }`}>
+                    <div
+                      className={`w-10 sm:w-12 h-10 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center ${
+                        session.status === 'confirmed' ? 'bg-accent-green/20' : 'bg-accent-yellow/20'
+                      }`}
+                    >
                       {getSessionIcon(session.type)}
                     </div>
                     <div>
                       <p className="text-white font-medium text-sm sm:text-base">{session.clientName}</p>
-                      <p className="text-neutral-300 text-xs sm:text-sm">{session.time} • {session.duration} min</p>
+                      <p className="text-neutral-300 text-xs sm:text-sm">
+                        {session.time} • {session.duration} min
+                      </p>
                     </div>
                   </div>
-                  
-                  <button className="bg-primary-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl hover:bg-primary-600 text-xs sm:text-sm">
-                    Join
-                  </button>
+
+                  {canJoinSession(session) && (
+                    <button
+                      onClick={() => handleJoinSession(session)}
+                      className="bg-primary-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-xl hover:bg-primary-600 text-xs sm:text-sm"
+                    >
+                      Join
+                    </button>
+                  )}
                 </div>
               ))}
-              
+
               {getSessionsForDate(selectedDate).length === 0 && (
                 <div className="text-center py-8 sm:py-16">
-                  <CalendarIcon className="w-12 sm:w-16 h-12 sm:h-16 text-neutral-600 mx-auto mb-3 sm:mb-4" />
+                  <CalendarIcon className="w-12 sm:w-16 h-12 text-neutral-600 mx-auto mb-3 sm:mb-4" />
                   <p className="text-neutral-300 mb-1 sm:mb-2 text-sm sm:text-base">No sessions scheduled</p>
                   <p className="text-neutral-400 text-xs sm:text-sm">Add availability to accept bookings</p>
                 </div>
@@ -454,10 +497,15 @@ const TherapistSchedule: React.FC = () => {
                   </p>
                 </div>
               </div>
-              
-              <button className="w-full bg-primary-500 text-white py-2 sm:py-3 rounded-xl hover:bg-primary-600">
-                Join Session
-              </button>
+
+              {canJoinSession(selectedSession) && (
+                <button
+                  onClick={() => handleJoinSession(selectedSession)}
+                  className="w-full bg-primary-500 text-white py-2 sm:py-3 rounded-xl hover:bg-primary-600"
+                >
+                  Join Session
+                </button>
+              )}
             </div>
           </div>
         </div>
