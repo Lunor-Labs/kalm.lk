@@ -405,7 +405,7 @@ const TherapistProfile: React.FC = () => {
                 type="text"
                 value={formData.firstName}
                 onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
                 placeholder="Enter first name"
                 required
               />
@@ -419,7 +419,7 @@ const TherapistProfile: React.FC = () => {
                 type="text"
                 value={formData.lastName}
                 onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
                 placeholder="Enter last name"
                 required
               />
@@ -433,7 +433,7 @@ const TherapistProfile: React.FC = () => {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl  focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
                 placeholder="Enter email address"
                 required
               />
@@ -449,7 +449,7 @@ const TherapistProfile: React.FC = () => {
                 max="50"
                 value={formData.experience}
                 onChange={(e) => setFormData(prev => ({ ...prev, experience: parseInt(e.target.value) || 1 }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl  focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
               />
             </div>
 
@@ -464,7 +464,7 @@ const TherapistProfile: React.FC = () => {
                 step="500"
                 value={formData.hourlyRate}
                 onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseInt(e.target.value) || 4500 }))}
-                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
+                className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl  focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
               />
             </div>
           </div>
@@ -510,7 +510,7 @@ const TherapistProfile: React.FC = () => {
                               value={customCredential}
                               onChange={(e) => setCustomCredential(e.target.value)}
                               onKeyPress={handleCredentialKeyPress}
-                              className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-fixes-accent-purple focus:border-transparent bg-white text-black placeholder-neutral-400 text-sm"
+                              className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg  focus:ring-fixes-accent-purple focus:border-transparent bg-white text-black placeholder-neutral-400 text-sm"
                               placeholder="Type custom credential..."
                             />
                             <button
@@ -563,20 +563,20 @@ const TherapistProfile: React.FC = () => {
             </>
           ) : (
             <>
-              <label className="block text-sm font-medium text-fixes-heading-dark mb-2 sm:mb-3">
+              <label className="text-lg sm:text-xl font-semibold text-black mb-4 sm:mb-6">
                 Credentials * (Select or add at least one)
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {credentialOptions.map((credential) => (
                   <div key={credential}>
-                    <label className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                    <label className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-[#F5F5F5] transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.credentials.includes(credential)}
                         onChange={(e) => handleArrayFieldChange('credentials', credential, e.target.checked)}
                         className="rounded border-neutral-600 text-primary-500 focus:ring-primary-500"
                       />
-                      <span className="text-neutral-300 text-sm">{credential}</span>
+                      <span className="text-fixes-heading-dark text-sm">{credential}</span>
                     </label>
                     {credential === 'Other' && formData.credentials.includes('Other') && (
                       <div className="mt-2">
@@ -585,7 +585,7 @@ const TherapistProfile: React.FC = () => {
                           value={customCredential}
                           onChange={(e) => setCustomCredential(e.target.value)}
                           onKeyPress={handleCredentialKeyPress}
-                          className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white placeholder-neutral-400 text-sm"
+                          className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-primary-500 focus:border-transparent bg-white placeholder-neutral-400 text-sm"
                           placeholder="Enter custom credential and press Enter"
                         />
                       </div>
@@ -598,7 +598,7 @@ const TherapistProfile: React.FC = () => {
                   {formData.credentials.filter(c => c !== 'Other').map((credential, index) => (
                     <div
                       key={index}
-                      className="flex items-center px-2 py-1 bg-primary-500/20 text-primary-500 rounded-full text-sm"
+                      className="flex items-center px-2 py-1 bg-primary-500/20 text-fixes-accent-blue rounded-full text-sm"
                     >
                       {credential}
                       <button
@@ -642,7 +642,7 @@ const TherapistProfile: React.FC = () => {
                       value={customSpecialization}
                       onChange={(e) => setCustomSpecialization(e.target.value)}
                       onKeyPress={handleSpecializationKeyPress}
-                      className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white placeholder-neutral-400 text-xs"
+                      className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg focus:ring-primary-500 focus:border-transparent bg-white placeholder-neutral-400 text-xs"
                       placeholder="Enter specialization"
                     />
                     <button
@@ -695,7 +695,7 @@ const TherapistProfile: React.FC = () => {
                   value={customSpecialization}
                   onChange={(e) => setCustomSpecialization(e.target.value)}
                   onKeyPress={handleSpecializationKeyPress}
-                  className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white placeholder-neutral-400 text-sm"
+                  className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-primary-500 focus:border-transparent bg-white placeholder-neutral-400 text-sm"
                   placeholder="Enter specialization and press Enter"
                 />
                 {formData.specializations.length > 0 && (
@@ -743,7 +743,7 @@ const TherapistProfile: React.FC = () => {
               {expandedSections.languages && (
                 <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                   {languageOptions.map((language) => (
-                    <label key={language} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                    <label key={language} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-[#F5F5F5] transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.languages.includes(language)}
@@ -763,7 +763,7 @@ const TherapistProfile: React.FC = () => {
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                 {languageOptions.map((language) => (
-                  <label key={language} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                  <label key={language} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-[#F5F5F5] transition-colors duration-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.languages.includes(language)}
@@ -799,7 +799,7 @@ const TherapistProfile: React.FC = () => {
               {expandedSections.services && (
                 <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                   {serviceOptions.map((service) => (
-                    <label key={service} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                    <label key={service} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-[#F5F5F5] transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.services.includes(service)}
@@ -819,7 +819,7 @@ const TherapistProfile: React.FC = () => {
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {serviceOptions.map((service) => (
-                  <label key={service} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                  <label key={service} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-[#F5F5F5] transition-colors duration-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.services.includes(service)}
@@ -855,7 +855,7 @@ const TherapistProfile: React.FC = () => {
               {expandedSections.sessionFormats && (
                 <div className="p-4 pt-0 grid grid-cols-1 gap-2">
                   {sessionFormatOptions.map((format) => (
-                    <label key={format} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                    <label key={format} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg hover:bg-[#F5F5F5] transition-colors duration-200 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.sessionFormats.includes(format)}
@@ -880,7 +880,7 @@ const TherapistProfile: React.FC = () => {
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                 {sessionFormatOptions.map((format) => (
-                  <label key={format} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-neutral-700 transition-colors duration-200 cursor-pointer">
+                  <label key={format} className="flex items-center space-x-2 p-3 bg-white border border-neutral-200 rounded-lg sm:rounded-xl hover:bg-[#F5F5F5] transition-colors duration-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.sessionFormats.includes(format)}
@@ -909,7 +909,7 @@ const TherapistProfile: React.FC = () => {
             value={formData.bio}
             onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
             rows={4}
-            className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white placeholder-neutral-400 resize-none text-sm sm:text-base"
+            className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-white placeholder-neutral-400 resize-none text-sm sm:text-base"
             placeholder="Enter your professional bio..."
           />
         </div>

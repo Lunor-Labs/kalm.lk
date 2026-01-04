@@ -72,7 +72,7 @@ const Signup: React.FC = () => {
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full pl-9 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-4 py-3 border rounded-2xl  focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="Jane Doe"
                 required
               />
@@ -86,7 +86,7 @@ const Signup: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-9 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-4 py-3 border rounded-2xl  focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="you@example.com"
                 required
               />
@@ -100,7 +100,7 @@ const Signup: React.FC = () => {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                className="w-full pl-9 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-4 py-3 border rounded-2xl  focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="07XXXXXXXX"
               />
             </div>
@@ -113,7 +113,7 @@ const Signup: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-11 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-11 py-3 border rounded-2xl  focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="Create a strong password"
                 required
               />
@@ -130,7 +130,7 @@ const Signup: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-9 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-4 py-3 border rounded-2xl  focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="Confirm your password"
                 required
               />

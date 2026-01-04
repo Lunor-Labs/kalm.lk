@@ -81,7 +81,7 @@ const TherapistFiltersComponent: React.FC<TherapistFiltersProps> = ({
             placeholder="Search by name, specialization, or keyword..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
+            className="w-full pl-12 pr-4 py-4 border border-cream-200 rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
           />
         </div>
 
@@ -153,7 +153,7 @@ const TherapistFiltersComponent: React.FC<TherapistFiltersProps> = ({
               <select
                 value={filters.specialization || ''}
                 onChange={(e) => onFiltersChange({ ...filters, specialization: e.target.value || undefined })}
-                className="w-full p-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
+                className="w-full p-3 border border-cream-200 rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
               >
                 <option value="">All Specializations</option>
                 {specializations.map((spec) => (
@@ -171,7 +171,7 @@ const TherapistFiltersComponent: React.FC<TherapistFiltersProps> = ({
               <select
                 value={filters.language || ''}
                 onChange={(e) => onFiltersChange({ ...filters, language: e.target.value || undefined })}
-                className="w-full p-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
+                className="w-full p-3 border border-cream-200 rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
               >
                 <option value="">All Languages</option>
                 {languages.map((lang) => (
@@ -189,7 +189,7 @@ const TherapistFiltersComponent: React.FC<TherapistFiltersProps> = ({
               <select
                 value={filters.sessionFormat || ''}
                 onChange={(e) => onFiltersChange({ ...filters, sessionFormat: e.target.value || undefined })}
-                className="w-full p-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
+                className="w-full p-3 border border-cream-200 rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
               >
                 <option value="">All Formats</option>
                 {sessionFormats.map((format) => (
@@ -212,7 +212,7 @@ const TherapistFiltersComponent: React.FC<TherapistFiltersProps> = ({
                   ...filters, 
                   availability: e.target.value === 'all' ? undefined : e.target.value as 'available'
                 })}
-                className="w-full p-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
+                className="w-full p-3 border border-cream-200 rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
               >
                 <option value="all">All Therapists</option>
                 <option value="available">Available Now</option>
@@ -240,7 +240,7 @@ const TherapistFiltersComponent: React.FC<TherapistFiltersProps> = ({
                       priceRange: min !== undefined || max !== undefined ? [min || 0, max || 10000] : undefined 
                     });
                   }}
-                  className="w-full p-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
+                  className="w-full p-3 border border-cream-200 rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
                 />
               </div>
               <div>
@@ -256,7 +256,7 @@ const TherapistFiltersComponent: React.FC<TherapistFiltersProps> = ({
                       priceRange: min !== undefined || max !== undefined ? [min || 0, max || 10000] : undefined 
                     });
                   }}
-                  className="w-full p-3 border border-cream-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
+                  className="w-full p-3 border border-cream-200 rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-sm bg-white"
                 />
               </div>
             </div>

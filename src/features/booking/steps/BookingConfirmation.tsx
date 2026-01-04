@@ -253,7 +253,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                   placeholder="Enter coupon code"
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  className="flex-1 px-4 py-3 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400"
+                  className="flex-1 px-4 py-3 border border-neutral-700 rounded-xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400"
                 />
                 <button
                   onClick={applyCoupon}

@@ -104,7 +104,7 @@ const SessionConfigManagement: React.FC = () => {
               max="1440"
               value={formData.joinEarlyMinutes}
               onChange={(e) => handleInputChange('joinEarlyMinutes', parseInt(e.target.value) || 0)}
-              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-xl text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-xl text-white placeholder-neutral-400 focus:outline-none  focus:ring-primary-500 focus:border-transparent"
               placeholder="15"
             />
             <p className="text-xs text-neutral-400 mt-1">
@@ -122,7 +122,7 @@ const SessionConfigManagement: React.FC = () => {
               max="1440"
               value={formData.joinLateMinutes}
               onChange={(e) => handleInputChange('joinLateMinutes', parseInt(e.target.value) || 0)}
-              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-xl text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-neutral-700 border border-neutral-600 rounded-xl text-white placeholder-neutral-400 focus:outline-none  focus:ring-primary-500 focus:border-transparent"
               placeholder="30"
             />
             <p className="text-xs text-neutral-400 mt-1">
