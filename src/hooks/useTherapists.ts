@@ -8,13 +8,14 @@ import { therapistsData, TherapistData } from '../data/therapists';
 export interface UseTherapistsOptions {
   useFirebase?: boolean;
   serviceCategory?: string;
+  serviceName?: string;
 }
 
 export const useTherapists = (options: UseTherapistsOptions = {}) => {
   const [therapists, setTherapists] = useState<TherapistData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { useFirebase = false, serviceCategory } = options;
+  const { useFirebase = false, serviceCategory, serviceName } = options;
 
   const loadTherapists = async () => {
       setLoading(true);
@@ -50,7 +51,6 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
               hourlyRate: therapistProfile.hourlyRate,
               sessionFormats: therapistProfile.sessionFormats,
               services: therapistProfile.services,
-              serviceCategory: determineServiceCategory(therapistProfile.services),
               experience: therapistProfile.experience,
               bio: therapistProfile.bio,
               isAvailable: userData.isActive !== false,
@@ -58,20 +58,36 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
             } as TherapistData;
           }).filter(Boolean) as TherapistData[];
 
-          // Filter by service category if specified
-          const filteredTherapists = serviceCategory 
-            ? firebaseTherapists.filter(t => t.serviceCategory === serviceCategory)
-            : firebaseTherapists;
+          // Filter by exact service name if provided, otherwise by derived category
+          let filteredTherapists = firebaseTherapists;
+          if (serviceName) {
+            const target = serviceName.toLowerCase();
+            filteredTherapists = firebaseTherapists.filter(t =>
+              Array.isArray(t.services) &&
+              t.services.some(s => typeof s === 'string' && s.toLowerCase() === target)
+            );
+          } else if (serviceCategory) {
+            filteredTherapists = firebaseTherapists.filter(t =>
+              Array.isArray(t.services) && determineServiceCategory(t.services as string[]) === serviceCategory
+            );
+          }
 
           setTherapists(filteredTherapists);
         } else {
           // Use dummy data — only include therapists who are active (default true)
-          const base = serviceCategory 
-            ? therapistsData.filter(t => t.serviceCategory === serviceCategory)
-            : therapistsData;
+          let base = therapistsData as TherapistData[];
+          if (serviceName) {
+            const target = serviceName.toLowerCase();
+            base = therapistsData.filter(t =>
+              Array.isArray(t.services) &&
+              t.services.some(s => typeof s === 'string' && s.toLowerCase() === target)
+            );
+          } else if (serviceCategory) {
+            base = therapistsData.filter(t => Array.isArray(t.services) && determineServiceCategory(t.services as string[]) === serviceCategory);
+          }
 
           const filteredTherapists = base
-            .filter(t => (t as any).isActive !== false) // respect isActive if present
+            .filter(t => (t as any).isActive !== false)
             .map(t => ({ ...(t as any), isActive: (t as any).isActive === undefined ? true : (t as any).isActive }));
 
           setTherapists(filteredTherapists as any);
@@ -81,9 +97,16 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
         setError(err.message || 'Failed to load therapists');
         
         // Fallback to dummy data on error — respect isActive
-        const base = serviceCategory 
-          ? therapistsData.filter(t => t.serviceCategory === serviceCategory)
-          : therapistsData;
+        let base = therapistsData as TherapistData[];
+        if (serviceName) {
+          const target = serviceName.toLowerCase();
+          base = therapistsData.filter(t =>
+            Array.isArray(t.services) &&
+            t.services.some(s => typeof s === 'string' && s.toLowerCase() === target)
+          );
+        } else if (serviceCategory) {
+          base = therapistsData.filter(t => Array.isArray(t.services) && determineServiceCategory(t.services as string[]) === serviceCategory);
+        }
 
         const filteredTherapists = base
           .filter(t => (t as any).isActive !== false)
@@ -97,7 +120,7 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
 
   useEffect(() => {
     loadTherapists();
-  }, [useFirebase, serviceCategory]);
+  }, [useFirebase, serviceCategory, serviceName]);
 
   return { therapists, loading, error, refetch: () => loadTherapists() };
 };

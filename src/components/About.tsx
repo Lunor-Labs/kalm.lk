@@ -69,9 +69,9 @@ const About: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-stretch">
-          <div className="space-y-8">
+          <div className="space-y-6">
 
-            <div className="border border-black p-6 flex gap-6">
+            <div className="border border-black px-6 py-5 flex gap-6">
               <div
                 className="text-black text-7xl leading-none"
                 style={{ fontFamily: 'Poppins' }}
@@ -89,7 +89,7 @@ const About: React.FC = () => {
               </div>
             </div>
 
-            <div className="border border-black p-6 flex gap-6">
+            <div className="border border-black px-6 py-5 flex gap-6">
               <div
                 className="text-black text-7xl leading-none"
                 style={{ fontFamily: 'Poppins' }}
@@ -107,7 +107,7 @@ const About: React.FC = () => {
               </div>
             </div>
 
-            <div className="border border-black p-6 flex gap-6">
+            <div className="border border-black px-6 py-5 flex gap-6">
               <div
                 className="text-black text-7xl leading-none"
                 style={{ fontFamily: 'Poppins' }}
@@ -126,9 +126,9 @@ const About: React.FC = () => {
             </div>
           </div>
 
-          {/* Replace this image with the promo video */}
-          <div className="relative animate-fade-in h-full">
-            <div className="relative z-10 w-full h-full overflow-hidden group">
+          {/* Promo video in landscape (16:9) aspect ratio */}
+          <div className="relative animate-fade-in lg:self-center">
+            <div className="relative z-10 w-full aspect-video overflow-hidden group">
               <video
                 ref={videoRef}
                 autoPlay

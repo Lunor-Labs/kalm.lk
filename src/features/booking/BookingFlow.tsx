@@ -90,8 +90,8 @@ const BookingFlow: React.FC = () => {
         return (
           <ServiceSelection
             selectedService={bookingData.serviceType}
-            onServiceSelect={(serviceType) => {
-              updateBookingData({ serviceType });
+            onServiceSelect={(serviceType, serviceName) => {
+              updateBookingData({ serviceType, serviceName });
               nextStep();
             }}
           />
@@ -100,6 +100,7 @@ const BookingFlow: React.FC = () => {
         return (
           <TherapistSelection
             serviceType={bookingData.serviceType}
+            serviceName={bookingData.serviceName}
             selectedTherapist={bookingData.therapistId}
             onTherapistSelect={(therapistId) => {
               updateBookingData({ therapistId });
