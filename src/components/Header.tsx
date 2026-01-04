@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Menu, X, Phone, Instagram, Mail, Facebook, Youtube } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '../lib/auth';
@@ -15,10 +15,13 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
   const location = useLocation();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   const handleSignOut = async () => {
     try {
       await signOut();
+      setIsUserMenuOpen(false);
     } catch {
       toast.error('Failed to sign out. Please try again.');
     }
@@ -34,6 +37,20 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
     };
     navigate(roleMap[user.role] || '/client/home');
   };
+
+  // Close user dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const navItems = [
     { label: 'About', href: '#about' },
@@ -125,21 +142,60 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
               </>
             ) : (
               <div className="flex items-center space-x-3">
-                <button
-                  onClick={goToDashboard}
-                  className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200"
-                >
-                  <div className="w-6 h-6 bg-fixes-accent-purple rounded-full flex items-center justify-center text-xs font-semibold">
-                    {user.displayName?.charAt(0) || 'U'}
-                  </div>
-                  <span className="text-sm font-medium">{user.displayName || 'User'}</span>
-                </button>
-                <button
-                  onClick={handleSignOut}
-                  className="text-black hover:text-gray-600 transition-colors duration-200 text-sm"
-                >
-                  Sign Out
-                </button>
+                <div ref={userMenuRef} className="relative">
+                  <button
+                    onClick={() => setIsUserMenuOpen(prev => !prev)}
+                    className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200"
+                  >
+                    <div className="w-6 h-6 bg-fixes-accent-purple rounded-full flex items-center justify-center text-xs font-semibold">
+                      {user.displayName?.charAt(0) || 'U'}
+                    </div>
+                    <div className="flex flex-col text-left leading-tight">
+                      <span className="text-sm font-medium truncate max-w-[140px]">
+                        {user.displayName || 'User'}
+                      </span>
+                      <span className="text-[11px] text-neutral-300 capitalize">
+                        {user.role || 'Client'}
+                      </span>
+                    </div>
+                  </button>
+
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-72 bg-black text-white rounded-2xl shadow-2xl border border-neutral-800 overflow-hidden z-50">
+                      <div className="px-4 pt-4 pb-3 flex space-x-3">
+                        <div className="w-9 h-9 bg-fixes-accent-purple rounded-full flex items-center justify-center text-sm font-semibold">
+                          {user.displayName?.charAt(0) || 'U'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate">{user.displayName || 'User'}</p>
+                          {!user.isAnonymous && (
+                            <p className="text-[11px] text-neutral-300 truncate">{user.email}</p>
+                          )}
+                          <p className="text-[11px] text-fixes-accent-purple capitalize mt-0.5">{user.role}</p>
+                        </div>
+                      </div>
+
+                      <div className="h-px bg-neutral-800" />
+
+                      <button
+                        onClick={() => {
+                          goToDashboard();
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="w-full flex items-center space-x-2 px-4 py-2.5 text-sm text-neutral-300 hover:bg-fixes-bg-purple hover:text-fixes-heading-dark duration-200"
+                      >
+                        <span className="flex-1 text-left">Go to Dashboard</span>
+                      </button>
+
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center space-x-2 px-4 py-2.5 text-sm text-neutral-300 hover:bg-fixes-bg-purple hover:text-fixes-heading-dark transition-colors duration-200"
+                      >
+                        <span className="flex-1 text-left">Sign Out</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -214,7 +270,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                 </>
               ) : (
                 <>
-                  <div className="bg-black/30 rounded-2xl p-4 text-center">
+                  <div className="bg-black rounded-2xl p-4 text-center">
                     <div className="w-12 h-12 bg-fixes-accent-purple rounded-full flex items-center justify-center mx-auto mb-2">
                       <span className="text-white font-semibold">
                         {user.displayName?.charAt(0) || 'U'}
@@ -244,7 +300,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                       handleSignOut();
                       setIsMenuOpen(false);
                     }}
-                    className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm"
+                    className="text-fixes-accent-black hover:text-white transition-colors duration-200 text-sm"
                   >
                     Sign Out
                   </button>
