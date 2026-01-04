@@ -29,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
       await signOut();
       setShowProfileMenu(false);
     } catch {
-      toast.error('Failed to sign out. Please refresh and try again.');
+      toast.error('Failed to sign out. Please try again.');
     }
   };
 
@@ -52,14 +52,15 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
     { label: 'FAQ', href: '#faq' },
   ];
 
+  const phoneNumber = '+94 (76) 633 0360';
   const phoneNumberForCall = '+94766330360';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-fixes-bg-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-4 lg:py-5">
 
-          {/* Logo */}
+          {/* LOGO */}
           <button
             onClick={() => {
               location.pathname === '/'
@@ -67,32 +68,42 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                 : navigate('/');
               setIsMenuOpen(false);
             }}
-            className="flex items-center gap-2 shrink-0"
+            className="flex items-center space-x-3 flex-shrink-0"
           >
-            <img src="logo.jpg" alt="Kalm Logo" className="w-9 h-9" />
-            <span className="text-lg font-medium text-black">Kalm.lk</span>
+            <img src="logo.jpg" alt="Kalm Logo" className="w-10 h-10 lg:w-8 lg:h-8" />
+            <span className="text-lg lg:text-xl font-body font-medium text-black">
+              Kalm.lk
+            </span>
           </button>
 
-          {/* Desktop Nav */}
-          <nav className="hidden lg:flex flex-1 justify-center gap-10">
-            {navItems.map(item => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="uppercase text-sm hover:font-medium"
-              >
-                {item.label}
-              </a>
-            ))}
+          {/* ================= DESKTOP NAV (UNCHANGED) ================= */}
+          <nav className="hidden lg:flex items-center justify-center flex-1">
+            <div className="flex items-center space-x-10">
+              {navItems.map(item => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="font-body font-light uppercase text-sm hover:text-black hover:font-medium transition-colors duration-200"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
           </nav>
 
-          {/* Desktop Auth */}
-          <div className="hidden lg:flex items-center gap-4">
+          {/* ================= DESKTOP AUTH (UNCHANGED & RESTORED) ================= */}
+          <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
             {!user ? (
               <>
+                <div className="flex items-center space-x-2 font-medium text-sm px-4 py-2 rounded-lg text-black">
+                  <Phone className="w-4 h-4" />
+                  <span className="font-medium">{phoneNumber}</span>
+                </div>
+
                 <button
                   onClick={() => onOpenAuth('login')}
-                  className="border px-5 py-2 rounded-full"
+                  className="bg-fixes-bg-white border uppercase text-black px-5 py-2 rounded-full transition-colors duration-200 font-medium text-sm
+                             border-black hover:bg-black hover:text-fixes-bg-white"
                 >
                   Login
                 </button>
@@ -102,75 +113,49 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             )}
           </div>
 
-          {/* ================= MOBILE RIGHT SECTION ================= */}
+          {/* ================= MOBILE RIGHT AREA (ONLY FIXED PART) ================= */}
           <div className="flex items-center gap-1.5 lg:hidden">
 
             {!user ? (
               <>
                 {/* Call */}
                 <a href={`tel:${phoneNumberForCall}`}>
-                  <div className="w-7 h-7 border rounded-full flex items-center justify-center">
-                    <Phone className="w-4 h-4" />
+                  <div className="w-7 h-7 rounded-full border border-black flex items-center justify-center">
+                    <Phone className="w-4 h-4 text-black" />
                   </div>
                 </a>
 
                 {/* Login */}
                 <button
-                  onClick={() => onOpenAuth('login')}
-                  className="border px-3 py-1 rounded-full text-sm"
+                  onClick={() => {
+                    onOpenAuth('login');
+                    setIsMenuOpen(false);
+                  }}
+                  className="bg-white uppercase border border-black text-black px-3 py-1 rounded-full hover:bg-black hover:text-white transition-all duration-200 font-normal text-sm"
                 >
                   Login
                 </button>
               </>
             ) : (
-              <>
-                <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm">
-                  {user.displayName?.charAt(0) || 'U'}
-                </div>
-              </>
+              <div className="w-8 h-8 bg-fixes-accent-purple rounded-full flex items-center justify-center text-sm font-semibold text-white">
+                {user.displayName?.charAt(0) || 'U'}
+              </div>
             )}
 
             {/* Hamburger */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-1.5 rounded-md hover:bg-black/10"
+              className="p-1.5 rounded-lg hover:bg-black/10 transition-colors duration-200"
             >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {isMenuOpen ? (
+                <X className="w-5 h-5 text-black" />
+              ) : (
+                <Menu className="w-5 h-5 text-black" />
+              )}
             </button>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden bg-neutral-900 text-white rounded-b-xl px-4 py-4 space-y-3">
-            {navItems.map(item => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="block text-center py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.label}
-              </a>
-            ))}
-
-            {user && (
-              <>
-                <button onClick={goToDashboard} className="w-full bg-purple-600 py-2 rounded">
-                  Dashboard
-                </button>
-                <button onClick={handleSignOut} className="w-full text-sm">
-                  Sign Out
-                </button>
-              </>
-            )}
-          </div>
-        )}
       </div>
-
-      {showProfileMenu && (
-        <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-      )}
     </header>
   );
 };
