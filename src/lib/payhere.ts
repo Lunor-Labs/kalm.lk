@@ -1,6 +1,12 @@
 // PayHere payment gateway integration for Sri Lanka
 import { PayHerePayment} from '../types/payment';
 
+// Helper function to get Cloud Functions URL based on current environment
+const getCloudFunctionsUrl = (functionName: string): string => {
+  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || 'kalm-dev-907c9';
+  return `https://us-central1-${projectId}.cloudfunctions.net/${functionName}`;
+};
+
 declare global {
   interface Window {
     payhere: {
@@ -72,7 +78,7 @@ const loadPayHereScript = (): Promise<void> => {
 
 // New: Fetch hash from server
 const fetchPayHereHash = async (orderId: string, amount: number, currency: string) => {
-  const response = await fetch('https://us-central1-kalm-dev-907c9.cloudfunctions.net/generatePayHereHash', {
+  const response = await fetch(getCloudFunctionsUrl('generatePayHereHash'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
