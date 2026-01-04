@@ -102,7 +102,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
     window.scrollTo(0, 0);
   }, []);
 
-  // Set initial filter based on service category
+  // Set initial filter based on service (coming from navigation)
   useEffect(() => {
     if (initialFilter) {
       setFilters({ serviceCategory: initialFilter });
@@ -119,7 +119,14 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
     )
   ];
   const languages = [...new Set(allTherapists.flatMap(t => t.languages))];
-  const serviceCategories = [...new Set(allTherapists.map(t => t.serviceCategory))];
+  // Build list of unique services from therapist.services arrays
+  const services = [
+    ...new Set(
+      allTherapists
+        .flatMap(t => (Array.isArray(t.services) ? t.services : []))
+        .filter(Boolean)
+    )
+  ];
 
   // Compute which therapists have a special date for today with at least one available time slot
   useEffect(() => {
@@ -199,7 +206,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
 
     if (filters.serviceCategory) {
       filtered = filtered.filter(therapist => 
-        therapist.serviceCategory === filters.serviceCategory
+        Array.isArray(therapist.services) && therapist.services.includes(filters.serviceCategory!)
       );
     }
 
@@ -280,9 +287,9 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
 
   const serviceCategoryOptions = [
     { value: '', label: 'All Services' },
-    ...serviceCategories.map(category => ({
-      value: category,
-      label: getServiceCategoryDisplayName(category)
+    ...services.map(service => ({
+      value: service,
+      label: service
     }))
   ];
 
@@ -363,7 +370,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
 
         {/* Simplified Filters */}
         <div className="bg-white border border-black shadow-lg p-6 mb-8 relative rounded-xl"
-             style={{ zIndex: 10 }}>
+             style={{ zIndex: 40 }}>
           <div className="grid md:grid-cols-5 gap-4 mb-4">
             {/* Search */}
             <div className="md:col-span-2">
@@ -440,7 +447,7 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
               <div className="w-16 h-16 border-4 border-fixes-box-purple border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-white">Loading therapists...</p>
               <p className="text-neutral-400 text-sm mt-2">
-                {'Fetching from Firebase...'}
+                {'Please wait...'}
               </p>
             </div>
           </div>

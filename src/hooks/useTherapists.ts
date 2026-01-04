@@ -49,6 +49,7 @@ export const useTherapists = (options: UseTherapistsOptions = {}) => {
               reviewCount: therapistProfile.reviewCount,
               hourlyRate: therapistProfile.hourlyRate,
               sessionFormats: therapistProfile.sessionFormats,
+              services: therapistProfile.services,
               serviceCategory: determineServiceCategory(therapistProfile.services),
               experience: therapistProfile.experience,
               bio: therapistProfile.bio,
