@@ -238,7 +238,7 @@ const TherapistSchedule: React.FC = () => {
         
         <div className="flex flex-col xs:flex-row items-stretch sm:items-center gap-3">
           {/* View Toggle */}
-          <div className="flex bg-fixes-bg-purple rounded-2xl p-1">
+          <div className="flex w-fit bg-fixes-bg-purple rounded-2xl p-1">
             <button
               onClick={() => setViewMode('week')}
               className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl text-sm font-medium ${
