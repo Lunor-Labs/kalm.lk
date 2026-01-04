@@ -12,6 +12,7 @@ export interface TherapistData {
   hourlyRate: number;
   sessionFormats: string[];
   serviceCategory: string;
+  services?: string[]; // Optional list of service names (from Firebase)
   experience: number;
   bio: string;
   isActive?: boolean;
