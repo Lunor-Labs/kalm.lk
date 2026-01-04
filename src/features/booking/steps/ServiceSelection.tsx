@@ -3,7 +3,9 @@ import { Heart, Users, UserCheck, Sparkles } from 'lucide-react';
 
 interface ServiceSelectionProps {
   selectedService?: string;
-  onServiceSelect: (serviceType: string) => void;
+  // serviceType is the high-level category (TEENS, INDIVIDUALS, etc.)
+  // serviceName is the exact label stored in therapistProfile.services
+  onServiceSelect: (serviceType: string, serviceName: string) => void;
 }
 
 const ServiceSelection: React.FC<ServiceSelectionProps> = ({ selectedService, onServiceSelect }) => {
@@ -15,7 +17,8 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ selectedService, on
       description: 'Specialized support for teenagers navigating adolescence, school stress, and identity.',
       icon: Heart,
       color: 'from-primary-500 to-primary-600',
-      price: 'From LKR 3,500'
+      price: 'From LKR 3,500',
+      serviceName: 'Teen Counseling'
     },
     {
       id: 'INDIVIDUALS',
@@ -24,7 +27,8 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ selectedService, on
       description: 'Personal therapy for adults dealing with anxiety, depression, and life challenges.',
       icon: Users,
       color: 'from-accent-green to-primary-500',
-      price: 'From LKR 4,500'
+      price: 'From LKR 4,500',
+      serviceName: 'Individual Therapy'
     },
     {
       id: 'FAMILY_COUPLES',
@@ -33,7 +37,8 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ selectedService, on
       description: 'Relationship counseling and family therapy to strengthen bonds and communication.',
       icon: UserCheck,
       color: 'from-accent-pink to-accent-orange',
-      price: 'From LKR 6,000'
+      price: 'From LKR 6,000',
+      serviceName: 'Family and Couples Therapy'
     },
     {
       id: 'LGBTQIA',
@@ -42,7 +47,8 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ selectedService, on
       description: 'Affirming and inclusive therapy for LGBTQIA+ individuals and couples.',
       icon: Sparkles,
       color: 'from-accent-yellow to-accent-orange',
-      price: 'From LKR 4,500'
+      price: 'From LKR 4,500',
+      serviceName: 'LGBTQIA+ Support'
     }
   ];
 
@@ -63,7 +69,7 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ selectedService, on
           return (
             <button
               key={service.id}
-              onClick={() => onServiceSelect(service.id)}
+              onClick={() => onServiceSelect(service.id, service.serviceName)}
               className={`group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-2 border-none text-left ${
                 isSelected
                   ? 'ring-2 ring-fixes-accent-purple'
@@ -120,7 +126,7 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({ selectedService, on
           return (
             <button
               key={service.id}
-              onClick={() => onServiceSelect(service.id)}
+              onClick={() => onServiceSelect(service.id, service.serviceName)}
               className={`group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-2 border-none text-center ${
                 isSelected
                   ? 'ring-2 ring-fixes-accent-purple'

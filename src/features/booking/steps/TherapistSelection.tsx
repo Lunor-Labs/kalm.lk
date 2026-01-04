@@ -4,6 +4,7 @@ import { useTherapists } from '../../../hooks/useTherapists';
 
 interface TherapistSelectionProps {
   serviceType?: string;
+  serviceName?: string;
   selectedTherapist?: string;
   onTherapistSelect: (therapistId: string) => void;
   onBack: () => void;
@@ -11,6 +12,7 @@ interface TherapistSelectionProps {
 
 const TherapistSelection: React.FC<TherapistSelectionProps> = ({
   serviceType,
+  serviceName,
   selectedTherapist,
   onTherapistSelect,
   onBack
@@ -24,7 +26,8 @@ const TherapistSelection: React.FC<TherapistSelectionProps> = ({
   // Use the custom hook to fetch therapists, always using Firebase
   const { therapists, loading, error } = useTherapists({
     useFirebase: true,
-    serviceCategory: serviceType
+    serviceCategory: serviceType,
+    serviceName
   });
 
   const getSessionFormatIcon = (format: string) => {
