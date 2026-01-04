@@ -70,7 +70,7 @@ const AnonymousSignup: React.FC = () => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full pl-9 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-4 py-3 border rounded-2xl  focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="Choose a unique username"
                 required
               />
@@ -84,7 +84,7 @@ const AnonymousSignup: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-11 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-11 py-3 border rounded-2xl  focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="Create a password"
                 required
               />
@@ -101,7 +101,7 @@ const AnonymousSignup: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-9 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-4 py-3 border rounded-2xl  focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="Confirm your password"
                 required
               />

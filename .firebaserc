@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "kalm-dev-907c9"
+    "default": "kalm-dev-907c9",
+    "prod": "kalm-prod"
   }
 }

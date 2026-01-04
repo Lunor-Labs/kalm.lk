@@ -112,7 +112,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 type="text"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                className="w-full pl-9 pr-4 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-4 py-3 border rounded-2xl  focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="you@example.com or username"
                 required
               />
@@ -126,7 +126,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-11 py-3 border rounded-2xl focus:ring-2 focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
+                className="w-full pl-9 pr-11 py-3 border rounded-2xl  focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="Your password"
                 required
               />

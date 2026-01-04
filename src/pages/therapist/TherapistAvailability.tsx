@@ -567,7 +567,7 @@ const TherapistAvailability = () => {
                       border border-neutral-300 
                       rounded-lg 
                       text-fixes-heading-dark 
-                      focus:ring-2 focus:ring-fixes-accent-purple/30 
+                       focus:ring-fixes-accent-purple/30 
                       focus:border-fixes-accent-purple
                       outline-none
                       transition-all
@@ -581,7 +581,7 @@ const TherapistAvailability = () => {
                       border border-neutral-300 
                       rounded-lg 
                       text-fixes-heading-dark 
-                      focus:ring-2 focus:ring-fixes-accent-purple/30 
+                       focus:ring-fixes-accent-purple/30 
                       focus:border-fixes-accent-purple
                       outline-none
                       transition-all

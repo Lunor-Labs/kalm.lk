@@ -534,7 +534,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`w-full pl-8 xs:pl-10 pr-4 py-2 xs:py-3 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
+                    className={`w-full pl-8 xs:pl-10 pr-4 py-2 xs:py-3 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
                       errors.email ? 'border-red-500' : 'border-cream-200'
                     }`}
                     placeholder="Enter your email"
@@ -558,7 +558,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                     name="username"
                     value={formData.username}
                     onChange={handleInputChange}
-                    className={`w-full pl-8 xs:pl-10 pr-4 py-2 xs:py-3 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
+                    className={`w-full pl-8 xs:pl-10 pr-4 py-2 xs:py-3 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
                       errors.username ? 'border-red-500' : 'border-cream-200'
                     }`}
                     placeholder="Choose a unique username"
@@ -583,7 +583,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                       name="displayName"
                       value={formData.displayName}
                       onChange={handleInputChange}
-                      className={`w-full pl-8 xs:pl-10 pr-4 py-2 xs:py-3 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
+                      className={`w-full pl-8 xs:pl-10 pr-4 py-2 xs:py-3 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
                         errors.displayName ? 'border-red-500' : 'border-cream-200'
                       }`}
                       placeholder="Enter your full name"
@@ -605,7 +605,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className={`w-full pl-8 xs:pl-10 pr-4 py-2 xs:py-3 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
+                      className={`w-full pl-8 xs:pl-10 pr-4 py-2 xs:py-3 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
                         errors.phone ? 'border-red-500' : 'border-cream-200'
                       }`}
                       placeholder="Enter your phone number"
@@ -630,7 +630,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`w-full pl-8 xs:pl-10 pr-10 xs:pr-12 py-2 xs:py-3 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
+                    className={`w-full pl-8 xs:pl-10 pr-10 xs:pr-12 py-2 xs:py-3 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
                       errors.password ? 'border-red-500' : 'border-cream-200'
                     }`}
                     placeholder="Enter your password"
@@ -666,7 +666,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, mode, onSwitchMo
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={`w-full pl-8 xs:pl-10 pr-4 py-2 xs:py-3 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
+                    className={`w-full pl-8 xs:pl-10 pr-4 py-2 xs:py-3 sm:py-3 border rounded-lg xs:rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 text-xs xs:text-sm sm:text-base ${
                       errors.confirmPassword ? 'border-red-500' : 'border-cream-200'
                     }`}
                     placeholder="Confirm your password"

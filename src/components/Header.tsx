@@ -1,111 +1,56 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, X, Phone, User, LogOut } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Menu, X, Phone, Instagram, Mail, Facebook, Youtube } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '../lib/auth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Instagram, Mail, MapPin, Facebook, Youtube } from 'lucide-react';
 
 interface HeaderProps {
   onOpenAuth: (mode: 'login' | 'signup') => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const location = useLocation();
-  const [mobileRightMargin, setMobileRightMargin] = useState<string>('-12rem');
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
-      if (hash) {
-        const el = document.getElementById(hash);
-        if (el) {
-          const headerHeight = document.querySelector('header')?.offsetHeight || 0;
-          const elementPosition = el.getBoundingClientRect().top + window.pageYOffset;
-          window.scrollTo({
-            top: elementPosition - headerHeight,
-            behavior: 'smooth',
-          });
-        }
-      }
-    };
-
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  // Smooth marginRight calculation across widths (linear interpolation)
-  useEffect(() => {
-    const minW = 360; // px
-    const maxW = 1020; // px
-    const minRem = -6; // rem at minW
-    const maxRem = -27; // rem at maxW
-
-    const interpolate = (w: number) => {
-      if (w <= minW) return minRem;
-      if (w >= maxW) return maxRem;
-      const t = (w - minW) / (maxW - minW);
-      return minRem + t * (maxRem - minRem);
-    };
-
-    let rafId: number | null = null;
-
-    const updateMargin = () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        const w = window.innerWidth;
-        const remValue = interpolate(w);
-        // format to 4 decimal places to avoid long floats
-        setMobileRightMargin(`${remValue.toFixed(4)}rem`);
-      });
-    };
-
-    updateMargin();
-    window.addEventListener('resize', updateMargin);
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', updateMargin);
-    };
-  }, []);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   const handleSignOut = async () => {
     try {
       await signOut();
-      // toast.success('Signed out successfully');
-      setShowProfileMenu(false);
-    } catch (error: any) {
-      toast.error('Failed to sign out. Please try refreshing the page.');
+      setIsUserMenuOpen(false);
+    } catch {
+      toast.error('Failed to sign out. Please try again.');
     }
   };
 
   const goToDashboard = () => {
-    if (user) {
-      const getRoleRedirectPath = (role: string): string => {
-        switch (role) {
-          case 'admin':
-          case 'superadmin': return '/admin/dashboard';
-          case 'therapist': return '/therapist/schedule';
-          case 'client': return '/client/home';
-          default: return '/client/home';
-        }
-      };
-      navigate(getRoleRedirectPath(user.role));
-    }
+    if (!user) return;
+    const roleMap: Record<string, string> = {
+      admin: '/admin/dashboard',
+      superadmin: '/admin/dashboard',
+      therapist: '/therapist/schedule',
+      client: '/client/home',
+    };
+    navigate(roleMap[user.role] || '/client/home');
   };
+
+  // Close user dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const navItems = [
     { label: 'About', href: '#about' },
@@ -142,45 +87,35 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-fixes-bg-white shadow-lg transition-none">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-fixes-bg-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-4 lg:py-5">
-          {/* Logo (click to go to homepage) */}
+
+          {/* LOGO */}
           <button
             onClick={() => {
-              if (location.pathname === '/') {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                setIsMenuOpen(false);
-              } else {
-                navigate('/');
-              }
+              location.pathname === '/'
+                ? window.scrollTo({ top: 0, behavior: 'smooth' })
+                : navigate('/');
+              setIsMenuOpen(false);
             }}
-            className="flex items-center space-x-3 flex-shrink-0 cursor-pointer"
-            aria-label="Go to homepage"
+            className="flex items-center space-x-3 flex-shrink-0"
           >
-            <img
-              src="logo.jpg"
-              alt="Kalm Logo"
-              className="w-10 h-10 lg:w-8 lg:h-8"
-            />
-            <span className={`text-lg lg:text-xl font-body font-medium transition-colors duration-300 ${
-              isScrolled ? 'text-black' : 'text-black'
-            }`}>
+            <img src="logo.jpg" alt="Kalm Logo" className="w-10 h-10 lg:w-8 lg:h-8" />
+            <span className="text-lg lg:text-xl font-body font-medium text-black">
               Kalm.lk
             </span>
           </button>
 
-          {/* Desktop Navigation - Centered */}
+          {/* ================= DESKTOP NAV (FIXED - Added click handler) ================= */}
           <nav className="hidden lg:flex items-center justify-center flex-1">
             <div className="flex items-center space-x-10">
-              {navItems.map((item) => (
+              {navItems.map(item => (
                 <a
                   key={item.label}
                   href={item.href}
-                  onClick={e => handleNavClick(e, item.href)}
-                  className={`font-body font-light uppercase hover:text-black hover:font-medium transition-colors duration-200 text-sm whitespace-nowrap ${
-                    isScrolled ? 'text-fixes-heading-dark' : 'text=fixes-heading-dark/90 hover:text-fixes-heading-dark'
-                  }`}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className="font-body font-light uppercase text-sm hover:text-black hover:font-medium transition-colors duration-200 cursor-pointer"
                 >
                   {item.label}
                 </a>
@@ -188,237 +123,193 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             </div>
           </nav>
 
-          {/* Desktop Auth/Profile Section */}
+          {/* ================= DESKTOP AUTH (UNCHANGED & RESTORED) ================= */}
           <div className="hidden lg:flex items-center space-x-4 flex-shrink-0">
             {!user ? (
               <>
-                <div className={`flex items-center space-x-2 font-medium text-sm px-4 py-2 rounded-lg ${
-                  isScrolled 
-                    ? 'text-fixes-heading-dark' 
-                    : 'text-black'
-                }`}>
+                <div className="flex items-center space-x-2 font-medium text-sm px-4 py-2 rounded-lg text-black">
                   <Phone className="w-4 h-4" />
-                  <span>{phoneNumber}</span>
+                  <span className="font-medium">{phoneNumber}</span>
                 </div>
+
                 <button
                   onClick={() => onOpenAuth('login')}
-                  className={`bg-fixes-bg-white border uppercase text-black px-5 py-2 rounded-full transition-colors duration-200 font-medium text-sm ${
-                    isScrolled 
-                      ? 'bg-fixes-bg-white text-fixes-heading-dark border-fixes-heading-dark hover:bg-black hover:text-fixes-bg-white' 
-                      : 'bg-fixes-bg-white text-black border-black hover:bg-black hover:text-fixes-bg-white'
-                  }`}
+                  className="bg-fixes-bg-white border uppercase text-black px-5 py-2 rounded-full transition-colors duration-200 font-medium text-sm
+                             border-black hover:bg-black hover:text-fixes-bg-white"
                 >
                   Login
                 </button>
               </>
             ) : (
-              <div className="relative">
-                <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center space-x-3 bg-black backdrop-blur-sm rounded-full px-4 py-2 hover:bg-black/70 transition-colors duration-200"
-                >
-                  <div className="w-8 h-8 bg-fixes-accent-purple rounded-full flex items-center justify-center">
-                    <span className="text-black font-semibold text-sm">
+              <div className="flex items-center space-x-3">
+                <div ref={userMenuRef} className="relative">
+                  <button
+                    onClick={() => setIsUserMenuOpen(prev => !prev)}
+                    className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200"
+                  >
+                    <div className="w-6 h-6 bg-fixes-accent-purple rounded-full flex items-center justify-center text-xs font-semibold">
                       {user.displayName?.charAt(0) || 'U'}
-                    </span>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-white font-medium text-sm">
-                      {user.displayName || 'User'}
-                    </p>
-                    <p className="text-neutral-300 text-xs capitalize">
-                      {user.role} {user.isAnonymous && '(Anonymous)'}
-                    </p>
-                  </div>
-                </button>
-
-                {showProfileMenu && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 backdrop-blur-sm border border-neutral-700 rounded-2xl shadow-xl z-50">                    <div className="p-4 border-b border-neutral-700">
-                      <p className="text-white font-medium">{user.displayName || 'User'}</p>
-                      <p className="text-neutral-300 text-sm">
-                        {user.isAnonymous ? 'Anonymous Account' : user.email}
-                      </p>
-                      <p className="text-fixes-accent-purple text-xs capitalize mt-1">
-                        {user.role}
-                      </p>
                     </div>
-                    <div className="p-2 space-y-2">
+                    <div className="flex flex-col text-left leading-tight">
+                      <span className="text-sm font-medium truncate max-w-[140px]">
+                        {user.displayName || 'User'}
+                      </span>
+                      <span className="text-[11px] text-neutral-300 capitalize">
+                        {user.role || 'Client'}
+                      </span>
+                    </div>
+                  </button>
+
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-72 bg-black text-white rounded-2xl shadow-2xl border border-neutral-800 overflow-hidden z-50">
+                      <div className="px-4 pt-4 pb-3 flex space-x-3">
+                        <div className="w-9 h-9 bg-fixes-accent-purple rounded-full flex items-center justify-center text-sm font-semibold">
+                          {user.displayName?.charAt(0) || 'U'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate">{user.displayName || 'User'}</p>
+                          {!user.isAnonymous && (
+                            <p className="text-[11px] text-neutral-300 truncate">{user.email}</p>
+                          )}
+                          <p className="text-[11px] text-fixes-accent-purple capitalize mt-0.5">{user.role}</p>
+                        </div>
+                      </div>
+
+                      <div className="h-px bg-neutral-800" />
+
                       <button
-                        onClick={goToDashboard}
-                        className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-fixes-heading-dark bg-fixes-accent-purple hover:bg-fixes-accent-blue transition-colors duration-200"
+                        onClick={() => {
+                          goToDashboard();
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="w-full flex items-center space-x-2 px-4 py-2.5 text-sm text-neutral-300 hover:bg-fixes-bg-purple hover:text-fixes-heading-dark duration-200"
                       >
-                        <User className="w-4 h-4" />
-                        <span>Go to Dashboard</span>
+                        <span className="flex-1 text-left">Go to Dashboard</span>
                       </button>
+
                       <button
                         onClick={handleSignOut}
-                        className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl text-neutral-300 hover:bg-fixes-accent-purple hover:text-fixes-heading-dark transition-colors duration-200"
+                        className="w-full flex items-center space-x-2 px-4 py-2.5 text-sm text-neutral-300 hover:bg-fixes-bg-purple hover:text-fixes-heading-dark transition-colors duration-200"
                       >
-                        <LogOut className="w-4 h-4" />
-                        <span>Sign Out</span>
+                        <span className="flex-1 text-left">Sign Out</span>
                       </button>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
           </div>
 
-            <div className="pr-4 pt-3 flex items-center justify-end mb-3 lg:hidden">
-              {/* Adjust the marginRight value below to move this block further from the right edge as you wish */}
-              <div
-                className="flex items-center justify-end gap-3 overflow-x-auto px-2 py-2"
-                style={{ marginRight: mobileRightMargin }}
-              >
-                {!user ? (
-                  <>
-                  <a
-                    href={`tel:${phoneNumberForCall}`}
-                    className="inline-flex items-center gap-1 text-fixes-accent-purple hover:text-primary-600 transition-colors duration-200 font-medium text-sm"
-                  >
-                    <div className="w-7 h-7 rounded-full border border-black flex items-center justify-center">
-                      <Phone className="w-4 h-4 text-black" />
-                    </div>
-                    {/* <span>Call Us</span> */}
-                  </a>
+          {/* ================= MOBILE RIGHT AREA (ONLY FIXED PART) ================= */}
+          <div className="flex items-center gap-1.5 lg:hidden">
+
+            {!user ? (
+              <>
+                {/* Call */}
+                <a href={`tel:${phoneNumberForCall}`}>
+                  <div className="w-7 h-7 rounded-full border border-black flex items-center justify-center">
+                    <Phone className="w-4 h-4 text-black" />
+                  </div>
+                </a>
+
+                {/* Login */}
                 <button
                   onClick={() => {
-                  onOpenAuth('login');
-                  setIsMenuOpen(false);
+                    onOpenAuth('login');
+                    setIsMenuOpen(false);
                   }}
-                  className="bg-white uppercase border border-black text-black px-4 py-1.5 rounded-full hover:bg-black hover:text-white transition-all duration-200 font-normal text-sm whitespace-nowrap"
-                  >
+                  className="bg-white uppercase border border-black text-black px-3 py-1 rounded-full hover:bg-black hover:text-white transition-all duration-200 font-normal text-sm"
+                >
                   Login
                 </button>
               </>
             ) : (
-              <>
-          {/* Profile Initial */}
-            <div className="w-8 h-8 bg-fixes-accent-purple rounded-full flex items-center justify-center text-sm font-semibold text-white shrink-0">
-              {user.displayName?.charAt(0) || 'U'}
-            </div>
-          
-          {/* Dashboard Button */}
-            {/* <button
-              onClick={() => {
-                goToDashboard();
-                setIsMenuOpen(false);
-              }}
-              className="bg-fixes-accent-purple text-white px-3 py-1 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-xs whitespace-nowrap"
-            >
-              Dashboard
-            </button> */}
+              <div className="w-8 h-8 bg-fixes-accent-purple rounded-full flex items-center justify-center text-sm font-semibold text-white">
+                {user.displayName?.charAt(0) || 'U'}
+              </div>
+            )}
 
-          {/* Sign Out Button */}
+            {/* Hamburger */}
             <button
-              onClick={() => {
-                handleSignOut();
-                setIsMenuOpen(false);
-              }}
-              className="text-fixes-heading-dark hover:text-black transition-colors duration-200 text-xs whitespace-nowrap"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-1.5 rounded-lg hover:bg-black/10 transition-colors duration-200"
             >
-              Sign Out
+              {isMenuOpen ? (
+                <X className="w-5 h-5 text-black" />
+              ) : (
+                <Menu className="w-5 h-5 text-black" />
+              )}
             </button>
-          </>
-        )}
-    
+          </div>
         </div>
       </div>
 
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="lg:hidden absolute top-full left-0 right-0 bg-white shadow-xl rounded-b-2xl border-t border-neutral-700">
+          <div className="px-4 py-4 space-y-3">
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-white/10 transition-colors duration-200"
-          >
-            {isMenuOpen ? (
-              <X className={`w-5 h-5 ${isScrolled ? 'text-black' : 'text-black'}`} />
-            ) : (
-              <Menu className={`w-5 h-5 ${isScrolled ? 'text-black' : 'text-black'}`} />
-            )}
-          </button>
-        </div>
+            {/* Nav Items */}
+            <div className="text-center space-y-3">
+              {navItems.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className="block text-black hover:text-fixes-accent-purple transition-colors duration-200 font-normal py-2 text-sm"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 bg-neutral-900 shadow-xl rounded-b-2xl border-t border-neutral-700">
-            <div className="px-4 py-4 space-y-3">
-              <div className="text-center space-y-3">
-                {navItems.map((item) => (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    onClick={e => handleNavClick(e, item.href)}
-                    className="block text-white hover:text-fixes-accent-purple transition-colors duration-200 font-normal py-2 text-sm"
-                  >
-                    {item.label}
-                  </a>
-                ))}
-              </div>
-              
-              <div className="pt-3 border-t border-neutral-700 space-y-2 text-center">
-                {!user ? (
-                  <>
-                    {/* <a
-                      href={`tel:${phoneNumberForCall}`}
-                      className="inline-flex items-center space-x-2 text-fixes-accent-purple hover:text-primary-600 transition-colors duration-200 font-medium py-2 text-sm"
-                    >
-                      <Phone className="w-4 h-4" />
-                      <span>Call Us</span>
-                    </a>
-                    <div>
-                      <button
-                        onClick={() => {
-                          onOpenAuth('login');
-                          setIsMenuOpen(false);
-                        }}
-                        className="bg-fixes-accent-purple text-white px-6 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm"
-                      >
-                        Login
-                      </button>
-                    </div> */}
-                  </>
-                ) : (
-                  <>
-                    <div className="bg-black/30 rounded-2xl p-4 text-center">
-                      <div className="w-12 h-12 bg-fixes-accent-purple rounded-full flex items-center justify-center mx-auto mb-2">
-                        <span className="text-white font-semibold">
-                          {user.displayName?.charAt(0) || 'U'}
-                        </span>
-                      </div>
-                      <p className="text-white font-medium">{user.displayName || 'User'}</p>
-                      <p className="text-neutral-300 text-sm">
-                        {user.isAnonymous ? 'Anonymous Account' : user.email}
-                      </p>
-                      <p className="text-fixes-accent-purple text-xs capitalize mt-1">
-                        {user.role}
-                      </p>
+            {/* Auth / User Section */}
+            <div className="pt-3 border-t border-neutral-700 space-y-2 text-center">
+              {!user ? (
+                <>
+                </>
+              ) : (
+                <>
+                  <div className="bg-black rounded-2xl p-4 text-center">
+                    <div className="w-12 h-12 bg-fixes-accent-purple rounded-full flex items-center justify-center mx-auto mb-2">
+                      <span className="text-white font-semibold">
+                        {user.displayName?.charAt(0) || 'U'}
+                      </span>
                     </div>
-                    
-                    <button
-                      onClick={() => {
-                        goToDashboard();
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full bg-fixes-accent-purple text-white px-6 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm"
-                    >
-                      Go to Dashboard
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        handleSignOut();
-                        setIsMenuOpen(false);
-                      }}
-                      className="text-neutral-300 hover:text-white transition-colors duration-200 text-sm"
-                    >
-                      Sign Out
-                    </button>
-                  </>
-                )}
-              </div>
-          {/* <div className="pt-3 border-t border-neutral-700 space-y-2 text-center"></div> */}
-                <div className="flex items-center space-x-3 justify-center block lg:hidden">
+                    <p className="text-white font-medium">{user.displayName || 'User'}</p>
+                    <p className="text-neutral-300 text-sm">
+                      {user.isAnonymous ? 'Anonymous Account' : user.email}
+                    </p>
+                    <p className="text-fixes-accent-purple text-xs capitalize mt-1">
+                      {user.role}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      goToDashboard();
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full bg-fixes-accent-purple text-white px-6 py-2.5 rounded-full hover:bg-primary-600 transition-all duration-200 font-medium text-sm"
+                  >
+                    Go to Dashboard
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-fixes-accent-black hover:text-white transition-colors duration-200 text-sm"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Social Media Icons */}
+            <div className="flex items-center space-x-3 justify-center block lg:hidden">
               <a
                 href="https://www.instagram.com/kalm_lk?igsh=dHJ1YWExNDg1Mmpz"
                 target="_blank"
@@ -465,16 +356,9 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                 <Mail className="w-4 h-4" />
               </a>
             </div>
+
           </div>
         </div>
-        )}
-      </div>
-
-      {showProfileMenu && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowProfileMenu(false)}
-        />
       )}
     </header>
   );

@@ -144,7 +144,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Type a message..."
               disabled={isLoading}
-              className="w-full bg-neutral-700 text-white placeholder-neutral-400 rounded-2xl px-4 py-3 pr-12 focus:ring-2 focus:ring-primary-500 focus:outline-none disabled:opacity-50"
+              className="w-full bg-neutral-700 text-white placeholder-neutral-400 rounded-2xl px-4 py-3 pr-12  focus:ring-primary-500 focus:outline-none disabled:opacity-50"
             />
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
               <button

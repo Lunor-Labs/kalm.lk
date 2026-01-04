@@ -647,7 +647,7 @@ const TherapistManagement: React.FC = () => {
             placeholder="Search therapists..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+            className="w-full pl-10 pr-4 py-2 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
           />
         </div>
       </div>
@@ -1209,7 +1209,7 @@ const TherapistManagement: React.FC = () => {
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
                     placeholder="Enter first name"
                     required
                   />
@@ -1223,7 +1223,7 @@ const TherapistManagement: React.FC = () => {
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
                     placeholder="Enter last name"
                     required
                   />
@@ -1237,7 +1237,7 @@ const TherapistManagement: React.FC = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
                     placeholder="Enter email address"
                     required
                   />
@@ -1253,7 +1253,7 @@ const TherapistManagement: React.FC = () => {
                         type={showPassword ? 'text' : 'password'}
                         value={formData.password}
                         onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                        className="w-full px-3 py-2 sm:px-4 sm:py-3 pr-10 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                        className="w-full px-3 py-2 sm:px-4 sm:py-3 pr-10 border border-neutral-700 rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
                         placeholder="Enter password"
                         required
                       />
@@ -1278,7 +1278,7 @@ const TherapistManagement: React.FC = () => {
                     max="50"
                     value={formData.experience}
                     onChange={(e) => setFormData(prev => ({ ...prev, experience: parseInt(e.target.value) || 1 }))}
-                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
                   />
                 </div>
 
@@ -1293,7 +1293,7 @@ const TherapistManagement: React.FC = () => {
                     step="500"
                     value={formData.hourlyRate}
                     onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseInt(e.target.value) || 4500 }))}
-                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
                   />
                 </div>
               </div>
@@ -1335,7 +1335,7 @@ const TherapistManagement: React.FC = () => {
                                   value={customCredential}
                                   onChange={(e) => setCustomCredential(e.target.value)}
                                   onKeyPress={handleCredentialKeyPress}
-                                  className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
+                                  className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg  focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
                                   placeholder="Enter custom credential"
                                 />
                                 <button
@@ -1395,7 +1395,7 @@ const TherapistManagement: React.FC = () => {
                             value={customSpecialization}
                             onChange={(e) => setCustomSpecialization(e.target.value)}
                             onKeyPress={handleSpecializationKeyPress}
-                            className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
+                            className="flex-1 px-3 py-2 border border-neutral-700 rounded-lg  focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-xs"
                             placeholder="Enter specialization"
                           />
                           <button
@@ -1556,7 +1556,7 @@ const TherapistManagement: React.FC = () => {
                                 value={customCredential}
                                 onChange={(e) => setCustomCredential(e.target.value)}
                                 onKeyPress={handleCredentialKeyPress}
-                                className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-sm"
+                                className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl  focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-sm"
                                 placeholder="Enter custom credential and press Enter"
                               />
                             </div>
@@ -1596,7 +1596,7 @@ const TherapistManagement: React.FC = () => {
                         value={customSpecialization}
                         onChange={(e) => setCustomSpecialization(e.target.value)}
                         onKeyPress={handleSpecializationKeyPress}
-                        className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-sm"
+                        className="w-full px-3 py-2 border border-neutral-700 rounded-lg sm:rounded-xl  focus:ring-primary-500 focus:border-transparent bg-neutral-800 text-white placeholder-neutral-400 text-sm"
                         placeholder="Enter specialization and press Enter"
                       />
                       {formData.specializations.length > 0 && (
@@ -1697,7 +1697,7 @@ const TherapistManagement: React.FC = () => {
                   value={formData.bio}
                   onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                   rows={4}
-                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 resize-none text-sm sm:text-base"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 resize-none text-sm sm:text-base"
                   placeholder="Enter therapist bio..."
                 />
               </div>

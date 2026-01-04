@@ -64,7 +64,7 @@ const TherapistCard: React.FC<TherapistCardProps> = ({ therapist, onBookNow }) =
 
         <button
           onClick={() => onBookNow(therapist)}
-          className="mt-4 w-full bg-white/15 text-white text-xs font-normal py-3 rounded-xl font-[Poppins]"
+          className="mt-4 w-full bg-[#E1E3FC] text-black text-xs font-normal py-3 rounded-xl font-[Poppins]"
         >
           Book Session
         </button>

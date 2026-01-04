@@ -129,7 +129,7 @@ const DatePickerInput: React.FC<DatePickerInputProps> = ({ value, onChange, plac
           readOnly
           value={value}
           placeholder={placeholder}
-          className={`${className || ''} w-full pl-11 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white text-sm`}
+          className={`${className || ''} w-full pl-11 pr-4 py-2.5 border border-neutral-700 rounded-xl  focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white text-sm`}
         />
       </div>
 
@@ -459,7 +459,7 @@ const UserManagementPage: React.FC = () => {
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
+              className="w-full pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl  focus:ring-primary-500 focus:border-transparent focus:outline-none transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm"
             />
           </div>
           <div className="relative" ref={roleRef}>
@@ -468,7 +468,7 @@ const UserManagementPage: React.FC = () => {
               ref={roleButtonRef}
               type="button"
               onClick={() => setRoleOpen(prev => !prev)}
-              className="w-full text-left pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white text-sm flex items-center justify-between"
+              className="w-full text-left pl-10 pr-4 py-2.5 border border-neutral-700 rounded-xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white text-sm flex items-center justify-between"
               aria-haspopup="listbox"
               aria-expanded={roleOpen}
             >
