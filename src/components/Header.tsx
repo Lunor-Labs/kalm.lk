@@ -4,14 +4,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { signOut } from '../lib/auth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Instagram, Mail, MapPin, Facebook, Youtube } from 'lucide-react';
+import { Instagram, Mail, Facebook, Youtube } from 'lucide-react';
 
 interface HeaderProps {
   onOpenAuth: (mode: 'login' | 'signup') => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -264,10 +264,10 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             )}
           </div>
 
-            <div className="pr-4 pt-3 flex items-center justify-end mb-3 lg:hidden">
+            <div className="pr-2 pt-2 flex items-center justify-end lg:hidden">
               {/* Adjust the marginRight value below to move this block further from the right edge as you wish */}
               <div
-                className="flex items-center justify-end gap-3 overflow-x-auto px-2 py-2"
+                className="flex items-center justify-end gap-2 overflow-x-auto px-2 py-2"
                 style={{ marginRight: mobileRightMargin }}
               >
                 {!user ? (
