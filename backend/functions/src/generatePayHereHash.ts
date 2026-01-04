@@ -19,10 +19,11 @@ export const generatePayHereHash = onRequest(
   {
     cors: [
       "https://lunor-labs.github.io",
-      "https://kalm.lk",
+      "https://www.kalm.lk",
       "http://localhost:5173",
       "http://localhost:3000",
-      "https://kalmlk-dev.vercel.app"
+      "https://kalmlk-dev.vercel.app",
+      "https://kalm.lk",
     ],
   },
   async (req, res) => {
