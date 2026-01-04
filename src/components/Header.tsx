@@ -90,14 +90,15 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
             </span>
           </button>
 
-          {/* ================= DESKTOP NAV (UNCHANGED) ================= */}
+          {/* ================= DESKTOP NAV (FIXED - Added click handler) ================= */}
           <nav className="hidden lg:flex items-center justify-center flex-1">
             <div className="flex items-center space-x-10">
               {navItems.map(item => (
                 <a
                   key={item.label}
                   href={item.href}
-                  className="font-body font-light uppercase text-sm hover:text-black hover:font-medium transition-colors duration-200"
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className="font-body font-light uppercase text-sm hover:text-black hover:font-medium transition-colors duration-200 cursor-pointer"
                 >
                   {item.label}
                 </a>
@@ -123,7 +124,23 @@ const Header: React.FC<HeaderProps> = ({ onOpenAuth }) => {
                 </button>
               </>
             ) : (
-              <button onClick={goToDashboard}>Dashboard</button>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={goToDashboard}
+                  className="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors duration-200"
+                >
+                  <div className="w-6 h-6 bg-fixes-accent-purple rounded-full flex items-center justify-center text-xs font-semibold">
+                    {user.displayName?.charAt(0) || 'U'}
+                  </div>
+                  <span className="text-sm font-medium">{user.displayName || 'User'}</span>
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  className="text-black hover:text-gray-600 transition-colors duration-200 text-sm"
+                >
+                  Sign Out
+                </button>
+              </div>
             )}
           </div>
 
