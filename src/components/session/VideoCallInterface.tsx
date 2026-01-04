@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import DailyIframe, { DailyCall } from '@daily-co/daily-js';
-import { Phone } from 'lucide-react';
 import { Session } from '../../types/session';
 
 interface VideoCallInterfaceProps {
