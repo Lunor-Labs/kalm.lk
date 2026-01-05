@@ -26,6 +26,7 @@ export interface BookingStep {
 
 export interface BookingData {
   serviceType?: string;
+  serviceName?: string; // exact label from therapistProfile.services
   therapistId?: string;
   sessionType?: 'video' | 'audio' | 'chat';
   sessionTime?: Date;

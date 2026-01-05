@@ -91,9 +91,9 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
         callFrameRef.current.innerHTML = '';
       }
 
-      // Create fresh frame - hide Daily.co's leave button, we'll use our own with confirmation
+      // Use Daily.co's leave button but intercept with our confirmation
       const call = DailyIframe.createFrame(callFrameRef.current, {
-        showLeaveButton: false, // Hide Daily.co's leave button
+        showLeaveButton: true, // Show Daily.co's leave button
         showParticipantsBar: true,
         showFullscreenButton: true,
           // 🔥 Audio-only enforcement
@@ -111,22 +111,41 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
 
       call.on("left-meeting", () => {
         if (cancelled) return;
-        setIsConnected(false);
-        setShowEndCallConfirm(false); // Hide confirmation dialog
 
-        // 🔥 force fresh Daily instance next time
-        setReloadKey(Date.now());
+        // Check if this was an intentional leave (user clicked Daily.co's button)
+        // vs accidental (navigation, error, etc.)
+        const wasIntentionalLeave = !isUnmountingRef.current;
 
-        // Only end session if user explicitly ended it, not if they just navigated away
-        // If component is unmounting (navigation), just notify parent but don't end session
-        // This allows users to rejoin the same session after navigating away
-        if (isUnmountingRef.current) {
-          // User navigated away - just leave the call, don't end the session
-          // Session remains active and they can rejoin
-          onLeftCall?.();
+        if (wasIntentionalLeave) {
+          // User clicked Daily.co's leave button - show our confirmation
+          setShowEndCallConfirm(true);
+          // Don't immediately end the call - wait for confirmation
+
+          // Try to rejoin immediately to keep the call active during confirmation
+          setTimeout(async () => {
+            try {
+              await call.join({
+                url: session.dailyRoomUrl,
+                userName: "User",
+                token: token || undefined,
+                startVideoOff: session.sessionType === "audio",
+                startAudioOff: false,
+              });
+            } catch (rejoinError) {
+              console.warn("Failed to rejoin after leave button click:", rejoinError);
+              // If rejoin fails, proceed with ending the session
+              setIsConnected(false);
+              setShowEndCallConfirm(false);
+              setReloadKey(Date.now());
+              onEndCall();
+            }
+          }, 100);
         } else {
-          // User explicitly left via our custom end call button - end the session
-          onEndCall();
+          // Accidental leave (navigation, error, etc.)
+          setIsConnected(false);
+          setShowEndCallConfirm(false);
+          setReloadKey(Date.now());
+          onLeftCall?.();
         }
       });
 
@@ -182,25 +201,19 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
     setShowEndCallConfirm(false);
   }, [session.dailyRoomUrl]);
 
-  // Handle end call with confirmation
-  const handleEndCallClick = () => {
-    setShowEndCallConfirm(true);
-  };
-
+  // Handle end call confirmation (triggered by Daily.co's leave button)
   const handleConfirmEndCall = async () => {
-    if (callObjectRef.current) {
-      try {
-        await callObjectRef.current.leave();
-      } catch (err) {
-        console.error("Error leaving call:", err);
-        setError("Failed to end call. Please try again.");
-        setShowEndCallConfirm(false);
-      }
-    }
+    // User confirmed ending the call - actually end it now
+    setIsConnected(false);
+    setShowEndCallConfirm(false);
+    setReloadKey(Date.now());
+    onEndCall();
   };
 
-  const handleCancelEndCall = () => {
+  const handleCancelEndCall = async () => {
     setShowEndCallConfirm(false);
+    // User cancelled - the call should already be rejoined from the left-meeting handler
+    // No additional action needed
   };
 
   // ------------------------------------------------------------
@@ -266,20 +279,7 @@ const VideoCallInterface: React.FC<VideoCallInterfaceProps> = ({
           </div>
         )}
 
-        {/* Custom End Call Button */}
-        {isConnected && !error && !showEndCallConfirm && (
-          <div className="absolute bottom-1 left-[40%] transform -translate-x-1/2 z-40">
-            <button
-              onClick={handleEndCallClick}
-              className="bg-red-500 text-white px-6 py-3 rounded-full hover:bg-red-600 transition-colors duration-200 flex items-center gap-2 shadow-lg"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              <span className="font-medium">End Call</span>
-            </button>
-          </div>
-        )}
+        {/* Using Daily.co's built-in leave button with our confirmation dialog */}
       </div>
 
       <div className="p-4 bg-neutral-800/50">

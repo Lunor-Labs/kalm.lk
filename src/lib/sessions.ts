@@ -32,7 +32,7 @@ export const createSession = async (sessionData: Omit<Session, 'id' | 'createdAt
         properties: {
           start_video_off: true, // Let users turn on their video manually
           start_audio_off: true, // Let users turn on their audio manually
-          enable_chat: true,
+          enable_chat: false,
           enable_screenshare: sessionData.sessionType === 'video',
           max_participants: 2,
           exp: Math.floor(sessionData.scheduledTime.getTime() / 1000) + (4 * 60 * 60), // 4 hours after scheduled time
