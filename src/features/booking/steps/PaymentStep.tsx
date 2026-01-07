@@ -100,10 +100,10 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   onPaymentComplete,
   onBack
 }) => {
-    useEffect(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, []);
-    
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const { user } = useAuth();
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
@@ -137,13 +137,12 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         return;
       }
 
-      // Calculate final amount with session type discount
-      const sessionTypeDiscount = sessionType === 'audio' ? 500 : sessionType === 'chat' ? 1000 : 0;
-      const finalAmount = totalAmount - sessionTypeDiscount;
+      // Calculate final amount (use component-level totalAmount which includes all discounts)
+      // totalAmount is already calculated as: (Base - Coupon) - SessionDiscount
 
       // Prepare payment data for PayHere
       const paymentData = {
-        amount: finalAmount,
+        amount: totalAmount,
         currency: 'LKR' as const,
         orderId: `kalm-${Date.now()}-${user.uid.slice(-6)}`,
         items: `${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Therapy Session`,
@@ -163,7 +162,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
       // Initiate PayHere payment
       const paymentResult = await initiatePayHerePayment(paymentData);
-      
+
       if (paymentResult.success) {
         const bookingId = paymentResult.orderId || `booking-${Date.now()}`;
         console.log('bookingData.therapistId', bookingData.therapistId);
@@ -189,7 +188,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             clientId: user.uid,
             clientName: user.displayName || user.email || 'Unknown',
             therapistId: bookingData.therapistId,
-            amount: bookingData.amount || finalAmount,
+            amount: bookingData.amount || totalAmount,
             currency: 'LKR' as const,
             paymentMethod: 'payhere' as const,
             paymentStatus: 'completed' as const,
@@ -197,7 +196,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             orderId: bookingId,
             couponCode: bookingData.couponCode || null,
             discountAmount: bookingData.discountAmount || 0,
-            finalAmount,
+            finalAmount: totalAmount,
             payoutStatus: 'pending' as const,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
@@ -212,7 +211,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
         toast.success('Payment successful! Session booked.');
         console.log('Session created with ID:', sessionId);
-        
+
         onPaymentComplete();
       } else {
         throw new Error(paymentResult.error || 'Payment failed');
@@ -305,7 +304,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               <Clock className="w-5 h-5" />
               <span>Cancellation Policy</span>
             </h3>
-            
+
             <div className="space-y-3 text-sm">
               <div className="flex items-start space-x-3">
                 <div className="w-2 h-2 bg-accent-green rounded-full mt-2 flex-shrink-0"></div>
@@ -331,7 +330,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                 </div>
               </div>
             </div>
-            
+
             {/* <div className="mt-4 p-3 bg-black/30 rounded-xl border border-neutral-700">
               <p className="text-neutral-300 text-xs">
                 <strong>Emergency Cancellations:</strong> Medical emergencies and unforeseen circumstances 
@@ -385,7 +384,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
           <div>
             {/* <h3 className="text-lg font-semibold text-white mb-4">Payment Method</h3> */}
-            
+
             <div className="space-y-3">
               {/* Credit/Debit Card */}
               {/* <label className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
@@ -480,13 +479,13 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         <div className="space-y-6">
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <h3 className="text-lg font-black text-black mb-4">Order Summary</h3>
-            
+
             <div className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-fixes-heading-dark">Base Session Fee</span>
                 <span className="text-black">LKR {(bookingData.amount || 0).toLocaleString()}</span>
               </div>
-              
+
               {sessionTypeDiscount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-fixes-heading-dark">
@@ -495,14 +494,14 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                   <span className="text-fixes-heading-dark">-LKR {sessionTypeDiscount.toLocaleString()}</span>
                 </div>
               )}
-              
+
               {bookingData.discountAmount && bookingData.discountAmount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-accent-green">Coupon Discount</span>
                   <span className="text-accent-green">-LKR {bookingData.discountAmount.toLocaleString()}</span>
                 </div>
               )}
-              
+
               <div className="border-t border-neutral-700 pt-4">
                 <div className="flex justify-between">
                   <span className="text-xl font-black text-black">Total</span>
@@ -576,24 +575,24 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                 <div className="text-neutral-300 text-sm mb-6">
                   {/* Replace with your actual terms */}
                   <p>
-                    <strong>Welcome to Kalm.lk:</strong> By using our platform, you agree to our Terms.<br/><br/>
-      
-                    <strong>Services:</strong> We connect users with licensed mental health professionals for video, audio, and chat therapy sessions.<br/><br/>
-                    
-                    <strong>Eligibility:</strong> Must be 13+ (under 18 requires parental consent) and provide accurate information.<br/><br/>
-                    
-                    <strong>User Responsibilities:</strong> Use lawfully, respect privacy, provide honest information, attend/cancel sessions appropriately.<br/><br/>
-                    
-                    <strong>Therapists:</strong> Independently licensed professionals (we don't provide medical advice directly).<br/><br/>
-                    
-                    <strong>Payment:</strong> Fees displayed before booking, processed securely via PayHere.<br/><br/>
-                    
-                    <strong>Privacy:</strong> All communications encrypted and confidential.<br/><br/>
-                    
-                    <strong>Liability:</strong> We're not liable for therapy outcomes, therapist actions, or technical issues beyond our control.<br/><br/>
-                    
-                    <strong>Termination:</strong> Accounts can be deleted anytime or suspended for violations.<br/><br/>
-                    
+                    <strong>Welcome to Kalm.lk:</strong> By using our platform, you agree to our Terms.<br /><br />
+
+                    <strong>Services:</strong> We connect users with licensed mental health professionals for video, audio, and chat therapy sessions.<br /><br />
+
+                    <strong>Eligibility:</strong> Must be 13+ (under 18 requires parental consent) and provide accurate information.<br /><br />
+
+                    <strong>User Responsibilities:</strong> Use lawfully, respect privacy, provide honest information, attend/cancel sessions appropriately.<br /><br />
+
+                    <strong>Therapists:</strong> Independently licensed professionals (we don't provide medical advice directly).<br /><br />
+
+                    <strong>Payment:</strong> Fees displayed before booking, processed securely via PayHere.<br /><br />
+
+                    <strong>Privacy:</strong> All communications encrypted and confidential.<br /><br />
+
+                    <strong>Liability:</strong> We're not liable for therapy outcomes, therapist actions, or technical issues beyond our control.<br /><br />
+
+                    <strong>Termination:</strong> Accounts can be deleted anytime or suspended for violations.<br /><br />
+
                     <strong>Contact:</strong> legal@kalm.lk | +94 (76) 633 0360
                   </p>
                 </div>
@@ -615,22 +614,22 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                 <div className="text-neutral-300 text-sm mb-6">
                   {/* Replace with your actual policy */}
                   <p>
-                       <strong>Our Refund Commitment:</strong> We want you to be completely satisfied with our services.<br/><br/>
-      
-                      <strong>Refund Eligibility:</strong><br/>
-                      • 100% Refund: Cancellation - 24h before session, therapist cancellation, technical issues<br/>
-                      • 50% Refund: Cancellation 12-24h before session, interrupted sessions<br/>
-                      • No Refund: Cancellation -12h before session, no-shows, completed sessions<br/><br/>
-                      
-                      <strong>Refund Process:</strong> Contact support within 7 days with booking reference and reason.<br/>
-                      Processing takes 3-5 business days after approval.<br/><br/>
-                      
-                      <strong>Emergency Cancellations:</strong> Medical/family emergencies reviewed case-by-case.<br/><br/>
-                      
-                      <strong>Payment Methods:</strong> Refunds processed to original payment method (7-10 business days).<br/><br/>
-                      
-                      <strong>Contact:</strong> refunds@kalm.lk | support@kalm.lk | +94 (76) 633 0360<br/>
-                      Support Hours: Mon-Fri, 9AM-6PM (Sri Lanka Time)
+                    <strong>Our Refund Commitment:</strong> We want you to be completely satisfied with our services.<br /><br />
+
+                    <strong>Refund Eligibility:</strong><br />
+                    • 100% Refund: Cancellation - 24h before session, therapist cancellation, technical issues<br />
+                    • 50% Refund: Cancellation 12-24h before session, interrupted sessions<br />
+                    • No Refund: Cancellation -12h before session, no-shows, completed sessions<br /><br />
+
+                    <strong>Refund Process:</strong> Contact support within 7 days with booking reference and reason.<br />
+                    Processing takes 3-5 business days after approval.<br /><br />
+
+                    <strong>Emergency Cancellations:</strong> Medical/family emergencies reviewed case-by-case.<br /><br />
+
+                    <strong>Payment Methods:</strong> Refunds processed to original payment method (7-10 business days).<br /><br />
+
+                    <strong>Contact:</strong> refunds@kalm.lk | support@kalm.lk | +94 (76) 633 0360<br />
+                    Support Hours: Mon-Fri, 9AM-6PM (Sri Lanka Time)
                   </p>
                 </div>
                 <button

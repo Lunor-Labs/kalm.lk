@@ -31,37 +31,44 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
   onBack
 }) => {
 
-    useEffect(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, []);
-    
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [therapistAvailability, setTherapistAvailability] = useState<any>(null);
+  const [hourlyRate, setHourlyRate] = useState<number>(4500); // Default fallback
 
   // Generate next 7 days for date selection
   const availableDates = Array.from({ length: 7 }, (_, i) => addDays(new Date(), i));
 
-  // Load therapist availability data
+  // Load therapist availability data and profile rate
   useEffect(() => {
-    const loadTherapistAvailability = async () => {
-      try {
-        // Therapist ID is now directly the user ID
-        const therapistUserId = therapistId;
+    const loadData = async () => {
+      if (!therapistId) return;
 
-        // Get availability using the userId
-        const availability = await getTherapistAvailability(therapistUserId);
+      try {
+        // 1. Get availability
+        const availability = await getTherapistAvailability(therapistId);
         setTherapistAvailability(availability);
+
+        // 2. Get hourly rate from profile
+        const userDoc = await getDoc(doc(db, 'users', therapistId));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.therapistProfile?.hourlyRate) {
+            setHourlyRate(userData.therapistProfile.hourlyRate);
+          }
+        }
       } catch (error: any) {
-        console.error('Failed to load therapist availability:', error);
+        console.error('Failed to load therapist data:', error);
         toast.error('Failed to load therapist availability');
       }
     };
 
-    if (therapistId) {
-      loadTherapistAvailability();
-    }
+    loadData();
   }, [therapistId]);
 
   // Generate time slots from Firebase availability data
@@ -103,7 +110,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
 
     // Check for existing bookings to mark slots as booked
     const bookedSlots = await getBookedSlotsForDate(therapistId, dateString);
-    
+
     // Convert availability time slots to TimeSlot format
     const slots: TimeSlot[] = [];
 
@@ -140,7 +147,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
         endTime,
         isAvailable: !isBooked,
         isBooked,
-        price: availSlot.price || 4500,
+        price: hourlyRate, // Use the fetched profile rate
         sessionType: availSlot.sessionType || 'video'
       });
     }
@@ -158,20 +165,20 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
         where('therapistId', '==', therapistId),
         where('status', 'in', ['scheduled', 'confirmed', 'active'])
       );
-      
+
       const snapshot = await getDocs(q);
       const bookedSlots: string[] = [];
-      
+
       snapshot.docs.forEach(doc => {
         const booking = doc.data();
         const bookingDate = booking.sessionTime?.toDate();
-        
+
         if (bookingDate && format(bookingDate, 'yyyy-MM-dd') === dateString) {
           const timeSlot = format(bookingDate, 'HH:mm');
           bookedSlots.push(timeSlot);
         }
       });
-      
+
       return bookedSlots;
     } catch (error) {
       console.error('Error fetching booked slots:', error);
@@ -182,7 +189,7 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
   useEffect(() => {
     const loadTimeSlots = async () => {
       if (!therapistAvailability) return;
-      
+
       setLoading(true);
       try {
         const slots = await generateTimeSlotsFromAvailability(selectedDate);
@@ -197,11 +204,11 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
     };
 
     loadTimeSlots();
-  }, [selectedDate, therapistId, therapistAvailability]);
+  }, [selectedDate, therapistId, therapistAvailability, hourlyRate]);
 
   const handleTimeSlotSelect = (slot: TimeSlot) => {
     if (!slot.isAvailable || slot.isBooked) return;
-    
+
     const duration = 60; // 1 hour session
     onTimeSelect(slot.startTime, duration, slot.price);
   };
@@ -230,21 +237,20 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
             <Calendar className="w-5 h-5" />
             <span>Select Date</span>
           </h3>
-          
+
           <div className="grid grid-cols-1 gap-3">
             {availableDates.map((date, index) => {
               const isSelected = isSameDay(date, selectedDate);
               const isToday = isSameDay(date, new Date());
-              
+
               return (
                 <button
                   key={index}
                   onClick={() => setSelectedDate(date)}
-                  className={`p-4 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md ${
-                    isSelected
+                  className={`p-4 rounded-xl transition-all duration-200 text-left shadow-sm hover:shadow-md ${isSelected
                       ? 'ring-2 ring-fixes-accent-purple bg-white'
                       : 'bg-white hover:bg-neutral-50'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -285,19 +291,18 @@ const TimeSlotSelection: React.FC<TimeSlotSelectionProps> = ({
             <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto">
               {timeSlots.map((slot) => {
                 const isSelected = selectedTime && slot.startTime.getTime() === selectedTime.getTime();
-                
+
                 return (
                   <button
                     key={slot.id}
                     onClick={() => handleTimeSlotSelect(slot)}
                     disabled={!slot.isAvailable || slot.isBooked}
-                    className={`p-3 rounded-xl transition-all duration-200 text-center shadow-sm hover:shadow-md ${
-                      !slot.isAvailable || slot.isBooked
+                    className={`p-3 rounded-xl transition-all duration-200 text-center shadow-sm hover:shadow-md ${!slot.isAvailable || slot.isBooked
                         ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed'
                         : isSelected
-                        ? 'ring-2 ring-fixes-accent-purple bg-white text-fixes-accent-purple'
-                        : 'bg-white hover:bg-neutral-50 text-black hover:text-fixes-accent-purple'
-                    }`}
+                          ? 'ring-2 ring-fixes-accent-purple bg-white text-fixes-accent-purple'
+                          : 'bg-white hover:bg-neutral-50 text-black hover:text-fixes-accent-purple'
+                      }`}
                   >
                     <p className="font-black text-sm">
                       {format(slot.startTime, 'h:mm a')}
