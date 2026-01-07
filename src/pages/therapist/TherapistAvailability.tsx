@@ -14,7 +14,7 @@ const TherapistAvailability = () => {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weeklySchedule, setWeeklySchedule] = useState(getDefaultWeeklySchedule());
-  const [specialDates, setSpecialDates] = useState([]);
+  const [specialDates, setSpecialDates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeView] = useState<'calendar' | 'settings'>('calendar');
   const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
@@ -24,9 +24,7 @@ const TherapistAvailability = () => {
   const [newTimeSlot, setNewTimeSlot] = useState({
     startTime: '09:00',
     endTime: '10:00',
-    isRecurring: false,
-    sessionType: 'video' as 'video' | 'audio' | 'chat',
-    price: 4500
+    isRecurring: false
   });
 
   // Load data on mount
@@ -49,17 +47,13 @@ const TherapistAvailability = () => {
       setNewTimeSlot({
         startTime: editingTimeSlot.startTime,
         endTime: editingTimeSlot.endTime,
-        isRecurring: editingTimeSlot.isRecurring ?? false,
-        sessionType: editingTimeSlot.sessionType || 'video',
-        price: editingTimeSlot.price || 4500
+        isRecurring: editingTimeSlot.isRecurring ?? false
       });
     } else if (!editingTimeSlot) {
       setNewTimeSlot({
         startTime: '09:00',
         endTime: '10:00',
-        isRecurring: false,
-        sessionType: 'video',
-        price: 4500
+        isRecurring: false
       });
     }
   }, [editingTimeSlot, showTimeSlotModal]);
@@ -92,7 +86,8 @@ const TherapistAvailability = () => {
     return days.map((dayName, index) => ({
       dayOfWeek: index,
       dayName,
-      timeSlots: []
+      isAvailable: true,
+      timeSlots: [] as any[]
     }));
   }
 
@@ -162,8 +157,6 @@ const TherapistAvailability = () => {
         endTime: `${endHour}:${endMin}`,
         isAvailable: true,
         isRecurring: newTimeSlot.isRecurring,
-        sessionType: newTimeSlot.sessionType,
-        price: newTimeSlot.price,
       });
 
       currentStart += 60;
@@ -438,15 +431,14 @@ const TherapistAvailability = () => {
                         setSelectedDate(item.date);
                         if (item.current) setShowDateDetailsModal(true);
                       }}
-                      className={`w-full h-16 md:h-24 lg:h-28 rounded-lg flex items-center justify-center text-sm md:text-lg lg:text-xl font-medium relative transition-all ${
-                        !item.current
-                          ? 'text-fixes-heading-dark/50'
-                          : isSelected
+                      className={`w-full h-16 md:h-24 lg:h-28 rounded-lg flex items-center justify-center text-sm md:text-lg lg:text-xl font-medium relative transition-all ${!item.current
+                        ? 'text-fixes-heading-dark/50'
+                        : isSelected
                           ? 'bg-fixes-accent-purple text-black scale-110 shadow-lg'
                           : isToday
-                          ? 'border-2 border-fixes-accent-purple text-fixes-accent-purple'
-                          : 'bg-white hover:bg-neutral-50 border border-neutral-200'
-                      }`}
+                            ? 'border-2 border-fixes-accent-purple text-fixes-accent-purple'
+                            : 'bg-white hover:bg-neutral-50 border border-neutral-200'
+                        }`}
                     >
                       {item.date.getDate()}
                       {item.current && hasSlots && (
@@ -489,10 +481,8 @@ const TherapistAvailability = () => {
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <div className="font-bold">{slot.startTime} – {slot.endTime}</div>
-                          <div className="text-sm text-gray-400 capitalize">{slot.sessionType}</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">LKR {slot.price.toLocaleString()}</div>
                           <div className={slot.isBooked ? 'text-red-400' : 'text-primary-400'}>
                             {slot.isBooked ? 'Booked' : 'Available'}
                           </div>
@@ -509,11 +499,10 @@ const TherapistAvailability = () => {
                             setEditingTimeSlot(slot);
                             setShowTimeSlotModal(true);
                           }}
-                          className={`flex-1 py-2 border rounded-lg text-sm flex items-center justify-center gap-1 ${
-                            slot.isBooked || slot.isAvailable === false
-                              ? 'border-gray-600 text-gray-500 cursor-not-allowed'
-                              : 'border-gray-600'
-                          }`}
+                          className={`flex-1 py-2 border rounded-lg text-sm flex items-center justify-center gap-1 ${slot.isBooked || slot.isAvailable === false
+                            ? 'border-gray-600 text-gray-500 cursor-not-allowed'
+                            : 'border-gray-600'
+                            }`}
                         >
                           <Edit3 size={16} /> Edit
                         </button>
@@ -526,11 +515,10 @@ const TherapistAvailability = () => {
 
                             handleDeleteTimeSlot(slot.id);
                           }}
-                          className={`flex-1 py-2 border rounded-lg text-sm flex items-center justify-center gap-1 ${
-                            slot.isBooked || slot.isAvailable === false
-                              ? 'border-red-600 text-red-800 cursor-not-allowed'
-                              : 'border-red-600 text-red-400'
-                          }`}
+                          className={`flex-1 py-2 border rounded-lg text-sm flex items-center justify-center gap-1 ${slot.isBooked || slot.isAvailable === false
+                            ? 'border-red-600 text-red-800 cursor-not-allowed'
+                            : 'border-red-600 text-red-400'
+                            }`}
                         >
                           <Trash2 size={16} /> Delete
                         </button>
@@ -586,29 +574,10 @@ const TherapistAvailability = () => {
                       outline-none
                       transition-all
                     "
-                   />
+                  />
                 </div>
               </div>
-{/* 
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Session Type</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {(['video', 'audio', 'chat'] as const).map(t => (
-                    <label key={t} className="cursor-pointer">
-                      <input
-                        type="radio"
-                        name="type"
-                        checked={newTimeSlot.sessionType === t}
-                        onChange={() => setNewTimeSlot(prev => ({ ...prev, sessionType: t }))}
-                        className="hidden"
-                      />
-                      <div className={`p-3 text-center rounded-lg font-medium ${newTimeSlot.sessionType === t ? 'bg-fixes-accent-purple text-black' : 'bg-neutral-100'}`}>
-                        {t.charAt(0).toUpperCase() + t.slice(1)}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div> */}
+
 
               {/* <div>
                 <label className="block text-sm text-gray-400 mb-1">Price (LKR)</label>
@@ -635,12 +604,12 @@ const TherapistAvailability = () => {
               </div>
 
               <div className="flex gap-3 pt-4">
-              <button
-                onClick={() => setShowTimeSlotModal(false)}
-                className="flex-1 py-3 bg-fixes-bg-offwhite hover:bg-neutral-200 text-fixes-heading-dark font-medium rounded-xl transition-colors"
-              >
-                Cancel
-              </button>
+                <button
+                  onClick={() => setShowTimeSlotModal(false)}
+                  className="flex-1 py-3 bg-fixes-bg-offwhite hover:bg-neutral-200 text-fixes-heading-dark font-medium rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
                 <button
                   onClick={handleAddTimeSlot}
                   className="flex-1 py-3 bg-fixes-accent-purple text-black rounded-xl font-medium hover:bg-fixes-accent-blue"

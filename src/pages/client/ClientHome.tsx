@@ -43,8 +43,8 @@ const ClientHome: React.FC = () => {
 
   // Get upcoming sessions (scheduled or active, future dates)
   const upcomingSessions = sessions
-    .filter(session => 
-      (session.status === 'scheduled' || session.status === 'active') && 
+    .filter(session =>
+      (session.status === 'scheduled' || session.status === 'active') &&
       isFuture(session.scheduledTime)
     )
     .sort((a, b) => a.scheduledTime.getTime() - b.scheduledTime.getTime())
@@ -71,7 +71,7 @@ const ClientHome: React.FC = () => {
       const timeAgo = session.status === 'completed' && session.endTime
         ? formatDistanceToNow(session.endTime, { addSuffix: true })
         : formatDistanceToNow(session.updatedAt, { addSuffix: true });
-      
+
       return {
         id: session.id,
         type: session.status === 'completed' ? 'session_completed' : 'booking_confirmed',
@@ -107,12 +107,12 @@ const ClientHome: React.FC = () => {
   ];
 
   const handleBookSession = (therapist: any) => {
-    navigate('/client/book', { 
-      state: { 
+    navigate('/client/book', {
+      state: {
         preSelectedTherapist: therapist.id,
         therapistName: therapist.name,
         returnTo: 'booking'
-      } 
+      }
     });
   };
 
@@ -170,7 +170,7 @@ const ClientHome: React.FC = () => {
   useEffect(() => {
     if (isAutoPlaying && showWellnessTip) {
       autoPlayIntervalRef.current = setInterval(() => {
-        setCurrentTipIndex((prevIndex) => 
+        setCurrentTipIndex((prevIndex) =>
           (prevIndex + 1) % wellnessTips.length
         );
       }, 5000); // Change tip every 5 seconds
@@ -207,7 +207,7 @@ const ClientHome: React.FC = () => {
 
   // Manual navigation functions
   const goToPreviousTip = () => {
-    setCurrentTipIndex((prevIndex) => 
+    setCurrentTipIndex((prevIndex) =>
       prevIndex === 0 ? wellnessTips.length - 1 : prevIndex - 1
     );
     setIsAutoPlaying(false);
@@ -215,7 +215,7 @@ const ClientHome: React.FC = () => {
   };
 
   const goToNextTip = () => {
-    setCurrentTipIndex((prevIndex) => 
+    setCurrentTipIndex((prevIndex) =>
       (prevIndex + 1) % wellnessTips.length
     );
     setIsAutoPlaying(false);
@@ -250,40 +250,40 @@ const ClientHome: React.FC = () => {
       </div> */}
 
       <div className="hidden md:block lg:hidden">
-  <div className="bg-transparent rounded-3xl p-8 w-full">
-    <div className="mx-auto text-center max-w-2xl">
-      <h1 className="text-3xl font-black text-black mb-2">
-        Welcome to Kalm
-      </h1>
-      <p className="text-fixes-heading-dark mb-4">
-        {user?.isAnonymous
-          ? 'Continue your anonymous wellness journey with complete privacy.'
-          : 'Continue your mental wellness journey with personalized support.'
-        }
-      </p>
-    </div>
-  </div>
-</div>
-
-
-
-<div className="block md:hidden lg:block">
-<div className="space-y-8 bg-[#F8F9FA] pt-4 pb-6 px-6 -mt-16">
-      <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-black text-black mb-2">
-          Welcome to Kalm
-        </h1>
-        <p className="text-fixes-heading-dark mb-4">
-          {user?.isAnonymous
-            ? 'Continue your anonymous wellness journey with complete privacy.'
-            : 'Continue your mental wellness journey with personalized support.'
-          }
-        </p>
+        <div className="bg-transparent rounded-3xl p-8 w-full">
+          <div className="mx-auto text-center max-w-2xl">
+            <h1 className="text-3xl font-black text-black mb-2">
+              Welcome to Kalm
+            </h1>
+            <p className="text-fixes-heading-dark mb-4">
+              {user?.isAnonymous
+                ? 'Continue your anonymous wellness journey with complete privacy.'
+                : 'Continue your mental wellness journey with personalized support.'
+              }
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
+
+
+
+      <div className="block md:hidden lg:block">
+        <div className="space-y-8 bg-[#F8F9FA] pt-4 pb-6 px-6 -mt-16">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-black text-black mb-2">
+                Welcome to Kalm
+              </h1>
+              <p className="text-fixes-heading-dark mb-4">
+                {user?.isAnonymous
+                  ? 'Continue your anonymous wellness journey with complete privacy.'
+                  : 'Continue your mental wellness journey with personalized support.'
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
 
       {/* Quick Actions */}
@@ -296,7 +296,7 @@ const ClientHome: React.FC = () => {
               <button
                 key={index}
                 onClick={action.action}
-                className="group bg-[#F1F5F9] rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 text-left"
+                className="group bg-[#E2E8F0] rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 text-left"
               >
                 <div className={`w-12 h-12 ${action.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
                   <Icon className="w-6 h-6 text-white" />
@@ -319,7 +319,7 @@ const ClientHome: React.FC = () => {
               <button
                 key={index}
                 onClick={action.action}
-                className="group bg-[#F1F5F9] rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 text-center"
+                className="group bg-[#E2E8F0] rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 text-center"
               >
                 <div className={`w-12 h-12 ${action.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 mx-auto`}>
                   <Icon className="w-6 h-6 text-white" />
@@ -335,12 +335,12 @@ const ClientHome: React.FC = () => {
       {/* Dashboard Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
         {/* Upcoming Sessions */}
-        <div className="bg-[#F1F5F9] rounded-xl p-4 sm:p-6 shadow-sm">
+        <div className="bg-[#E2E8F0] rounded-xl p-4 sm:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h2 className="text-lg sm:text-xl font-black text-black">Upcoming Sessions</h2>
             <button
               onClick={() => navigate('/client/sessions')}
-              className="text-fixes-accent-purple hover:bg-fixes-accent-purple hover:text-white transition-colors duration-200 text-xs sm:text-sm px-3 py-1 rounded-lg"
+              className="text-fixes-heading-dark bg-fixes-accent-purple hover:bg-fixes-accent-purple hover:text-white transition-colors duration-200 text-xs sm:text-sm px-3 py-1 rounded-lg"
             >
               View All
             </button>
@@ -354,8 +354,8 @@ const ClientHome: React.FC = () => {
           ) : upcomingSessions.length > 0 ? (
             <div className="space-y-3 sm:space-y-4">
               {upcomingSessions.map((session) => (
-                <div 
-                  key={session.id} 
+                <div
+                  key={session.id}
                   className="flex items-center justify-between p-3 sm:p-4 bg-neutral-800/50 rounded-lg sm:rounded-xl md:rounded-2xl"
                 >
                   {/* Left side */}
@@ -372,25 +372,24 @@ const ClientHome: React.FC = () => {
                     <div className="min-w-0">
                       <p className="text-black font-medium text-sm sm:text-base truncate">{session.therapist}</p>
                       <p className="text-fixes-heading-dark text-xs sm:text-sm">{session.date} at {session.time}</p>
-                      <span className={`flex items-center justify-center px-2 py-0.5 sm:px-3 sm:py-2 rounded-full text-xs h-6 sm:h-8 mt-1 w-20 ${
-                        session.status === 'Active' 
-                          ? 'bg-accent-green/20 text-accent-green'
-                          : 'bg-primary-500/20 text-primary-500'
-                      }`}>
+                      <span className={`flex items-center justify-center px-2 py-0.5 sm:px-3 sm:py-2 rounded-full text-xs h-6 sm:h-8 mt-1 w-20 ${session.status === 'Active'
+                        ? 'bg-accent-green/20 text-accent-green'
+                        : 'bg-primary-500/20 text-primary-500'
+                        }`}>
                         {session.status}
                       </span>
                     </div>
                   </div>
 
                   {/* Right side */}
-                  <div className="flex items-center ml-4">
+                  {/* <div className="flex items-center ml-4">
                     <button
                       onClick={() => navigate(`/client/session/${session.id}`)}
                       className="bg-fixes-accent-purple text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl hover:bg-fixes-accent-blue transition-colors duration-200 text-xs sm:text-sm"
                     >
                       {session.status === 'Active' ? 'Join' : 'View'}
                     </button>
-                  </div>
+                  </div> */}
                 </div>
               ))}
             </div>
@@ -409,7 +408,7 @@ const ClientHome: React.FC = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-[#F1F5F9] rounded-xl p-4 sm:p-6 shadow-sm">
+        <div className="bg-[#E2E8F0] rounded-xl p-4 sm:p-6 shadow-sm">
           <h2 className="text-lg sm:text-xl font-black text-black mb-4 sm:mb-6">Recent Activity</h2>
           {recentActivity.length > 0 ? (
             <div className="space-y-3 sm:space-y-4">
@@ -435,7 +434,7 @@ const ClientHome: React.FC = () => {
       {/* Enhanced Auto-Sliding Wellness Tip */}
       <div
         ref={wellnessTipRef}
-        className={`bg-[#F1F5F9] rounded-xl p-6 shadow-sm relative overflow-hidden
+        className={`bg-[#E2E8F0] rounded-xl p-6 shadow-sm relative overflow-hidden
           transition-all duration-1000 ease-out
           ${showWellnessTip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24'}
         `}
@@ -468,11 +467,10 @@ const ClientHome: React.FC = () => {
             <button
               key={index}
               onClick={() => goToSpecificTip(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentTipIndex
-                  ? 'bg-fixes-accent-blue w-6'
-                  : 'bg-fixes-heading-dark hover:bg-fixes-accent-blue/70'
-              }`}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentTipIndex
+                ? 'bg-fixes-accent-blue w-6'
+                : 'bg-fixes-heading-dark hover:bg-fixes-accent-blue/70'
+                }`}
               aria-label={`Go to tip ${index + 1}`}
             />
           ))}
@@ -489,7 +487,7 @@ const ClientHome: React.FC = () => {
           />
         </div>
 
-       
+
       </div>
     </div>
   );

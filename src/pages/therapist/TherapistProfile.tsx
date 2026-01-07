@@ -527,8 +527,8 @@ const TherapistProfile: React.FC = () => {
                               disabled={!customCredential.trim()}
                               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors min-w-[60px] ${
                                 customCredential.trim()
-                                  ? 'bg-fixes-accent-purple text-black hover:bg-fixes-accent-blue'
-                                  : 'bg-neutral-200 text-neutral-500 cursor-not-allowed'
+                                  ? 'bg-fixes-accent-blue hover:bg-fixes-accent-purple text-white'
+                                  : 'bg-fixes-accent-blue hover:bg-fixes-accent-purple text-white cursor-not-allowed'
                               }`}
                             >
                               Add
@@ -544,13 +544,13 @@ const TherapistProfile: React.FC = () => {
                       {formData.credentials.filter(c => c !== 'Other').map((credential, index) => (
                         <div
                           key={index}
-                          className="flex items-center px-3 py-1.5 bg-fixes-accent-purple/20 text-fixes-accent-purple rounded-full text-xs"
+                          className="flex items-center px-3 py-1.5 bg-fixes-accent-purple/20 text-fixes-accent-blue rounded-full text-xs"
                         >
                           {credential}
                           <button
                             type="button"
                             onClick={() => removeCredential(credential)}
-                            className="ml-2 text-fixes-accent-purple hover:text-fixes-accent-purple/80"
+                            className="ml-2 text-fixes-accent-blue"
                           >
                             <X className="w-3.5 h-3.5" />
                           </button>
@@ -604,7 +604,7 @@ const TherapistProfile: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => removeCredential(credential)}
-                        className="ml-2 text-primary-500 hover:text-primary-600"
+                        className="ml-2 text-fixes-accent-blue"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -656,7 +656,7 @@ const TherapistProfile: React.FC = () => {
                           setCustomSpecialization('');
                         }
                       }}
-                      className="px-3 py-2 bg-primary-500 text-white rounded-lg text-xs font-medium hover:bg-primary-600 transition-colors"
+                      className="px-3 py-2 bg-fixes-accent-blue hover:bg-fixes-accent-purple text-white rounded-lg text-xs font-medium transition-colors"
                       disabled={!customSpecialization.trim()}
                     >
                       Add
@@ -667,13 +667,13 @@ const TherapistProfile: React.FC = () => {
                       {formData.specializations.map((spec, index) => (
                         <div
                           key={index}
-                          className="flex items-center px-2 py-1 bg-accent-yellow/20 text-accent-yellow rounded-full text-xs"
+                          className="flex items-center px-2 py-1 bg-accent-yellow/20 text-fixes-accent-blue rounded-full text-xs"
                         >
                           {spec}
                           <button
                             type="button"
                             onClick={() => removeSpecialization(spec)}
-                            className="ml-2 text-accent-yellow hover:text-accent-yellow/80"
+                            className="ml-2 text-fixes-accent-blue"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -703,13 +703,13 @@ const TherapistProfile: React.FC = () => {
                     {formData.specializations.map((spec, index) => (
                       <div
                         key={index}
-                        className="flex items-center px-2 py-1 bg-accent-yellow/20 text-accent-yellow rounded-full text-sm"
+                        className="flex items-center px-2 py-1 bg-accent-yellow/20 text-fixes-accent-blue rounded-full text-sm"
                       >
                         {spec}
                         <button
                           type="button"
                           onClick={() => removeSpecialization(spec)}
-                          className="ml-2 text-accent-yellow hover:text-accent-yellow/80"
+                          className="ml-2 text-fixes-accent-blue"
                         >
                           <X className="w-4 h-4" />
                         </button>

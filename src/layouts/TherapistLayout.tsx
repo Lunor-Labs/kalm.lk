@@ -143,9 +143,10 @@ const TherapistLayout: React.FC = () => {
       <div className="lg:pl-64">
         {/* Top bar */}
         <div className="sticky top-0 z-30 bg-fixes-bg-white border-b border-neutral-200">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center justify-between px-4 py-2 lg:px-6 lg:py-4">
             <button
               onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
               className="lg:hidden text-fixes-heading-dark hover:text-black"
             >
               <Menu className="w-6 h-6" />
@@ -162,8 +163,9 @@ const TherapistLayout: React.FC = () => {
               </div>
             </div> */}
           </div>
-          <div style={{ borderBottom: '1px solid var(--neutral-200)', marginTop: '2.95rem' }}></div>
-          </div>
+          {/* Extra spacer only on desktop to visually match previous header height */}
+          <div className="hidden lg:block border-b border-neutral-200 mt-12"></div>
+        </div>
 
         {/* Page content */}
         <main className="p-6">
