@@ -247,7 +247,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   };
 
   const finalAmount = (bookingData.amount || 0) - (bookingData.discountAmount || 0);
-  const sessionTypeDiscount = sessionType === 'audio' ? 500 : sessionType === 'chat' ? 1000 : 0;
+  const sessionTypeDiscount = sessionType === 'audio' ? 0 : sessionType === 'chat' ? 0 : 0;
   const totalAmount = finalAmount - sessionTypeDiscount;
 
   const getSessionTypeIcon = (type: string) => {
