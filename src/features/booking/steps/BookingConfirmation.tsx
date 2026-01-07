@@ -42,19 +42,19 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   // Get therapist details from both Firebase and dummy data
   const getTherapistDetails = () => {
     if (!bookingData.therapistId) return null;
-    
+
     // First try to find in Firebase data
     const firebaseTherapist = firebaseTherapists.find(t => t.id === bookingData.therapistId);
     if (firebaseTherapist) {
       return firebaseTherapist;
     }
-    
+
     // Then try dummy data
     const dummyTherapist = getTherapistById(bookingData.therapistId);
     if (dummyTherapist) {
       return dummyTherapist;
     }
-    
+
     return null;
   };
 
@@ -64,8 +64,8 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   // Get available session types for this therapist
   const availableSessionTypes = [
     { type: 'video' as const, label: 'Video Session', price: 0 },
-    { type: 'audio' as const, label: 'Audio Session', price: -500 },
-    { type: 'chat' as const, label: 'Chat Session', price: -1000 }
+    { type: 'audio' as const, label: 'Audio Session', price: 0 },
+    { type: 'chat' as const, label: 'Chat Session', price: 0 }
   ].filter(option => therapist?.sessionFormats?.includes(option.type) ?? true); // Default to all if not specified
 
   // Set default session type to first available option
@@ -94,10 +94,10 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
     }
   }; */
 
- /*  const removeCoupon = () => {
-    setAppliedCoupon(null);
-    setDiscount(0);
-  }; */
+  /*  const removeCoupon = () => {
+     setAppliedCoupon(null);
+     setDiscount(0);
+   }; */
 
   const finalAmount = (bookingData.amount || 0)/*  - discount */;
 
@@ -153,10 +153,10 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             {/* <p className="text-neutral-300">
               {serviceNames[bookingData.serviceType as keyof typeof serviceNames] || 'Unknown Service'}
             </p> */}
-             <p className="text-fixes-heading-dark">
+            <p className="text-fixes-heading-dark">
               {serviceNames[bookingData.serviceType as keyof typeof serviceNames] ||
-              (therapist?.serviceCategory ? (
-                 serviceNames[therapist.serviceCategory as keyof typeof serviceNames] || therapist.serviceCategory) : 'Unknown Service')}
+                (therapist?.serviceCategory ? (
+                  serviceNames[therapist.serviceCategory as keyof typeof serviceNames] || therapist.serviceCategory) : 'Unknown Service')}
             </p>
 
           </div>
@@ -221,7 +221,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             )}
           </div>
 
-          
+
         </div>
 
         {/* Payment Summary */}
@@ -284,11 +284,10 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
                 {availableSessionTypes.map((option) => (
                   <label
                     key={option.type}
-                    className={`flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all duration-200 shadow-sm ${
-                      sessionType === option.type
-                        ? 'ring-2 ring-fixes-accent-purple bg-white'
-                        : 'bg-white hover:bg-neutral-50'
-                    }`}
+                    className={`flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all duration-200 shadow-sm ${sessionType === option.type
+                      ? 'ring-2 ring-fixes-accent-purple bg-white'
+                      : 'bg-white hover:bg-neutral-50'
+                      }`}
                   >
                     <div className="flex items-center space-x-3">
                       <input

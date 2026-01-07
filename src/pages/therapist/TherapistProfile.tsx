@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   User, Upload, Save, X, Video, Phone, MessageCircle,
   ChevronDown, ChevronUp,
 } from 'lucide-react';
@@ -229,7 +229,7 @@ const TherapistProfile: React.FC = () => {
   const handleArrayFieldChange = (field: keyof TherapistFormData, value: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      [field]: checked 
+      [field]: checked
         ? [...(prev[field] as string[]), value]
         : (prev[field] as string[]).filter(item => item !== value)
     }));
@@ -251,7 +251,7 @@ const TherapistProfile: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.firstName || !formData.lastName || !formData.email) {
       toast.error('Please fill in all required fields');
       return;
@@ -308,7 +308,7 @@ const TherapistProfile: React.FC = () => {
         },
         updatedAt: serverTimestamp()
       });
-      
+
       toast.success('Profile updated successfully');
       await loadTherapistProfile(); // Reload to get updated data
     } catch (error: any) {
@@ -379,9 +379,8 @@ const TherapistProfile: React.FC = () => {
               />
               <label
                 htmlFor="profile-photo"
-                className={`inline-flex items-center space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-fixes-accent-purple text-black rounded-lg sm:rounded-xl hover:bg-fixes-accent-blue transition-colors duration-200 cursor-pointer text-sm sm:text-base ${
-                  uploading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
+                className={`inline-flex items-center space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-fixes-accent-purple text-black rounded-lg sm:rounded-xl hover:bg-fixes-accent-blue transition-colors duration-200 cursor-pointer text-sm sm:text-base ${uploading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
               >
                 <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>{uploading ? 'Uploading...' : 'Upload Photo'}</span>
@@ -459,9 +458,8 @@ const TherapistProfile: React.FC = () => {
               </label>
               <input
                 type="number"
-                min="1000"
+                min="0"
                 max="50000"
-                step="500"
                 value={formData.hourlyRate}
                 onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseInt(e.target.value) || 4500 }))}
                 className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl  focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
@@ -525,11 +523,10 @@ const TherapistProfile: React.FC = () => {
                                 }
                               }}
                               disabled={!customCredential.trim()}
-                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors min-w-[60px] ${
-                                customCredential.trim()
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors min-w-[60px] ${customCredential.trim()
                                   ? 'bg-fixes-accent-blue hover:bg-fixes-accent-purple text-white'
                                   : 'bg-fixes-accent-blue hover:bg-fixes-accent-purple text-white cursor-not-allowed'
-                              }`}
+                                }`}
                             >
                               Add
                             </button>

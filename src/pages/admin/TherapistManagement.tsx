@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Users, Search, Plus, Edit, Upload, X, Save, ToggleRight,
   Star, Clock, Award, Video, Phone, MessageCircle,
   Eye, EyeOff, ArrowLeft, Calendar, DollarSign, ChevronLeft, ChevronRight, ChevronDown, ChevronUp
@@ -255,7 +255,7 @@ const TherapistManagement: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.firstName || !formData.lastName || !formData.email) {
       toast.error('Please fill in all required fields');
       return;
@@ -315,18 +315,18 @@ const TherapistManagement: React.FC = () => {
           },
           updatedAt: serverTimestamp()
         });
-        
+
         toast.success('Therapist updated successfully');
       } else {
         // Use secondaryAuth instead of auth to create the therapist account
         const userCredential = await createUserWithEmailAndPassword(secondaryAuth, formData.email, formData.password);
         const user = userCredential.user;
-        
+
         // Update profile on the secondary auth user
         await updateProfile(user, {
           displayName: `${formData.firstName} ${formData.lastName}`
         });
-        
+
 
         // Create user document in Firestore with therapist profile
         await setDoc(doc(db, 'users', user.uid), {
@@ -355,20 +355,20 @@ const TherapistManagement: React.FC = () => {
             nextAvailableSlot: formData.nextAvailableSlot,
           }
         });
-        
+
         // Sign out the therapist from secondaryAuth to ensure admin stays logged in
         await secondaryAuth.signOut();
-        
+
         toast.success('Therapist added successfully');
       }
-      
+
       resetForm();
       setShowAddModal(false);
       setEditingTherapist(null);
       loadTherapists();
     } catch (error: any) {
       console.error('Error saving therapist:', error);
-      
+
       // Provide more specific error messages
       if (error.code === 'auth/email-already-in-use') {
         toast.error('A user with this email already exists');
@@ -521,7 +521,7 @@ const TherapistManagement: React.FC = () => {
   const handleArrayFieldChange = (field: keyof TherapistFormData, value: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      [field]: checked 
+      [field]: checked
         ? [...(prev[field] as string[]), value]
         : (prev[field] as string[]).filter(item => item !== value)
     }));
@@ -568,40 +568,38 @@ const TherapistManagement: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">Therapist Management</h1>
           <p className="text-neutral-300 text-sm sm:text-base">Manage therapist profiles and accounts</p>
         </div>
-        
+
         <div className="flex flex-col xs:flex-row items-stretch sm:items-center gap-3">
           {!isMobile && (
             <div className="flex bg-neutral-800 rounded-2xl p-1">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl text-sm font-medium ${
-                  viewMode === 'grid' ? 'bg-primary-500 text-white' : 'text-neutral-300 hover:text-white'
-                }`}
+                className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl text-sm font-medium ${viewMode === 'grid' ? 'bg-primary-500 text-white' : 'text-neutral-300 hover:text-white'
+                  }`}
               >
                 Grid
               </button>
               <button
                 onClick={() => setViewMode('table')}
-                className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl text-sm font-medium ${
-                  viewMode === 'table' ? 'bg-primary-500 text-white' : 'text-neutral-300 hover:text-white'
-                }`}
+                className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl text-sm font-medium ${viewMode === 'table' ? 'bg-primary-500 text-white' : 'text-neutral-300 hover:text-white'
+                  }`}
               >
                 Table
               </button>
             </div>
           )}
 
-        <button
-          onClick={() => {
-            resetForm();
-            setEditingTherapist(null);
-            setShowAddModal(true);
-          }}
-          className="bg-primary-500 text-white px-3 sm:px-4 py-2 rounded-xl hover:bg-primary-600 flex items-center justify-center gap-1.5 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span className="text-sm">Add Therapist</span>
-        </button>
+          <button
+            onClick={() => {
+              resetForm();
+              setEditingTherapist(null);
+              setShowAddModal(true);
+            }}
+            className="bg-primary-500 text-white px-3 sm:px-4 py-2 rounded-xl hover:bg-primary-600 flex items-center justify-center gap-1.5 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="text-sm">Add Therapist</span>
+          </button>
         </div>
       </div>
 
@@ -668,9 +666,8 @@ const TherapistManagement: React.FC = () => {
                       className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 sm:border-4 border-neutral-700"
                     />
                     <div className={`absolute bottom-0 right-0
- w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-neutral-800 ${
-                      therapist.isActive ? 'bg-accent-green' : 'bg-neutral-500'
-                    }`}></div>
+ w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-neutral-800 ${therapist.isActive ? 'bg-accent-green' : 'bg-neutral-500'
+                      }`}></div>
                   </div>
                 </div>
               </div>
@@ -753,7 +750,7 @@ const TherapistManagement: React.FC = () => {
               <Users className="w-12 sm:w-16 h-12 sm:h-16 text-neutral-600 mx-auto mb-3 sm:mb-4" />
               <p className="text-neutral-300 mb-1 sm:mb-2 text-sm sm:text-base">No therapists found</p>
               <p className="text-neutral-400 text-xs sm:text-sm">
-                {searchQuery 
+                {searchQuery
                   ? 'Try adjusting your search query'
                   : 'Add your first therapist to get started'
                 }
@@ -873,7 +870,7 @@ const TherapistManagement: React.FC = () => {
               <Users className="w-12 sm:w-16 h-12 sm:h-16 text-neutral-600 mx-auto mb-3 sm:mb-4" />
               <p className="text-neutral-300 mb-1 sm:mb-2 text-sm sm:text-base">No therapists found</p>
               <p className="text-neutral-400 text-xs sm:text-sm">
-                {searchQuery 
+                {searchQuery
                   ? 'Try adjusting your search query'
                   : 'Add your first therapist to get started'
                 }
@@ -887,11 +884,10 @@ const TherapistManagement: React.FC = () => {
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl text-sm min-h-[40px] ${
-            currentPage === 1
+          className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl text-sm min-h-[40px] ${currentPage === 1
               ? 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
               : 'bg-primary-500 text-white hover:bg-primary-600'
-          } transition-colors duration-200`}
+            } transition-colors duration-200`}
           aria-label="Go to previous page"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -902,13 +898,12 @@ const TherapistManagement: React.FC = () => {
             <button
               key={`${page}-${index}`}
               onClick={() => typeof page === 'number' && handlePageChange(page)}
-              className={`px-2 py-1 rounded-lg text-sm min-w-[36px] min-h-[36px] text-center ${
-                page === currentPage
+              className={`px-2 py-1 rounded-lg text-sm min-w-[36px] min-h-[36px] text-center ${page === currentPage
                   ? 'bg-primary-500 text-white'
                   : typeof page === 'string'
-                  ? 'text-neutral-400 cursor-default'
-                  : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
-              } transition-colors duration-200`}
+                    ? 'text-neutral-400 cursor-default'
+                    : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+                } transition-colors duration-200`}
               aria-label={typeof page === 'number' ? `Go to page ${page}` : 'Page ellipsis'}
               disabled={typeof page === 'string'}
             >
@@ -919,11 +914,10 @@ const TherapistManagement: React.FC = () => {
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl text-sm min-h-[40px] ${
-            currentPage === totalPages
+          className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl text-sm min-h-[40px] ${currentPage === totalPages
               ? 'bg-neutral-600 text-neutral-400 cursor-not-allowed'
               : 'bg-primary-500 text-white hover:bg-primary-600'
-          } transition-colors duration-200`}
+            } transition-colors duration-200`}
           aria-label="Go to next page"
         >
           <span>Next</span>
@@ -933,7 +927,7 @@ const TherapistManagement: React.FC = () => {
 
       {viewingTherapist && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setViewingTherapist(null)}
           ></div>
@@ -965,9 +959,8 @@ const TherapistManagement: React.FC = () => {
                     alt={`${viewingTherapist.firstName} ${viewingTherapist.lastName}`}
                     className="w-20 h-20 sm:w-28 sm:h-28 rounded-full object-cover border-2 sm:border-4 border-neutral-700 mx-auto"
                   />
-                  <div className={`absolute bottom-0 right-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 sm:border-4 border-neutral-800 ${
-                    viewingTherapist.isActive ? 'bg-accent-green' : 'bg-neutral-500'
-                  }`}></div>
+                  <div className={`absolute bottom-0 right-0 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 sm:border-4 border-neutral-800 ${viewingTherapist.isActive ? 'bg-accent-green' : 'bg-neutral-500'
+                    }`}></div>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-bold text-white mt-3 sm:mt-4">
                   {viewingTherapist.firstName} {viewingTherapist.lastName}
@@ -976,7 +969,7 @@ const TherapistManagement: React.FC = () => {
                   )}
                 </h3>
                 <p className="text-neutral-400 text-sm sm:text-base">{viewingTherapist.email}</p>
-                
+
                 <div className="flex items-center justify-center space-x-2 mt-2 sm:mt-3">
                   <Star className="w-4 h-4 sm:w-5 sm:h-5 text-accent-yellow fill-current" />
                   <span className="text-white font-medium text-base sm:text-lg">{viewingTherapist.rating}</span>
@@ -1099,7 +1092,7 @@ const TherapistManagement: React.FC = () => {
                     <img src={t.profilePhoto} alt={`${t.firstName} ${t.lastName}`} className="w-10 h-10 rounded-full object-cover" />
                     <div>
                       <p className="text-white font-medium text-sm">{t.firstName} {t.lastName}</p>
-                      <p className="text-neutral-400 text-xs">{t.specializations.slice(0,2).join(', ')}</p>
+                      <p className="text-neutral-400 text-xs">{t.specializations.slice(0, 2).join(', ')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1119,7 +1112,7 @@ const TherapistManagement: React.FC = () => {
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => {
               setShowAddModal(false);
@@ -1186,9 +1179,8 @@ const TherapistManagement: React.FC = () => {
                     />
                     <label
                       htmlFor="profile-photo"
-                      className={`inline-flex items-center space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-primary-500 text-white rounded-lg sm:rounded-xl hover:bg-primary-600 transition-colors duration-200 cursor-pointer text-sm sm:text-base ${
-                        uploading ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
+                      className={`inline-flex items-center space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-primary-500 text-white rounded-lg sm:rounded-xl hover:bg-primary-600 transition-colors duration-200 cursor-pointer text-sm sm:text-base ${uploading ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                     >
                       <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span>{uploading ? 'Uploading...' : 'Upload Photo'}</span>
@@ -1288,9 +1280,8 @@ const TherapistManagement: React.FC = () => {
                   </label>
                   <input
                     type="number"
-                    min="1000"
+                    min="0"
                     max="50000"
-                    step="500"
                     value={formData.hourlyRate}
                     onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseInt(e.target.value) || 4500 }))}
                     className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
