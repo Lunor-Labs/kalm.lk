@@ -24,8 +24,7 @@ const TherapistAvailability = () => {
   const [newTimeSlot, setNewTimeSlot] = useState({
     startTime: '09:00',
     endTime: '10:00',
-    isRecurring: false,
-    sessionType: 'video' as 'video' | 'audio' | 'chat'
+    isRecurring: false
   });
 
   // Load data on mount
@@ -48,15 +47,13 @@ const TherapistAvailability = () => {
       setNewTimeSlot({
         startTime: editingTimeSlot.startTime,
         endTime: editingTimeSlot.endTime,
-        isRecurring: editingTimeSlot.isRecurring ?? false,
-        sessionType: editingTimeSlot.sessionType || 'video'
+        isRecurring: editingTimeSlot.isRecurring ?? false
       });
     } else if (!editingTimeSlot) {
       setNewTimeSlot({
         startTime: '09:00',
         endTime: '10:00',
-        isRecurring: false,
-        sessionType: 'video'
+        isRecurring: false
       });
     }
   }, [editingTimeSlot, showTimeSlotModal]);
@@ -160,7 +157,6 @@ const TherapistAvailability = () => {
         endTime: `${endHour}:${endMin}`,
         isAvailable: true,
         isRecurring: newTimeSlot.isRecurring,
-        sessionType: newTimeSlot.sessionType,
       });
 
       currentStart += 60;
@@ -485,7 +481,6 @@ const TherapistAvailability = () => {
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <div className="font-bold">{slot.startTime} – {slot.endTime}</div>
-                          <div className="text-sm text-gray-400 capitalize">{slot.sessionType}</div>
                         </div>
                         <div className="text-right">
                           <div className={slot.isBooked ? 'text-red-400' : 'text-primary-400'}>
@@ -582,26 +577,7 @@ const TherapistAvailability = () => {
                   />
                 </div>
               </div>
-              {/* 
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Session Type</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {(['video', 'audio', 'chat'] as const).map(t => (
-                    <label key={t} className="cursor-pointer">
-                      <input
-                        type="radio"
-                        name="type"
-                        checked={newTimeSlot.sessionType === t}
-                        onChange={() => setNewTimeSlot(prev => ({ ...prev, sessionType: t }))}
-                        className="hidden"
-                      />
-                      <div className={`p-3 text-center rounded-lg font-medium ${newTimeSlot.sessionType === t ? 'bg-fixes-accent-purple text-black' : 'bg-neutral-100'}`}>
-                        {t.charAt(0).toUpperCase() + t.slice(1)}
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div> */}
+
 
               {/* <div>
                 <label className="block text-sm text-gray-400 mb-1">Price (LKR)</label>
