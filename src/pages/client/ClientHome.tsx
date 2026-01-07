@@ -296,7 +296,7 @@ const ClientHome: React.FC = () => {
               <button
                 key={index}
                 onClick={action.action}
-                className="group bg-[#F1F5F9] rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 text-left"
+                className="group bg-[#E2E8F0] rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 text-left"
               >
                 <div className={`w-12 h-12 ${action.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
                   <Icon className="w-6 h-6 text-white" />
@@ -319,7 +319,7 @@ const ClientHome: React.FC = () => {
               <button
                 key={index}
                 onClick={action.action}
-                className="group bg-[#F1F5F9] rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 text-center"
+                className="group bg-[#E2E8F0] rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-2 text-center"
               >
                 <div className={`w-12 h-12 ${action.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 mx-auto`}>
                   <Icon className="w-6 h-6 text-white" />
@@ -335,7 +335,7 @@ const ClientHome: React.FC = () => {
       {/* Dashboard Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
         {/* Upcoming Sessions */}
-        <div className="bg-[#F1F5F9] rounded-xl p-4 sm:p-6 shadow-sm">
+        <div className="bg-[#E2E8F0] rounded-xl p-4 sm:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h2 className="text-lg sm:text-xl font-black text-black">Upcoming Sessions</h2>
             <button
@@ -408,7 +408,7 @@ const ClientHome: React.FC = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-[#F1F5F9] rounded-xl p-4 sm:p-6 shadow-sm">
+        <div className="bg-[#E2E8F0] rounded-xl p-4 sm:p-6 shadow-sm">
           <h2 className="text-lg sm:text-xl font-black text-black mb-4 sm:mb-6">Recent Activity</h2>
           {recentActivity.length > 0 ? (
             <div className="space-y-3 sm:space-y-4">
@@ -434,7 +434,7 @@ const ClientHome: React.FC = () => {
       {/* Enhanced Auto-Sliding Wellness Tip */}
       <div
         ref={wellnessTipRef}
-        className={`bg-[#F1F5F9] rounded-xl p-6 shadow-sm relative overflow-hidden
+        className={`bg-[#E2E8F0] rounded-xl p-6 shadow-sm relative overflow-hidden
           transition-all duration-1000 ease-out
           ${showWellnessTip ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24'}
         `}
