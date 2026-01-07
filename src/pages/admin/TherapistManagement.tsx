@@ -1411,13 +1411,13 @@ const TherapistManagement: React.FC = () => {
                             {formData.specializations.map((spec, index) => (
                               <div
                                 key={index}
-                                className="flex items-center px-2 py-1 bg-accent-yellow/20 text-accent-yellow rounded-full text-xs"
+                                className="flex items-center px-2 py-1 bg-accent-yellow/20 text-primary-500 rounded-full text-xs"
                               >
                                 {spec}
                                 <button
                                   type="button"
                                   onClick={() => removeSpecialization(spec)}
-                                  className="ml-2 text-accent-yellow hover:text-accent-yellow/80"
+                                  className="ml-2 text-primary-500 hover:text-accent-yellow/80"
                                 >
                                   <X className="w-3 h-3" />
                                 </button>
