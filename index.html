@@ -39,17 +39,25 @@
       https:
       https://firebasestorage.googleapis.com;
 
+    media-src
+      'self'
+      https://firebasestorage.googleapis.com;
+
     frame-src
-      https://www.payhere.lk;
+      https://www.payhere.lk
+      https://sandbox.payhere.lk
+      https://*.daily.co;
 
     connect-src
       'self'
       https://*.payhere.lk
       https://*.googleapis.com
       https://*.cloudfunctions.net
+      https://api.daily.co
       ws:
       wss:;
   " />
+
 
 </head>
 
