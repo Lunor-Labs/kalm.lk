@@ -366,9 +366,7 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
       throw new Error('User document not found. Cannot update role.');
     }
 
-    // If promoting to therapist, generate ID first
-    // Update the user role
-    const userUpdateData: any = {
+    const updates: Record<string, any> = {
       role: newRole,
       updatedAt: serverTimestamp(),
     };
@@ -376,16 +374,18 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
     // If promoting to therapist, add therapist profile to user document
     if (newRole === 'therapist') {
       const userData = userDoc.data();
+      const displayName = userData?.displayName || 'Therapist User';
+      const [firstName = 'First', lastName = 'Last'] = displayName.split(' ');
 
       // Create therapist profile data
-      const therapistProfile = {
-        firstName: userData.displayName?.split(' ')[0] || 'First',
-        lastName: userData.displayName?.split(' ')[1] || 'Last',
+      updates.therapistProfile = {
+        firstName,
+        lastName,
         credentials: ['Licensed Therapist'],
         specializations: ['General Counseling'],
         languages: ['English'],
         services: ['Individual Therapy'],
-        sessionFormats: ['video' as const],
+        sessionFormats: ['video'],
         bio: 'Professional therapist ready to help you on your wellness journey.',
         experience: 1,
         rating: 5.0,
@@ -394,13 +394,11 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
         profilePhoto: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
         nextAvailableSlot: 'Please set availability',
       };
-
-      // Add therapist profile to the user document
-      userUpdateData.therapistProfile = therapistProfile;
     }
 
-    await updateDoc(userDocRef, userUpdateData);
+    await updateDoc(userDocRef, updates);
   } catch (error: any) {
+    console.error('Error updating user role:', error);
     throw new Error(error.message || 'Failed to update user role');
   }
 };
