@@ -123,10 +123,107 @@ const LandingPage: React.FC = () => {
 };
 
 // Premium Coming Soon Page
-import ComingSoon from './pages/ComingSoon';
+//import ComingSoon from './pages/ComingSoon';
 
 function App() {
-	return <ComingSoon />;
+	return (
+		<ErrorBoundary>
+			<AuthProvider>
+				<Router>
+					<div className="App">
+						<Routes>
+							{/* Landing Page - unchanged */}
+							<Route path="/" element={<LandingPage />} />
+
+							{/* New Auth Pages */}
+							<Route path="/login" element={<Login />} />
+							<Route path="/signup" element={<Signup />} />
+							<Route path="/signup/anonymous" element={<AnonymousSignup />} />
+
+							{/* Auth Routes */}
+							<Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+							{/* Legal Pages */}
+							<Route path="/terms-of-service" element={<TermsOfService />} />
+							<Route path="/privacy-policy" element={<PrivacyPolicy />} />
+							<Route path="/refund-policy" element={<RefundPolicy />} />
+
+							{/* Admin Routes */}
+							<Route path="/admin/*" element={
+								<ProtectedRoute requiredRole={['admin', 'superadmin']}>
+									<AdminLayoutSelector />
+								</ProtectedRoute>
+							}>
+								<Route path="dashboard" element={<AdminDashboard />} />
+								<Route path="users" element={<UserManagement />} />
+								<Route path="therapists" element={<TherapistManagement />} />
+								<Route path="bookings" element={<div className="text-white">Bookings Management</div>} />
+								<Route path="payments" element={<PaymentsManagement />} />
+								<Route path="session-config" element={<SessionConfigManagement />} />
+								<Route path="error-logs" element={<ErrorLogsDashboard />} />
+								<Route path="notifications" element={<div className="text-white">Notifications</div>} />
+								<Route path="settings" element={<div className="text-white">Settings</div>} />
+								<Route index element={<Navigate to="dashboard" replace />} />
+							</Route>
+
+							{/* Therapist Routes */}
+							<Route path="/therapist/*" element={
+								<ProtectedRoute requiredRole="therapist">
+									<TherapistLayout />
+								</ProtectedRoute>
+							}>
+								<Route path="schedule" element={<TherapistSchedule />} />
+								<Route path="sessions" element={<TherapistSessions />} />
+								<Route path="session/:sessionId" element={<SessionRoom />} />
+								<Route path="availability" element={<TherapistAvailability />} />
+								<Route path="profile" element={<TherapistProfile />} />
+								<Route path="clients" element={<div className="text-white">Clients</div>} />
+								<Route path="earnings" element={<div className="text-white">Earnings</div>} />
+								<Route path="settings" element={<div className="text-white">Settings</div>} />
+								<Route index element={<Navigate to="schedule" replace />} />
+							</Route>
+
+							{/* Client Routes */}
+							<Route path="/client/*" element={
+								<ProtectedRoute requiredRole="client" allowAnonymous={true}>
+									<ClientLayout />
+								</ProtectedRoute>
+							}>
+								<Route path="home" element={<ClientHome />} />
+								<Route path="book" element={<BookingFlow />} />
+								<Route path="sessions" element={<ClientSessions />} />
+								<Route path="session/:sessionId" element={<SessionRoom />} />
+								<Route path="therapists" element={<TherapistListing onBack={() => window.history.back()} onOpenAuth={() => { }} />} />
+								<Route path="messages" element={<div className="text-white">Messages</div>} />
+								<Route path="payments" element={<div className="text-white">Payment History</div>} />
+								<Route path="profile" element={<div className="text-white">Profile</div>} />
+								<Route path="settings" element={<div className="text-white">Settings</div>} />
+								<Route index element={<Navigate to="home" replace />} />
+							</Route>
+
+							{/* Catch all route */}
+							<Route path="*" element={<Navigate to="/" replace />} />
+						</Routes>
+
+						{/* Toast Notifications */}
+						<Toaster
+							position="top-center"
+							// move the toast container down so messages appear below the fixed header
+							containerStyle={{ top: '0rem' }}
+							toastOptions={{
+								duration: 4000,
+								style: {
+									background: '#1f2937',
+									color: '#fff',
+									border: '1px solid #374151',
+								},
+							}}
+						/>
+					</div>
+				</Router>
+			</AuthProvider>
+		</ErrorBoundary>
+	);
 }
 
 
