@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { 
-  signInWithEmailAndPassword, 
+import {
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInAnonymously,
   signOut as firebaseSignOut,
@@ -19,11 +19,11 @@ import { logAuthError } from './errorLogger';
 export const signIn = async (credentials: LoginCredentials): Promise<User> => {
   let tempAuthUser: FirebaseUser | null = null; // Track temp anonymous auth for cleanup
   let firebaseUser: FirebaseUser | null = null; // Initialize firebaseUser
-  
+
   try {
     // Check if the input looks like an email (contains @)
     const isEmail = credentials.email.includes('@');
-    
+
     if (isEmail) {
       // Regular email login (unchanged)
       const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
@@ -32,52 +32,52 @@ export const signIn = async (credentials: LoginCredentials): Promise<User> => {
       // Username login - NEW: Sign in anonymously FIRST for authenticated query
       const tempCredential = await signInAnonymously(auth);
       tempAuthUser = tempCredential.user; // Temp auth for query
-      
+
       // Now query users collection (authenticated, so rules allow list)
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('username', '==', credentials.email));
       const querySnapshot = await getDocs(q);
-      
+
       if (querySnapshot.empty) {
-        await firebaseSignOut(auth); 
+        await firebaseSignOut(auth);
         throw new Error('Username not found. Please check your username or create an account.');
       }
-      
+
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data();
       const oldUid = userDoc.id; // UID from doc
-      
+
       if (userData.isAnonymous) {
-        firebaseUser = tempAuthUser; 
-        tempAuthUser = null; 
-        
+        firebaseUser = tempAuthUser;
+        tempAuthUser = null;
+
         await setDoc(doc(db, 'users', firebaseUser.uid), {
           ...userData,
           uid: firebaseUser.uid,
           updatedAt: serverTimestamp()
-        }, { merge: true }); 
+        }, { merge: true });
       } else {
         await firebaseSignOut(auth);
         tempAuthUser = null;
-        
+
         if (!userData.email) {
           throw new Error('This account cannot be accessed with username login.');
         }
-        
+
         const userCredential = await signInWithEmailAndPassword(auth, userData.email, credentials.password);
         firebaseUser = userCredential.user;
       }
     }
-    
+
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-    
+
     if (!userDoc.exists()) {
       throw new Error('User profile not found');
     }
-    
+
     const userData = userDoc.data();
-    
-    
+
+
     return {
       uid: firebaseUser.uid,
       email: firebaseUser.email,
@@ -119,12 +119,12 @@ export const signUp = async (signupData: SignupData): Promise<User> => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, signupData.email, signupData.password);
     const firebaseUser = userCredential.user;
-    
+
     // Update display name
     await updateProfile(firebaseUser, {
       displayName: signupData.displayName
     });
-    
+
     // Create user document in Firestore with default client role
     const userData = {
       uid: firebaseUser.uid,
@@ -136,7 +136,7 @@ export const signUp = async (signupData: SignupData): Promise<User> => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
-    
+
     await setDoc(doc(db, 'users', firebaseUser.uid), userData);
 
     return {
@@ -171,10 +171,10 @@ export const signInWithGoogle = async (): Promise<User> => {
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
     const firebaseUser = userCredential.user;
-    
+
     // Check if user already exists
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-    
+
     if (!userDoc.exists()) {
       // Create new user document with default client role
       const userData = {
@@ -186,9 +186,9 @@ export const signInWithGoogle = async (): Promise<User> => {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
-      
+
       await setDoc(doc(db, 'users', firebaseUser.uid), userData);
-      
+
       return {
         uid: firebaseUser.uid,
         email: firebaseUser.email,
@@ -228,11 +228,11 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
     const usersRef = collection(db, 'users');
     const q = query(usersRef, where('username', '==', anonymousData.username));
     const querySnapshot = await getDocs(q);
-    
+
     if (!querySnapshot.empty) {
       await firebaseSignOut(auth);
       throw new Error('Username already exists. Please choose a different username.');
-    }    
+    }
     // Create user document in Firestore for anonymous user
     const userData = {
       uid: firebaseUser.uid,
@@ -244,14 +244,14 @@ export const signUpAnonymous = async (anonymousData: AnonymousSignupData): Promi
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
-    
+
     await setDoc(doc(db, 'users', firebaseUser.uid), userData);
 
     // Log success only in development
     if (process.env.NODE_ENV === 'development') {
       console.log('User document created successfully');
     }
-    
+
     return {
       uid: firebaseUser.uid,
       email: null,
@@ -296,7 +296,8 @@ export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User |
       if (process.env.NODE_ENV === 'development') {
         console.log('No Firebase user provided');
       }
-      return null;}
+      return null;
+    }
 
     // Log user lookup only in development
     if (process.env.NODE_ENV === 'development') {
@@ -309,7 +310,7 @@ export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User |
       if (process.env.NODE_ENV === 'development') {
         console.log('User document does not exist in Firestore');
       }
-         // Return default user object when Firebase user exists but Firestore doc doesn't
+      // Return default user object when Firebase user exists but Firestore doc doesn't
       return {
         uid: firebaseUser.uid,
         email: firebaseUser.email,
@@ -320,7 +321,7 @@ export const getCurrentUser = async (firebaseUser: FirebaseUser): Promise<User |
         updatedAt: new Date(),
       };
     }
-    
+
     const userData = userDoc.data();
     // Log raw data only in development
     if (process.env.NODE_ENV === 'development') {
@@ -360,19 +361,17 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
     // Check if user document exists first
     const userDocRef = doc(db, 'users', uid);
     const userDoc = await getDoc(userDocRef);
-    
+
     if (!userDoc.exists()) {
       throw new Error('User document not found. Cannot update role.');
     }
-    
+
     // If promoting to therapist, generate ID first
     // Update the user role
     const userUpdateData: any = {
       role: newRole,
       updatedAt: serverTimestamp(),
     };
-
-    await updateDoc(userDocRef, userUpdateData);
 
     // If promoting to therapist, add therapist profile to user document
     if (newRole === 'therapist') {
@@ -399,6 +398,8 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
       // Add therapist profile to the user document
       userUpdateData.therapistProfile = therapistProfile;
     }
+
+    await updateDoc(userDocRef, userUpdateData);
   } catch (error: any) {
     throw new Error(error.message || 'Failed to update user role');
   }
