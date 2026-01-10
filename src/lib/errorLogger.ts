@@ -56,6 +56,25 @@ class ErrorLogger {
     // Always log to console in development
     if (process.env.NODE_ENV === 'development') {
       console.error('🔥 Error logged:', errorLog);
+      // Also log to Firestore in development for testing purposes
+      try {
+        await this.ensureInitialized();
+        // Create a clean object without undefined values for Firestore
+        const cleanErrorLog: any = {};
+        Object.keys(errorLog).forEach(key => {
+          if (errorLog[key as keyof typeof errorLog] !== undefined) {
+            cleanErrorLog[key] = errorLog[key as keyof typeof errorLog];
+          }
+        });
+
+        const docRef = await addDoc(collection(db, 'error_logs'), {
+          ...cleanErrorLog,
+          timestamp: serverTimestamp(),
+        });
+        console.log(`Error also logged to database (ID: ${docRef.id})`);
+      } catch (loggingError) {
+        console.error('Failed to log error to database in development:', loggingError);
+      }
       return;
     }
 
@@ -65,8 +84,16 @@ class ErrorLogger {
 
       // Only log to Firestore in production for monitoring
       if (process.env.NODE_ENV === 'production') {
+        // Create a clean object without undefined values for Firestore
+        const cleanErrorLog: any = {};
+        Object.keys(errorLog).forEach(key => {
+          if (errorLog[key as keyof typeof errorLog] !== undefined) {
+            cleanErrorLog[key] = errorLog[key as keyof typeof errorLog];
+          }
+        });
+
         const docRef = await addDoc(collection(db, 'error_logs'), {
-          ...errorLog,
+          ...cleanErrorLog,
           timestamp: serverTimestamp(),
         });
 
