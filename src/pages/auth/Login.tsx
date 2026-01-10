@@ -15,10 +15,12 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
+  const [showRetryGoogle, setShowRetryGoogle] = useState(false);
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-+  setError(null);
+  setError(null);
+  setShowRetryGoogle(false); // Clear retry state when using email/password
     if (!identifier.trim()) {
       setError('Please enter your email or username');
       return;
@@ -67,8 +69,25 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       const from = (location.state as any)?.from?.pathname || redirectPath;
       navigate(from, { replace: true });
+      setShowRetryGoogle(false); // Reset retry state on success
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in with Google');
+      // Handle specific Firebase auth errors with user-friendly messages
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Sign-in was cancelled. Click the button below to try again.');
+        setShowRetryGoogle(true);
+      } else if (err.code === 'auth/popup-blocked') {
+        setError('Pop-up was blocked by your browser. Please allow pop-ups for this site and try again.');
+        setShowRetryGoogle(false);
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        setError('Another sign-in attempt is in progress. Please wait and try again.');
+        setShowRetryGoogle(false);
+      } else if (err.code === 'auth/account-exists-with-different-credential') {
+        setError('An account with this email already exists. Please try signing in with email and password instead.');
+        setShowRetryGoogle(false);
+      } else {
+        setError(err.message || 'Failed to sign in with Google');
+        setShowRetryGoogle(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -119,7 +138,10 @@ const handleSubmit = async (e: React.FormEvent) => {
               <input
                 type="text"
                 value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
+                onChange={(e) => {
+                  setIdentifier(e.target.value);
+                  if (showRetryGoogle) setShowRetryGoogle(false); // Clear retry state when user types
+                }}
                 className="w-full pl-9 pr-4 py-3 border rounded-2xl  focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="you@example.com or username"
                 required
@@ -133,7 +155,10 @@ const handleSubmit = async (e: React.FormEvent) => {
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (showRetryGoogle) setShowRetryGoogle(false); // Clear retry state when user types
+                }}
                 className="w-full pl-9 pr-11 py-3 border rounded-2xl  focus:ring-fixes-accent-blue focus:border-transparent transition-all duration-200 border-cream-200"
                 placeholder="Your password"
                 required
@@ -184,6 +209,19 @@ const handleSubmit = async (e: React.FormEvent) => {
             </svg>
             <span className="text-neutral-700">Google</span>
           </button>
+
+          {showRetryGoogle && (
+            <button
+              onClick={handleGoogle}
+              disabled={loading}
+              className="w-full mt-2 flex items-center justify-center space-x-2 py-2 border border-red-200 rounded-2xl bg-red-50 hover:bg-red-100 text-red-700 transition-colors disabled:opacity-60"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#EA4335" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+              <span className="text-sm font-medium">Try Google Again</span>
+            </button>
+          )}
 
           <div className="mt-6 text-sm text-neutral-600 text-center space-y-2">
             <p>
