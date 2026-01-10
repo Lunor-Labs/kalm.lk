@@ -37,7 +37,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     
     // Redirect based on role
     let redirectPath = '/client/home';
-    if (userRole === 'admin') {
+    if (userRole === 'admin' || userRole === 'superadmin') {
       redirectPath = '/admin/dashboard';
     } else if (userRole === 'therapist') {
       redirectPath = '/therapist/schedule';
@@ -56,8 +56,16 @@ const handleSubmit = async (e: React.FormEvent) => {
     setLoading(true);
     setError(null);
     try {
-      await signInWithGoogle();
-      const from = (location.state as any)?.from?.pathname || '/client/home';
+      const user = await signInWithGoogle();
+      // Redirect based on role
+      let redirectPath = '/client/home';
+      if (user.role === 'admin' || user.role === 'superadmin') {
+        redirectPath = '/admin/dashboard';
+      } else if (user.role === 'therapist') {
+        redirectPath = '/therapist/schedule';
+      }
+
+      const from = (location.state as any)?.from?.pathname || redirectPath;
       navigate(from, { replace: true });
     } catch (err: any) {
       setError(err.message || 'Failed to sign in with Google');
