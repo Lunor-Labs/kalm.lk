@@ -212,11 +212,35 @@ export const signInWithGoogle = async (): Promise<User> => {
       };
     }
   } catch (error: any) {
-    // Log Google sign in errors for monitoring
-    await logAuthError(error);
+    // Don't log user-action errors as system errors
+    const userActionErrors = [
+      'auth/popup-closed-by-user',
+      'auth/popup-blocked',
+      'auth/cancelled-popup-request'
+    ];
 
-    console.error('Google sign in error:', error);
-    throw new Error(error.message || 'Failed to sign in with Google');
+    if (!userActionErrors.includes(error.code)) {
+      // Log only actual system errors for monitoring
+      await logAuthError(error);
+    }
+
+    // Don't log user actions to console as errors
+    if (!userActionErrors.includes(error.code)) {
+      console.error('Google sign in error:', error);
+    }
+
+    // Throw user-friendly error messages for user actions
+    if (error.code === 'auth/popup-closed-by-user') {
+      throw new Error('Sign-in was cancelled. Please try again.');
+    } else if (error.code === 'auth/popup-blocked') {
+      throw new Error('Pop-up was blocked by your browser. Please allow pop-ups for this site.');
+    } else if (error.code === 'auth/cancelled-popup-request') {
+      throw new Error('Another sign-in attempt is in progress. Please wait.');
+    } else if (error.code === 'auth/account-exists-with-different-credential') {
+      throw new Error('An account with this email already exists. Please try signing in with email and password.');
+    } else {
+      throw new Error(error.message || 'Failed to sign in with Google');
+    }
   }
 };
 
