@@ -31,7 +31,7 @@ const Hero: React.FC<HeroProps> = ({ onOpenAuth }) => {
 
   return (
     <section className="relative min-h-screen bg-white pt-16 overflow-x-hidden">
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ paddingTop: '120px' }}>
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-[60px]">
 
         {/* TOP ROW*/}
         <div className="mb-12 lg:mb-20">
