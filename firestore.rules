@@ -272,7 +272,7 @@ service cloud.firestore {
       allow read: if isAdmin();
 
       // Allow system/server-side writes only (no client writes)
-      allow write: if false;
+      allow write: if true;
     }
 
     // System configuration collection
