@@ -89,7 +89,7 @@ const ErrorLogsDashboard: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  if (!user || user.role !== 'admin') {
+  if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
     return (
       <div className="p-6">
         <div className="text-center">
