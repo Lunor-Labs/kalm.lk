@@ -204,11 +204,32 @@ const TherapistListing: React.FC<TherapistListingProps> = ({ onBack, initialFilt
       );
     }
 
-    if (filters.serviceCategory) {
-      filtered = filtered.filter(therapist => 
-        Array.isArray(therapist.services) && therapist.services.includes(filters.serviceCategory!)
-      );
-    }
+      if (filters.serviceCategory) {
+        const selectedCategory = (filters.serviceCategory || '').trim().toLowerCase();
+
+        filtered = filtered.filter(therapist => {
+          // Get services - handle both array and single value cases
+          const therapistServices = Array.isArray(therapist.services)
+            ? therapist.services
+            : therapist.services ? [therapist.services] : [];
+
+          return therapistServices.some(service => {
+            const s = (service || '').trim().toLowerCase();
+
+            return (
+              s === selectedCategory ||
+              s.includes(selectedCategory) ||
+              selectedCategory.includes(s) ||
+              // Special cases that appear very often
+              (selectedCategory.includes('teen') && s.includes('teen')) ||
+              (selectedCategory.includes('individual') && s.includes('individual')) ||
+              (selectedCategory.includes('family') && s.includes('family')) ||
+              (selectedCategory.includes('couple') && s.includes('couple')) ||
+              (selectedCategory.includes('lgbtq') && s.includes('lgbtq'))
+            );
+          });
+        });
+      }
 
     if (filters.sessionFormats) {
       filtered = filtered.filter(therapist => {
