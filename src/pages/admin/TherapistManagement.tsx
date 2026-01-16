@@ -1274,7 +1274,7 @@ const TherapistManagement: React.FC = () => {
                   />
                 </div>
 
-                <div>
+                  <div>
                   <label className="block text-sm font-medium text-neutral-300 mb-1 sm:mb-2">
                     Hourly Rate (LKR)
                   </label>
@@ -1282,8 +1282,11 @@ const TherapistManagement: React.FC = () => {
                     type="number"
                     min="0"
                     max="50000"
-                    value={formData.hourlyRate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseInt(e.target.value) || 4500 }))}
+                    value={formData.hourlyRate || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData(prev => ({ ...prev, hourlyRate: value === '' ? '' : parseInt(value) }));
+                    }}
                     className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-700 rounded-xl sm:rounded-2xl  focus:ring-primary-500 focus:border-transparent transition-all duration-200 bg-neutral-800 text-white placeholder-neutral-400 text-sm sm:text-base"
                   />
                 </div>
