@@ -74,14 +74,16 @@ export const verifyPayHerePayment = onRequest(
             const searchUrl = `${baseUrl}/merchant/v1/payment/search?order_id=${orderId}`;
             const searchResponse = await fetch(searchUrl, {
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Referer': 'https://kalmlk-dev.vercel.app',
                 }
             });
 
             if (!searchResponse.ok) {
                 const err = await searchResponse.text();
                 console.error('PayHere Search Error:', err);
-                throw new Error('Failed to retrieve payment details');
+                res.status(502).json({ error: "Failed to retrieve payment details", details: err });
+                return;
             }
 
             const searchData = await searchResponse.json() as { status: number, msg: string, data?: any[] };
