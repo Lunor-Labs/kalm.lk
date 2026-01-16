@@ -461,7 +461,10 @@ const TherapistProfile: React.FC = () => {
                 min="0"
                 max="50000"
                 value={formData.hourlyRate}
-                onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseInt(e.target.value) || 4500 }))}
+ onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData(prev => ({ ...prev, hourlyRate: value === '' ? '' : parseInt(value) }));
+                    }}                
                 className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-neutral-300 rounded-xl sm:rounded-2xl  focus:ring-fixes-accent-purple focus:border-transparent transition-all duration-200 bg-white text-black placeholder-fixes-heading-dark text-sm sm:text-base"
               />
             </div>
