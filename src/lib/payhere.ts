@@ -1,5 +1,5 @@
 // PayHere payment gateway integration for Sri Lanka
-import { PayHerePayment} from '../types/payment';
+import { PayHerePayment } from '../types/payment';
 
 // Helper function to get Cloud Functions URL based on current environment
 const getCloudFunctionsUrl = (functionName: string): string => {
@@ -55,11 +55,11 @@ const loadPayHereScript = (): Promise<void> => {
 
     // Create script element
     const script = document.createElement('script');
-    script.src = import.meta.env.VITE_PAYHERE_SANDBOX === 'true' 
+    script.src = import.meta.env.VITE_PAYHERE_SANDBOX === 'true'
       ? 'https://www.payhere.lk/lib/payhere.js'
       : 'https://www.payhere.lk/lib/payhere.js';
     script.async = true;
-    
+
     script.onload = () => {
       if (window.payhere) {
         resolve();
@@ -67,11 +67,11 @@ const loadPayHereScript = (): Promise<void> => {
         reject(new Error('PayHere failed to load'));
       }
     };
-    
+
     script.onerror = () => {
       reject(new Error('Failed to load PayHere script'));
     };
-    
+
     document.head.appendChild(script);
   });
 };
@@ -94,6 +94,35 @@ const fetchPayHereHash = async (orderId: string, amount: number, currency: strin
 };
 
 
+
+// Helper to verify payment via backend
+const verifyPaymentStatus = async (orderId: string): Promise<boolean> => {
+  try {
+    const response = await fetch(getCloudFunctionsUrl('verifyPayHerePayment'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId })
+    });
+
+    if (!response.ok) {
+      console.warn('Payment verification endpoint returned error, falling back to client status');
+      // If verification fails due to server error (e.g. 500), we might want to fail safe or fail hard.
+      // User asked to "check actual payment status", implying we should trust the server.
+      // If server is 404, it means payment DEFINITELY didn't happen.
+      if (response.status === 404) return false;
+      // If 500, lets assume true if we got onCompleted? No, unsafe.
+      // Let's return false to be safe, or throw?
+      // Let's assume false if verification fails.
+      return false;
+    }
+
+    const data = await response.json();
+    return data.success === true;
+  } catch (err) {
+    console.error('Payment verification network failed:', err);
+    return false;
+  }
+};
 
 export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): Promise<PayHereResult> => {
   try {
@@ -157,8 +186,51 @@ export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): P
 
     return new Promise((resolve) => {
       // Set up PayHere callbacks
-      window.payhere.onCompleted = function (orderId: string) {
+      window.payhere.onCompleted = async function (orderId: string) {
+        if (isSettled) return;
+
         console.log('Payment completed. Order ID:', orderId);
+
+        // Basic validation
+        if (!orderId || (paymentData.orderId && orderId !== paymentData.orderId)) {
+          console.error('Order ID mismatch or missing');
+          isSettled = true;
+          cleanup();
+          resolve({
+            success: false,
+            error: 'Payment validation failed: Order ID mismatch'
+          });
+          return;
+        }
+
+        // Backend Verification
+        try {
+          const verified = await verifyPaymentStatus(orderId);
+          if (!verified) {
+            console.error('Backend verification failed for order:', orderId);
+            isSettled = true;
+            cleanup();
+            resolve({
+              success: false,
+              error: 'Payment verification failed. Please contact support if you were charged.'
+            });
+            return;
+          }
+        } catch (e) {
+          console.error('Verification error:', e);
+          // Decide if we should block or allow? Safe to block if we want "Actual Status".
+          // If network fails, we can't verify.
+          isSettled = true;
+          cleanup();
+          resolve({
+            success: false,
+            error: 'Payment verification failed due to network error.'
+          });
+          return;
+        }
+
+        isSettled = true;
+        cleanup();
         resolve({
           success: true,
           orderId: orderId,
