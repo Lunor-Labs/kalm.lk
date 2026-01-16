@@ -1,4 +1,7 @@
 {
+  "functions": {
+    "source": "backend/functions"
+  },
   "firestore": {
     "database": "(default)",
     "location": "asia-southeast1",
