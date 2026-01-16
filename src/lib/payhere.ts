@@ -185,6 +185,15 @@ export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): P
     }
 
     return new Promise((resolve) => {
+      let isSettled = false;
+
+      // Helper to cleanup callbacks
+      const cleanup = () => {
+        window.payhere.onCompleted = () => { };
+        window.payhere.onDismissed = () => { };
+        window.payhere.onError = () => { };
+      };
+
       // Set up PayHere callbacks
       window.payhere.onCompleted = async function (orderId: string) {
         if (isSettled) return;
@@ -218,8 +227,6 @@ export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): P
           }
         } catch (e) {
           console.error('Verification error:', e);
-          // Decide if we should block or allow? Safe to block if we want "Actual Status".
-          // If network fails, we can't verify.
           isSettled = true;
           cleanup();
           resolve({
@@ -239,7 +246,10 @@ export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): P
       };
 
       window.payhere.onDismissed = function () {
+        if (isSettled) return;
         console.log('Payment dismissed');
+        isSettled = true;
+        cleanup();
         resolve({
           success: false,
           error: 'Payment was cancelled by user'
@@ -247,7 +257,10 @@ export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): P
       };
 
       window.payhere.onError = function (error: string) {
+        if (isSettled) return;
         console.error('Payment error:', error);
+        isSettled = true;
+        cleanup();
         resolve({
           success: false,
           error: error || 'Payment failed'
@@ -255,7 +268,18 @@ export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): P
       };
 
       // Start the payment
-      window.payhere.startPayment(payment);
+      try {
+        window.payhere.startPayment(payment);
+      } catch (err) {
+        if (!isSettled) {
+          isSettled = true;
+          cleanup();
+          resolve({
+            success: false,
+            error: 'Failed to start payment popup'
+          });
+        }
+      }
     });
 
   } catch (error: any) {

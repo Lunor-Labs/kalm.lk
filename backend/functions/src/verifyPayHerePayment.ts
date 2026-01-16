@@ -36,11 +36,18 @@ export const verifyPayHerePayment = onRequest(
             // const isSandbox = process.env.VITE_PAYHERE_SANDBOX === 'true'; // Note: backend might not have VITE_ envs, usually just NODE_ENV or custom. Assuming live unless specified.
 
             // Use sandbox URL if configured, but usually backend envs differ. 
+            // I'll default to Live            // Use sandbox URL if configured, but usually backend envs differ. 
             // I'll default to Live unless PAYHERE_ENV is 'sandbox'
             const payhereEnv = process.env.PAYHERE_ENV || 'production';
             const baseUrl = payhereEnv === 'sandbox'
                 ? 'https://sandbox.payhere.lk'
                 : 'https://www.payhere.lk';
+
+            // Define the allowed domain/referer based on environment
+            // Ensure these domains are whitelisted in PayHere Dashboard
+            const appDomain = payhereEnv === 'sandbox'
+                ? 'https://kalmlk-dev.vercel.app'
+                : 'https://kalm.lk';
 
             if (!appId || !appSecret) {
                 console.error("PayHere App credentials not configured");
@@ -55,6 +62,8 @@ export const verifyPayHerePayment = onRequest(
                 headers: {
                     'Authorization': `Basic ${auth}`,
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    // Mimic the whitelisted domain
+                    'Referer': appDomain,
                 },
                 body: 'grant_type=client_credentials'
             });
@@ -74,14 +83,16 @@ export const verifyPayHerePayment = onRequest(
             const searchUrl = `${baseUrl}/merchant/v1/payment/search?order_id=${orderId}`;
             const searchResponse = await fetch(searchUrl, {
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Referer': appDomain,
                 }
             });
 
             if (!searchResponse.ok) {
                 const err = await searchResponse.text();
                 console.error('PayHere Search Error:', err);
-                throw new Error('Failed to retrieve payment details');
+                res.status(502).json({ error: "Failed to retrieve payment details", details: err });
+                return;
             }
 
             const searchData = await searchResponse.json() as { status: number, msg: string, data?: any[] };

@@ -78,9 +78,8 @@ service cloud.firestore {
       allow list: if isAuthenticated();
       
       // Clients can create sessions (during booking)
-      allow create: if isAuthenticated() && 
-                      request.resource.data.clientId == request.auth.uid &&
-                      request.resource.data.keys().hasAll(['therapistId', 'clientId', 'sessionType', 'status', 'scheduledTime']);
+      // DEPRECATED: Session creation is now handled by backend Cloud Function for security
+      allow create: if false;
       
       // Participants can update limited fields only
       allow update: if isAuthenticated() && 

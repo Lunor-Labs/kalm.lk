@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, ArrowLeft, CreditCard, Shield, CheckCircle, Video, MessageCircle, Phone } from 'lucide-react';
+import { Clock, ArrowLeft, CreditCard, Shield, CheckCircle } from 'lucide-react';
 import { BookingData } from '../../../types/booking';
-import { createSession } from '../../../lib/sessions';
 import { useAuth } from '../../../contexts/AuthContext';
 import { initiatePayHerePayment } from '../../../lib/payhere';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import toast from 'react-hot-toast';
 import { db } from '../../../lib/firebase';
-import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc, query, where, getDocs } from 'firebase/firestore';
-import { logPaymentError, logUserError } from '../../../lib/errorLogger';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { logPaymentError } from '../../../lib/errorLogger';
 import { getTherapistAvailability } from '../../../lib/availability';
 import { format } from 'date-fns';
 
@@ -106,7 +106,6 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
   const { user } = useAuth();
   const [processing, setProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('card');
   const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>(bookingData.sessionType || 'video');
   const [showTerms, setShowTerms] = useState(false);
   const [showCancellation, setShowCancellation] = useState(false);
@@ -166,53 +165,49 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       if (paymentResult.success) {
         const bookingId = paymentResult.orderId || `booking-${Date.now()}`;
         console.log('bookingData.therapistId', bookingData.therapistId);
-        // Therapist ID is now directly the user ID
-        const therapistUserId = bookingData.therapistId;
 
-        // Create the session in Firebase after successful payment
-        const sessionId = await createSession({
+        // Prepare Payment Data for Backend
+        // Create the session in Firebase via Cloud Function
+        const functions = getFunctions();
+        const createSessionFn = httpsCallable(functions, 'createSession');
+
+        const paymentRecordData = {
           bookingId,
-          therapistId: bookingData.therapistId, // Use therapist's userId, not document ID
           clientId: user.uid,
-          sessionType: bookingData.sessionType || 'video', // Use sessionType from bookingData
-          status: 'scheduled',
-          scheduledTime: bookingData.sessionTime,
-          duration: bookingData.duration || 60,
-        });
+          clientName: user.displayName || user.email || 'Unknown',
+          therapistId: bookingData.therapistId,
+          amount: bookingData.amount || totalAmount,
+          currency: 'LKR',
+          paymentMethod: 'payhere',
+          paymentStatus: 'completed',
+          paymentId: paymentResult.paymentId || null,
+          orderId: bookingId,
+          couponCode: bookingData.couponCode || null,
+          discountAmount: bookingData.discountAmount || 0,
+          finalAmount: totalAmount,
+        };
 
-        // Record payment in Firestore for admin reporting & payouts
         try {
-          const paymentData = {
-            bookingId,
-            sessionId,
-            clientId: user.uid,
-            clientName: user.displayName || user.email || 'Unknown',
-            therapistId: bookingData.therapistId,
-            amount: bookingData.amount || totalAmount,
-            currency: 'LKR' as const,
-            paymentMethod: 'payhere' as const,
-            paymentStatus: 'completed' as const,
-            paymentId: paymentResult.paymentId || null,
-            orderId: bookingId,
-            couponCode: bookingData.couponCode || null,
-            discountAmount: bookingData.discountAmount || 0,
-            finalAmount: totalAmount,
-            payoutStatus: 'pending' as const,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          };
+          const result: any = await createSessionFn({
+            bookingData: {
+              ...bookingData,
+              sessionType: sessionType, // Ensure correct session type is passed
+            },
+            paymentData: paymentRecordData
+          });
 
-          const paymentsRef = collection(db, 'payments');
-          await addDoc(paymentsRef, paymentData);
-        } catch (paymentError: any) {
-          console.error('Failed to record payment document:', paymentError);
-          toast.error(paymentError?.message || 'Session booked, but failed to record payment in admin reports.');
+          const { sessionId } = result.data;
+
+          toast.success('Payment successful! Session booked.');
+          console.log('Session created with ID:', sessionId);
+          onPaymentComplete();
+
+        } catch (backendError: any) {
+          console.error('Backend session creation failed:', backendError);
+          toast.error('Payment succeeded but session creation failed. Please contact support.');
+          // Ideally we should refund or retry here
         }
 
-        toast.success('Payment successful! Session booked.');
-        console.log('Session created with ID:', sessionId);
-
-        onPaymentComplete();
       } else {
         throw new Error(paymentResult.error || 'Payment failed');
       }
@@ -250,14 +245,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   const sessionTypeDiscount = sessionType === 'audio' ? 0 : sessionType === 'chat' ? 0 : 0;
   const totalAmount = finalAmount - sessionTypeDiscount;
 
-  const getSessionTypeIcon = (type: string) => {
-    switch (type) {
-      case 'video': return <Video className="w-4 h-4" />;
-      case 'audio': return <Phone className="w-4 h-4" />;
-      case 'chat': return <MessageCircle className="w-4 h-4" />;
-      default: return <Video className="w-4 h-4" />;
-    }
-  };
+
 
   if (processing) {
     return (
