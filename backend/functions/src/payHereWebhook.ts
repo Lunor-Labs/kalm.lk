@@ -2,6 +2,7 @@ import { onRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 import * as dotenv from "dotenv";
+import { format } from "date-fns";
 
 // Load environment variables
 dotenv.config();
@@ -206,7 +207,62 @@ export const payHereWebhook = onRequest(
                     updatedAt: admin.firestore.FieldValue.serverTimestamp()
                 });
 
-                // 7. Log success
+                // 7. Update therapist availability
+                try {
+                    const scheduledDate = bookingData?.scheduledTime.toDate();
+                    const dateString = format(scheduledDate, "yyyy-MM-dd");
+                    const timeString = format(scheduledDate, "HH:mm");
+                    const dayOfWeek = scheduledDate.getDay();
+
+                    const availabilityRef = db.collection("therapistAvailability").doc(bookingData?.therapistId);
+                    const availabilitySnap = await availabilityRef.get();
+
+                    if (availabilitySnap.exists) {
+                        const availability = availabilitySnap.data();
+                        let updated = false;
+
+                        // Check special dates first
+                        if (availability?.specialDates) {
+                            const specialDateIndex = availability.specialDates.findIndex((sd: any) => sd.date === dateString);
+                            if (specialDateIndex !== -1) {
+                                availability.specialDates[specialDateIndex].timeSlots = availability.specialDates[specialDateIndex].timeSlots.map((slot: any) => {
+                                    if (slot.startTime === timeString) {
+                                        updated = true;
+                                        return { ...slot, isAvailable: false, isBooked: true };
+                                    }
+                                    return slot;
+                                });
+                            }
+                        }
+
+                        // Then weekly schedule if not found in special dates or even if found (to be thorough)
+                        if (availability?.weeklySchedule) {
+                            const dayIndex = availability.weeklySchedule.findIndex((ws: any) => ws.dayOfWeek === dayOfWeek);
+                            if (dayIndex !== -1) {
+                                availability.weeklySchedule[dayIndex].timeSlots = availability.weeklySchedule[dayIndex].timeSlots.map((slot: any) => {
+                                    if (slot.startTime === timeString) {
+                                        updated = true;
+                                        return { ...slot, isAvailable: false, isBooked: true };
+                                    }
+                                    return slot;
+                                });
+                            }
+                        }
+
+                        if (updated) {
+                            await availabilityRef.update({
+                                specialDates: availability?.specialDates || [],
+                                weeklySchedule: availability?.weeklySchedule || [],
+                                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                            });
+                            console.log(`✅ Availability updated for therapist ${bookingData?.therapistId} at ${dateString} ${timeString}`);
+                        }
+                    }
+                } catch (availError) {
+                    console.error("Error updating therapist availability:", availError);
+                }
+
+                // 8. Log success
                 await logRef.set({
                     order_id,
                     payment_id,
