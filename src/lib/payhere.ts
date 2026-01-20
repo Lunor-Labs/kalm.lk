@@ -107,9 +107,17 @@ export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): P
     const cancelUrl = import.meta.env.VITE_PAYHERE_CANCEL_URL || `${window.location.origin}/payment/cancel`;
     const notifyUrl = import.meta.env.VITE_PAYHERE_NOTIFY_URL || getCloudFunctionsUrl('payHereWebhook');
 
+    console.log("PayHere configuration:", {
+      merchantId,
+      merchantSecret,
+      returnUrl,
+      cancelUrl,
+      notifyUrl
+    });
     if (!merchantId || !merchantSecret) {
       throw new Error('PayHere configuration is missing. Please check environment variables.');
     }
+
 
     // Fetch secure hash from server
     const hash = await fetchPayHereHash(paymentData.orderId, paymentData.amount, paymentData.currency);
