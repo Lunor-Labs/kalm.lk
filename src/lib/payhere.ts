@@ -1,5 +1,5 @@
 // PayHere payment gateway integration for Sri Lanka
-import { PayHerePayment} from '../types/payment';
+import { PayHerePayment } from '../types/payment';
 
 // Helper function to get Cloud Functions URL based on current environment
 const getCloudFunctionsUrl = (functionName: string): string => {
@@ -55,11 +55,11 @@ const loadPayHereScript = (): Promise<void> => {
 
     // Create script element
     const script = document.createElement('script');
-    script.src = import.meta.env.VITE_PAYHERE_SANDBOX === 'true' 
+    script.src = import.meta.env.VITE_PAYHERE_SANDBOX === 'true'
       ? 'https://www.payhere.lk/lib/payhere.js'
       : 'https://www.payhere.lk/lib/payhere.js';
     script.async = true;
-    
+
     script.onload = () => {
       if (window.payhere) {
         resolve();
@@ -67,11 +67,11 @@ const loadPayHereScript = (): Promise<void> => {
         reject(new Error('PayHere failed to load'));
       }
     };
-    
+
     script.onerror = () => {
       reject(new Error('Failed to load PayHere script'));
     };
-    
+
     document.head.appendChild(script);
   });
 };
@@ -105,7 +105,7 @@ export const initiatePayHerePayment = async (paymentData: PayHerePaymentData): P
     const merchantSecret = import.meta.env.VITE_PAYHERE_MERCHANT_SECRET;
     const returnUrl = import.meta.env.VITE_PAYHERE_RETURN_URL || `${window.location.origin}/payment/success`;
     const cancelUrl = import.meta.env.VITE_PAYHERE_CANCEL_URL || `${window.location.origin}/payment/cancel`;
-    const notifyUrl = import.meta.env.VITE_PAYHERE_NOTIFY_URL || `${window.location.origin}/api/payhere-webhook`;
+    const notifyUrl = import.meta.env.VITE_PAYHERE_NOTIFY_URL || getCloudFunctionsUrl('payHereWebhook');
 
     if (!merchantId || !merchantSecret) {
       throw new Error('PayHere configuration is missing. Please check environment variables.');

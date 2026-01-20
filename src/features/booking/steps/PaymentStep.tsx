@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, ArrowLeft, CreditCard, Shield, CheckCircle, Video, MessageCircle, Phone } from 'lucide-react';
+import { Clock, ArrowLeft, CreditCard, Shield, CheckCircle } from 'lucide-react';
 import { BookingData } from '../../../types/booking';
-import { createSession } from '../../../lib/sessions';
 import { useAuth } from '../../../contexts/AuthContext';
 import { initiatePayHerePayment } from '../../../lib/payhere';
 import toast from 'react-hot-toast';
 import { db } from '../../../lib/firebase';
-import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc, query, where, getDocs } from 'firebase/firestore';
-import { logPaymentError, logUserError } from '../../../lib/errorLogger';
+import { collection, serverTimestamp, doc, query, where, onSnapshot, setDoc, getDocs } from 'firebase/firestore';
+import { logPaymentError } from '../../../lib/errorLogger';
 import { getTherapistAvailability } from '../../../lib/availability';
 import { format } from 'date-fns';
 
@@ -69,7 +68,7 @@ const checkTimeSlotAvailability = async (therapistId: string, scheduledTime: Dat
     );
 
     const sessionsSnapshot = await getDocs(q);
-    const isBooked = sessionsSnapshot.docs.some(doc => {
+    const isBooked = sessionsSnapshot.docs.some((doc: any) => {
       const sessionData = doc.data();
       if (!sessionData.scheduledTime) return false;
 
@@ -106,7 +105,6 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
   const { user } = useAuth();
   const [processing, setProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('card');
   const [sessionType, setSessionType] = useState<'video' | 'audio' | 'chat'>(bookingData.sessionType || 'video');
   const [showTerms, setShowTerms] = useState(false);
   const [showCancellation, setShowCancellation] = useState(false);
@@ -140,16 +138,40 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       // Calculate final amount (use component-level totalAmount which includes all discounts)
       // totalAmount is already calculated as: (Base - Coupon) - SessionDiscount
 
-      // Prepare payment data for PayHere
-      const paymentData = {
+      // 1. Create a unique Order ID
+      const orderId = `kalm-${Date.now()}-${user.uid.slice(-6)}`;
+
+      // 2. Store pending payment details in Firestore
+      // This allows the webhook to retrieve all necessary data for session creation
+      const pendingPaymentData = {
+        orderId,
+        therapistId: bookingData.therapistId,
+        clientId: user.uid,
+        sessionTime: bookingData.sessionTime,
+        scheduledTime: bookingData.sessionTime, // Standardized field name
+        sessionType: bookingData.sessionType || 'video',
+        duration: bookingData.duration || 60,
+        amount: bookingData.amount || totalAmount,
+        discountAmount: bookingData.discountAmount || 0,
+        couponCode: bookingData.couponCode || null,
+        finalAmount: totalAmount,
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      };
+
+      const pendingPaymentsRef = doc(db, 'pendingPayments', orderId);
+      await setDoc(pendingPaymentsRef, pendingPaymentData);
+
+      // 3. Prepare payment data for PayHere
+      const payHereData = {
         amount: totalAmount,
         currency: 'LKR' as const,
-        orderId: `kalm-${Date.now()}-${user.uid.slice(-6)}`,
+        orderId,
         items: `${sessionType.charAt(0).toUpperCase() + sessionType.slice(1)} Therapy Session`,
         firstName: user.displayName?.split(' ')[0] || 'User',
         lastName: user.displayName?.split(' ')[1] || '',
         email: user.email || 'user@kalm.lk',
-        phone: '0771234567', // You might want to get this from user profile
+        phone: '0771234567', // Ideally get from user profile
         address: 'Colombo',
         city: 'Colombo',
         country: 'Sri Lanka' as const,
@@ -160,59 +182,38 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         custom2: sessionType
       };
 
-      // Initiate PayHere payment
-      const paymentResult = await initiatePayHerePayment(paymentData);
+      // 4. Initiate PayHere payment
+      const paymentResult = await initiatePayHerePayment(payHereData);
 
       if (paymentResult.success) {
-        const bookingId = paymentResult.orderId || `booking-${Date.now()}`;
-        console.log('bookingData.therapistId', bookingData.therapistId);
-        // Therapist ID is now directly the user ID
-        const therapistUserId = bookingData.therapistId;
+        // 5. Start Polling for Session Creation
+        // Instead of creating the session here, we wait for the Webhook to do it
+        toast.loading('Finalizing your booking...', { id: 'payment-polling' });
 
-        // Create the session in Firebase after successful payment
-        const sessionId = await createSession({
-          bookingId,
-          therapistId: bookingData.therapistId, // Use therapist's userId, not document ID
-          clientId: user.uid,
-          sessionType: bookingData.sessionType || 'video', // Use sessionType from bookingData
-          status: 'scheduled',
-          scheduledTime: bookingData.sessionTime,
-          duration: bookingData.duration || 60,
+        // Use onSnapshot to poll for the session being created
+        const sessionsRef = collection(db, 'sessions');
+        const q = query(sessionsRef, where('bookingId', '==', orderId));
+
+        let pollTimeout: NodeJS.Timeout;
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          if (!snapshot.empty) {
+            const sessionDoc = snapshot.docs[0];
+            console.log('Session verified via webhook polling:', sessionDoc.id);
+
+            clearTimeout(pollTimeout);
+            unsubscribe();
+            toast.success('Payment successful! Session booked.', { id: 'payment-polling' });
+            onPaymentComplete();
+          }
         });
 
-        // Record payment in Firestore for admin reporting & payouts
-        try {
-          const paymentData = {
-            bookingId,
-            sessionId,
-            clientId: user.uid,
-            clientName: user.displayName || user.email || 'Unknown',
-            therapistId: bookingData.therapistId,
-            amount: bookingData.amount || totalAmount,
-            currency: 'LKR' as const,
-            paymentMethod: 'payhere' as const,
-            paymentStatus: 'completed' as const,
-            paymentId: paymentResult.paymentId || null,
-            orderId: bookingId,
-            couponCode: bookingData.couponCode || null,
-            discountAmount: bookingData.discountAmount || 0,
-            finalAmount: totalAmount,
-            payoutStatus: 'pending' as const,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          };
+        // Timeout after 30 seconds if webhook hasn't processed
+        pollTimeout = setTimeout(() => {
+          unsubscribe();
+          toast.error('The payment was received but processing is taking longer than expected. Please check your dashboard in a few minutes.', { id: 'payment-polling' });
+          onPaymentComplete(); // Still complete so they don't re-pay
+        }, 30000);
 
-          const paymentsRef = collection(db, 'payments');
-          await addDoc(paymentsRef, paymentData);
-        } catch (paymentError: any) {
-          console.error('Failed to record payment document:', paymentError);
-          toast.error(paymentError?.message || 'Session booked, but failed to record payment in admin reports.');
-        }
-
-        toast.success('Payment successful! Session booked.');
-        console.log('Session created with ID:', sessionId);
-
-        onPaymentComplete();
       } else {
         throw new Error(paymentResult.error || 'Payment failed');
       }
@@ -249,15 +250,6 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   const finalAmount = (bookingData.amount || 0) - (bookingData.discountAmount || 0);
   const sessionTypeDiscount = sessionType === 'audio' ? 0 : sessionType === 'chat' ? 0 : 0;
   const totalAmount = finalAmount - sessionTypeDiscount;
-
-  const getSessionTypeIcon = (type: string) => {
-    switch (type) {
-      case 'video': return <Video className="w-4 h-4" />;
-      case 'audio': return <Phone className="w-4 h-4" />;
-      case 'chat': return <MessageCircle className="w-4 h-4" />;
-      default: return <Video className="w-4 h-4" />;
-    }
-  };
 
   if (processing) {
     return (
