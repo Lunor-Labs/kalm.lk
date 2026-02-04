@@ -1,8 +1,8 @@
 import { onRequest } from "firebase-functions/v2/https";
+import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import * as crypto from "crypto";
 import * as dotenv from "dotenv";
-import { format } from "date-fns";
 
 // Load environment variables
 dotenv.config();
@@ -54,12 +54,13 @@ export const payHereWebhook = onRequest(
                 payment_id
             } = body;
 
-            console.log(`Received webhook for order: ${order_id}, status: ${status_code}`);
+            logger.info(`Received webhook for order: ${order_id}, status: ${status_code}`);
+            logger.info("Webhook Request Body:", body);
 
             // 1. Verify Hash
             const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET;
             if (!merchantSecret) {
-                console.error("PayHere merchant secret not configured");
+                logger.error("PayHere merchant secret not configured");
                 res.status(500).send("Internal Server Error");
                 return;
             }
@@ -85,7 +86,7 @@ export const payHereWebhook = onRequest(
                 .toUpperCase();
 
             if (md5sig !== expectedHash) {
-                console.warn(`Invalid hash for order ${order_id}. Expected ${expectedHash}, got ${md5sig}`);
+                logger.warn(`Invalid hash for order ${order_id}. Expected ${expectedHash}, got ${md5sig}`);
                 res.status(400).send("Invalid Signature");
                 return;
             }
@@ -94,7 +95,7 @@ export const payHereWebhook = onRequest(
             const logRef = db.collection("webhookLogs").doc(order_id);
             const logSnap = await logRef.get();
             if (logSnap.exists) {
-                console.log(`Webhook for order ${order_id} already processed.`);
+                logger.info(`Webhook for order ${order_id} already processed.`);
                 res.status(200).send("OK (Duplicate)");
                 return;
             }
@@ -106,14 +107,14 @@ export const payHereWebhook = onRequest(
                 const pendingSnap = await pendingRef.get();
 
                 if (!pendingSnap.exists) {
-                    console.error(`Pending booking not found for order ${order_id}`);
+                    logger.error(`Pending booking not found for order ${order_id}`);
                     res.status(404).send("Pending booking not found");
                     return;
                 }
 
                 const bookingData = pendingSnap.data();
                 if (bookingData?.status === "completed") {
-                    console.log(`Booking for order ${order_id} already marked as completed.`);
+                    logger.info(`Booking for order ${order_id} already marked as completed.`);
                     res.status(200).send("OK (Already Completed)");
                     return;
                 }
@@ -154,11 +155,11 @@ export const payHereWebhook = onRequest(
                                 dailyRoomUrl = roomData.url;
                                 dailyRoomName = roomData.name;
                             } else {
-                                console.warn("Failed to create Daily.co room:", await roomResponse.text());
+                                logger.warn("Failed to create Daily.co room:", await roomResponse.text());
                             }
                         }
                     } catch (dailyError) {
-                        console.error("Error creating Daily.co room:", dailyError);
+                        logger.error("Error creating Daily.co room:", dailyError);
                     }
                 }
 
@@ -210,9 +211,27 @@ export const payHereWebhook = onRequest(
                 // 7. Update therapist availability
                 try {
                     const scheduledDate = bookingData?.scheduledTime.toDate();
-                    const dateString = format(scheduledDate, "yyyy-MM-dd");
-                    const timeString = format(scheduledDate, "HH:mm");
-                    const dayOfWeek = scheduledDate.getDay();
+
+                    // Convert to Asia/Colombo (IST) for matching with availability slots
+                    const formatter = new Intl.DateTimeFormat('en-US', {
+                        timeZone: 'Asia/Colombo',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+
+                    const parts = formatter.formatToParts(scheduledDate);
+                    const getPart = (type: string) => parts.find(p => p.type === type)?.value || "";
+
+                    const dateString = `${getPart('year')}-${getPart('month')}-${getPart('day')}`;
+                    const timeString = `${getPart('hour')}:${getPart('minute')}`;
+
+                    // Get day of week (0-6, where 0 is Sunday) in IST
+                    // Using toLocaleString is a reliable way to get a Date object "representing" the time in that TZ
+                    const dayOfWeek = new Date(scheduledDate.toLocaleString('en-US', { timeZone: 'Asia/Colombo' })).getDay();
 
                     const availabilityRef = db.collection("therapistAvailability").doc(bookingData?.therapistId);
                     const availabilitySnap = await availabilityRef.get();
@@ -221,17 +240,23 @@ export const payHereWebhook = onRequest(
                         const availability = availabilitySnap.data();
                         let updated = false;
 
+                        logger.info(`Processing availability update for therapist: ${bookingData?.therapistId}, Date: ${dateString}, Time: ${timeString}`);
+
                         // Check special dates first
                         if (availability?.specialDates) {
                             const specialDateIndex = availability.specialDates.findIndex((sd: any) => sd.date === dateString);
                             if (specialDateIndex !== -1) {
+                                logger.info(`Found special date entry for ${dateString}`);
                                 availability.specialDates[specialDateIndex].timeSlots = availability.specialDates[specialDateIndex].timeSlots.map((slot: any) => {
                                     if (slot.startTime === timeString) {
+                                        logger.info(`Matched special date time slot: ${timeString}`);
                                         updated = true;
                                         return { ...slot, isAvailable: false, isBooked: true };
                                     }
                                     return slot;
                                 });
+                            } else {
+                                logger.info(`No special date entry found for ${dateString}`);
                             }
                         }
 
@@ -239,13 +264,17 @@ export const payHereWebhook = onRequest(
                         if (availability?.weeklySchedule) {
                             const dayIndex = availability.weeklySchedule.findIndex((ws: any) => ws.dayOfWeek === dayOfWeek);
                             if (dayIndex !== -1) {
+                                logger.info(`Found weekly schedule entry for day index: ${dayOfWeek}`);
                                 availability.weeklySchedule[dayIndex].timeSlots = availability.weeklySchedule[dayIndex].timeSlots.map((slot: any) => {
                                     if (slot.startTime === timeString) {
+                                        logger.info(`Matched weekly schedule time slot: ${timeString}`);
                                         updated = true;
                                         return { ...slot, isAvailable: false, isBooked: true };
                                     }
                                     return slot;
                                 });
+                            } else {
+                                logger.info(`No weekly schedule entry found for day index: ${dayOfWeek}`);
                             }
                         }
 
@@ -255,11 +284,15 @@ export const payHereWebhook = onRequest(
                                 weeklySchedule: availability?.weeklySchedule || [],
                                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
                             });
-                            console.log(`✅ Availability updated for therapist ${bookingData?.therapistId} at ${dateString} ${timeString}`);
+                            logger.info(`✅ Availability updated for therapist ${bookingData?.therapistId} at ${dateString} ${timeString}`);
+                        } else {
+                            logger.warn(`⚠️ No matching time slot found to update for therapist ${bookingData?.therapistId} at ${dateString} ${timeString}`);
                         }
+                    } else {
+                        logger.error(`Therapist availability document not found for therapist ${bookingData?.therapistId}`);
                     }
                 } catch (availError) {
-                    console.error("Error updating therapist availability:", availError);
+                    logger.error("Error updating therapist availability:", availError);
                 }
 
                 // 8. Log success
@@ -271,7 +304,7 @@ export const payHereWebhook = onRequest(
                     body: body
                 });
 
-                console.log(`✅ Session ${sessionId} created for order ${order_id}`);
+                logger.info(`✅ Session ${sessionId} created for order ${order_id}`);
             } else {
                 // Log other statuses (e.g. 0 = Pending, -1 = Cancelled, -2 = Failed, -3 = Chargedback)
                 await logRef.set({
@@ -282,13 +315,13 @@ export const payHereWebhook = onRequest(
                     processedAt: admin.firestore.FieldValue.serverTimestamp(),
                     body: body
                 });
-                console.log(`Webhook received with status ${status_code} for order ${order_id}`);
+                logger.info(`Webhook received with status ${status_code} for order ${order_id}`);
             }
 
             res.status(200).send("OK");
 
         } catch (err: any) {
-            console.error("❌ Error processing PayHere webhook:", err);
+            logger.error("❌ Error processing PayHere webhook:", err);
             res.status(500).send("Internal Server Error");
         }
     }
